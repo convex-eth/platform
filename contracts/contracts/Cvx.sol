@@ -41,7 +41,7 @@ contract ConvexToken is ERC20{
     function mint(address _to, uint256 _amount) external {
         if(msg.sender != operator){
             //dont error just return. if a shutdown happens, rewards on old system
-            //can still be claimed, jut wont mint cvx
+            //can still be claimed, just wont mint cvx
             return;
         }
 
@@ -53,11 +53,16 @@ contract ConvexToken is ERC20{
             return;
         }
         
+        //determine current cliff based on what will be new supply
         uint256 newSupply = totalSupply().add(_amount);
         uint256 cliff = newSupply.div(reductionPerCliff);
+        //mint if below total cliffs
         if(cliff < totalCliffs){
+            //for reduction% take inverse of current cliff
             uint256 reduction = totalCliffs.sub(cliff);
+            //reduce
             _amount = _amount.mul(reduction).div(totalCliffs);
+            //mint
             _mint(_to, _amount);
         }
     }

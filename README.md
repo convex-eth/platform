@@ -3,7 +3,7 @@
 Goals
 -----
 - Community based staking with boosting without the need for locking yourself.
-- Smart contract wallet users can finally get a boost without risk heavy vault platforms.
+- Smart contract wallet users can participate in the curve boost ecosystem.
 - Receive rewards in crv(and incentive tokens if there are any), not underlying lp tokens.
 - People who fund the boost by depositing crv get a % of crv rewards as a reward (plus vecrv fee claims).
 - No management/strategies, just staking on curve.
@@ -57,7 +57,7 @@ Tokenomics
 		- Curve Staking: Rewarded at a determined ratio to CRV generated on the platform
 		- cCrv/Crv LPs: each block over 4 years (3.75% per year)
 		- CVX/ETH LPs: each block over 4 years (3.75% per year)
-		- Treasury: instant
+		- Treasury: each block over 1 year
 		- Vecrv: each block over 1 year
 		- Team: each block over 1 year
 	- Treasury will be held by multisig. reward for community driven activities. could be burnt too if so desired.
