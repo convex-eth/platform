@@ -381,17 +381,20 @@ contract Booster{
             uint256 _lockIncentive = crvBal.mul(lockIncentive).div(FEE_DENOMINATOR);
             uint256 _stakerIncentive = crvBal.mul(stakerIncentive).div(FEE_DENOMINATOR);
             uint256 _callIncentive = crvBal.mul(earmarkIncentive).div(FEE_DENOMINATOR);
-            uint256 _platform = crvBal.mul(platformFee).div(FEE_DENOMINATOR);
-
-            crvBal = crvBal.sub(_lockIncentive).sub(_callIncentive).sub(_stakerIncentive).sub(_platform);
-
-            //send incentives for calling
-            IERC20(crv).safeTransfer(msg.sender, _callIncentive);
-
+            
             //send treasury
             if(treasury != address(0) && treasury != address(this)){
+                //only subtract after address condition check
+                uint256 _platform = crvBal.mul(platformFee).div(FEE_DENOMINATOR);
+                crvBal = crvBal.sub(_platform);
                 IERC20(crv).safeTransfer(treasury, _platform);
             }
+
+            //remove incentives from balance
+            crvBal = crvBal.sub(_lockIncentive).sub(_callIncentive).sub(_stakerIncentive);
+
+            //send incentives for calling
+            IERC20(crv).safeTransfer(msg.sender, _callIncentive);          
 
             //send crv to lp provider reward contract
             address rewardContract = poolInfo[_pid].crvRewards;

@@ -127,6 +127,11 @@ contract ManagedRewardPool is BalanceWrapper {
         extraRewards.push(_reward);
     }
 
+    function clearExtraRewards() external{
+        require(msg.sender == rewardManager, "!authorized");
+        delete extraRewards;
+    }
+
     modifier checkStart() {
         require(block.timestamp >= starttime, 'RewardPool : not start');
         _;
@@ -210,7 +215,7 @@ contract ManagedRewardPool is BalanceWrapper {
         withdraw(_account, balanceOf(_account));
     }
 
-    function getReward(address _account) public updateReward(_account) checkStart{
+    function getReward(address _account, bool _claimExtras) public updateReward(_account) checkStart{
         uint256 reward = earned(_account);
         if (reward > 0) {
             rewards[_account] = 0;
@@ -220,14 +225,23 @@ contract ManagedRewardPool is BalanceWrapper {
         }
 
         //also get rewards from linked rewards
-        for(uint i=0; i < extraRewards.length; i++){
-            IRewards(extraRewards[i]).getReward(_account);
+        if(_claimExtras){
+            for(uint i=0; i < extraRewards.length; i++){
+                IRewards(extraRewards[i]).getReward(_account);
+            }
         }
     }
 
-    //users only allowed to get their reward since balances are virtual
+    function getReward(address _account) external{
+        getReward(_account,true);
+    }
+    
+    function getReward(bool _claimExtras) external{
+        getReward(msg.sender,_claimExtras);
+    }
+
     function getReward() external{
-        getReward(msg.sender);
+        getReward(msg.sender,true);
     }
 
 

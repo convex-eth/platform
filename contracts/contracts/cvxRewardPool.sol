@@ -131,6 +131,10 @@ contract cvxRewardPool is DepositManager {
 
         extraRewards.push(_reward);
     }
+    function clearExtraRewards() external{
+        require(msg.sender == rewardManager, "!authorized");
+        delete extraRewards;
+    }
 
     modifier checkStart() {
         require(block.timestamp >= starttime, 'RewardPool : not start');
@@ -224,11 +228,11 @@ contract cvxRewardPool is DepositManager {
     }
 
     function exit() public {
-        getReward();
+        getReward(true);
         withdraw(balanceOf(msg.sender));
     }
 
-    function getReward() public updateReward(msg.sender) checkStart{
+    function getReward(bool _claimExtras) public updateReward(msg.sender) checkStart{
         uint256 reward = earnedReward(msg.sender);
         if (reward > 0) {
             rewards[msg.sender] = 0;
@@ -242,9 +246,15 @@ contract cvxRewardPool is DepositManager {
         }
 
         //also get rewards from linked rewards
-        for(uint i=0; i < extraRewards.length; i++){
-            IRewards(extraRewards[i]).getReward(msg.sender);
+        if(_claimExtras){
+            for(uint i=0; i < extraRewards.length; i++){
+                IRewards(extraRewards[i]).getReward(msg.sender);
+            }
         }
+    }
+
+    function getReward() external{
+        getReward(true);
     }
 
     function queueNewRewards(uint256 _rewards) external{
