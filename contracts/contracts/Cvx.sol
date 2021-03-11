@@ -53,15 +53,24 @@ contract ConvexToken is ERC20{
             return;
         }
         
-        //determine current cliff based on what will be new supply
-        uint256 newSupply = totalSupply().add(_amount);
-        uint256 cliff = newSupply.div(reductionPerCliff);
+        //use current supply to gauge cliff
+        //this will cause a bit of overflow into the next cliff range
+        //but should be within reasonable levels.
+        //requires a max supply check though
+        uint256 cliff = totalSupply().div(reductionPerCliff);
         //mint if below total cliffs
         if(cliff < totalCliffs){
             //for reduction% take inverse of current cliff
             uint256 reduction = totalCliffs.sub(cliff);
             //reduce
             _amount = _amount.mul(reduction).div(totalCliffs);
+
+            //supply cap check
+            uint256 amtTillMax = maxSupply.sub(totalSupply());
+            if(_amount > amtTillMax){
+                _amount = amtTillMax;
+            }
+
             //mint
             _mint(_to, _amount);
         }

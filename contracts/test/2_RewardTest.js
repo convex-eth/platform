@@ -195,6 +195,7 @@ contract("RewardsTest", async accounts => {
     await cvx.balanceOf(userA).then(a=>console.log("userA cvx: " +a))
     await rewardPool.earned(userA).then(a=>console.log("rewards earned(unclaimed): " +a));
     await booster.withdrawAll(0,{from:userA});
+    console.log("withdrawAll()");
 
     await threeCrv.balanceOf(userA).then(a=>console.log("userA 3crv final: " +a));
     await booster.userPoolInfo(0,userA).then(a=>console.log("final deposited lp: " +a));
