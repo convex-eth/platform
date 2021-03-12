@@ -147,7 +147,7 @@ contract VirtualBalanceRewardPool is VirtualBalanceWrapper {
         checkStart
     {
         require(msg.sender == address(deposits), "!authorized");
-        require(amount > 0, 'VirtualDepositRewardPool: Cannot stake 0');
+       // require(amount > 0, 'VirtualDepositRewardPool: Cannot stake 0');
         emit Staked(_account, amount);
     }
 
@@ -157,7 +157,7 @@ contract VirtualBalanceRewardPool is VirtualBalanceWrapper {
         checkStart
     {
         require(msg.sender == address(deposits), "!authorized");
-        require(amount > 0, 'VirtualDepositRewardPool : Cannot withdraw 0');
+        //require(amount > 0, 'VirtualDepositRewardPool : Cannot withdraw 0');
 
         emit Withdrawn(_account, amount);
     }

@@ -303,7 +303,7 @@ contract Booster{
     }
 
     //withdraw lp tokens
-    function withdraw(uint256 _pid, uint256 _amount) public {
+    function withdraw(uint256 _pid, uint256 _amount, bool _claimRewards) public {
         address token = poolInfo[_pid].lptoken;
         address gauge = poolInfo[_pid].gauge;
         uint256 before = IERC20(token).balanceOf(address(this));
@@ -321,17 +321,23 @@ contract Booster{
             IStash(stash).stashRewards();
         }
         
-        //get remaining rewards before balance change
+        //reward contract for the pool
         address rewardContract = poolInfo[_pid].crvRewards;
-        IRewards(rewardContract).getReward(msg.sender); //get rewards before changing balance
+
+        //if withdraw+claim
+        //mostly a what-if reward claiming doesnt work
+        if(_claimRewards){
+            //get remaining rewards
+            IRewards(rewardContract).getReward(msg.sender);
+        }
+
+        //update balance on reward contracts
+        IRewards(rewardContract).withdraw(msg.sender, _amount);
 
         //remove lp balance
         uint256 userBal = userPoolInfo[_pid][msg.sender].amount;
         userBal = userBal.sub(_amount);
         userPoolInfo[_pid][msg.sender].amount = userBal;
-
-        //update rewards with new balance by calling withdraw
-        IRewards(rewardContract).withdraw(msg.sender, _amount);
 
         //return lp tokens
         IERC20(token).safeTransfer(msg.sender, _amount);
@@ -339,10 +345,18 @@ contract Booster{
         emit Withdrawn(msg.sender, _pid, _amount);
     }
 
+     function withdraw(uint256 _pid, uint256 _amount) public {
+        withdraw(_pid,_amount,true);
+     }
+
     //withdraw all lp tokens
-    function withdrawAll(uint256 _pid) external {
+    function withdrawAll(uint256 _pid, bool _claimRewards) public {
         uint256 userBal = userPoolInfo[_pid][msg.sender].amount;
-        withdraw(_pid, userBal);
+        withdraw(_pid, userBal, _claimRewards);
+    }
+
+    function withdrawAll(uint256 _pid) external {
+        withdrawAll(_pid, true);
     }
 
     //delegate address votes on dao
