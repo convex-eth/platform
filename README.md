@@ -71,7 +71,6 @@ Contract Components
 - Booster
 	- Main deposit contract
 	- Keep track of pool info
-	- Keep track of user deposits
 	- Distributes rewards
 
 - Voter Proxy
@@ -114,10 +113,13 @@ Contract Components
 	- Create reward contracts on the fly when new pools are added
 	- Create reward contracts on the fly when new incentive tokens are added
 
-- cCrvToken
+- TokenFactory
+	- Create erc20 tokens for each new pool that can be minted and burned by the Booster contract
+
+- cCrv Token
 	- Minted 1:1 ratio for each crv deposited into the system
 
-- ConvexToken
+- Convex Token(cvx)
 	- System native token
 	- Minted at a defined ratio for each crv mined in the system
 	- Mint ratio is reduced as supply increases
@@ -127,21 +129,19 @@ Contract Interaction Flow
 --------
 - LP Deposit
 	- safe transfer lp tokens to deposit contract
-	- add user balance
-	- add user balance to pool's reward contracts
-	- move tokens to proxy contract
-	- deposit on curve gauge
+	- deposit lp tokens on curve gauge via vote proxy
 	- stash rewards claimed during deposit to the pool's stash contract
+	- mint deposit tokens for user
+	- if stake option is set, send deposit tokens to reward contract on behalf of user
+	
 
 - LP Withdrawal
 	- Check current amount on deposit contract
 	- unstake required amount from curve gauge
 	- move tokens from proxy to deposit contract
 	- stash rewards claimed during withdrawal to the pool's stash contract
-	- claim pool rewards
-	- remove user balance
-	- remove user balance on pool's reward contract
-	- send tokens to user
+	- burn deposit tokens
+	- send lp tokens to user
 
 - Lock Crv
 	- transfer crv to depositor
