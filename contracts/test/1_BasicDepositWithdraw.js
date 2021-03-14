@@ -103,7 +103,7 @@ contract("BasicDepositWithdraw", async accounts => {
     await rewardPool.balanceOf(userA).then(a=>console.log("reward balance: " +a));
 
     //withdraw a portion
-    await booster.withdraw(0,web3.utils.toWei("500.0", "ether"),true,{from:userA});
+    await booster.withdraw(0,web3.utils.toWei("500.0", "ether"),{from:userA});
     console.log("withdrawn portion");
 
     //check wallet increased and that deposit credit/reward balance decreased
@@ -116,7 +116,7 @@ contract("BasicDepositWithdraw", async accounts => {
     // this will error on the gauge not having enough balance
     console.log("try withdraw too much");
     await expectRevert(
-        booster.withdraw(0,startingThreeCrv+1,true,{from:userA}),
+        booster.withdraw(0,startingThreeCrv+1,{from:userA}),
         "revert");
     console.log(" ->reverted (fail on unstake)");
 

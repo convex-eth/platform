@@ -13,6 +13,7 @@ const ConvexToken = artifacts.require("ConvexToken");
 const cCrvToken = artifacts.require("cCrvToken");
 const StashFactory = artifacts.require("StashFactory");
 const RewardFactory = artifacts.require("RewardFactory");
+const TokenFactory = artifacts.require("TokenFactory");
 
 const IExchange = artifacts.require("IExchange");
 const ICurveFi = artifacts.require("I3CurveFi");
@@ -49,7 +50,9 @@ contract("Shutdown Test", async accounts => {
     let cCrvRewardsContract = await BaseRewardPool.at(cCrvRewards);
     let cvxRewardsContract = await cvxRewardPool.at(cvxRewards);
 
-    
+    var poolinfo = await booster.poolInfo(0);
+    var rewardPoolAddress = poolinfo.crvRewards;
+    var rewardPool = await BaseRewardPool.at(rewardPoolAddress);
 
     let starttime = await time.latest();
     console.log("current block time: " +starttime)
@@ -80,7 +83,7 @@ contract("Shutdown Test", async accounts => {
     await booster.shutdownSystem(true,{from:admin});
     console.log("system shutdown");
     await threeCrv.balanceOf(userA).then(a=>console.log("3crv on wallet: " +a));
-    await booster.userPoolInfo(0,userA).then(a=>console.log("deposited lp: " +a));
+    await rewardPool.balanceOf(userA).then(a=>console.log("deposited lp: " +a));
     await threeCrv.balanceOf(booster.address).then(a=>console.log("3crv at booster " +a));
     await voteproxy.balanceOfPool(threeCrvGauge).then(a=>console.log("3crv on gauge " +a));
 
@@ -92,7 +95,7 @@ contract("Shutdown Test", async accounts => {
     console.log("withdraw")
     await booster.withdrawAll(0,{from:userA});
     await threeCrv.balanceOf(userA).then(a=>console.log("3crv on wallet: " +a));
-    await booster.userPoolInfo(0,userA).then(a=>console.log("deposited lp: " +a));
+    await rewardPool.balanceOf(userA).then(a=>console.log("deposited lp: " +a));
     await threeCrv.balanceOf(booster.address).then(a=>console.log("3crv at booster " +a));
     await voteproxy.balanceOfPool(threeCrvGauge).then(a=>console.log("3crv on gauge " +a));
 
@@ -108,7 +111,8 @@ contract("Shutdown Test", async accounts => {
     //create factories
     let rewardFactory2 = await RewardFactory.new(booster2.address);
     let stashFactory2 = await StashFactory.new(booster2.address, rewardFactory2.address );
-    await booster2.setFactories(rewardFactory2.address, stashFactory2.address);
+    let tokenFactory2 = await TokenFactory.new(booster2.address);
+    await booster2.setFactories(rewardFactory2.address, stashFactory2.address, tokenFactory2.address);
     console.log("factories set");
 
     //set minter(cvx)
@@ -119,7 +123,7 @@ contract("Shutdown Test", async accounts => {
     console.log("cvx operater updated");
 
     //create new reward pools for staking ccrv and cvx
-    let cCrvRewardsContract2 = await cCrvRewardPool.new(cCrv.address,crv.address,0,booster2.address,rewardFactory2.address);
+    let cCrvRewardsContract2 = await BaseRewardPool.new(0,cCrv.address,crv.address,0,booster2.address,rewardFactory2.address);
     console.log("create new ccrv reward pool");
     let cvxRewardsContract2 = await cvxRewardPool.new(cvx.address,crv.address,crvDeposit.address,cCrv.address,0,booster2.address,admin);
     console.log("create new cvx reward pool");
@@ -135,9 +139,9 @@ contract("Shutdown Test", async accounts => {
     await booster2.addPool(threeCrvSwap,threeCrvGauge,0);
     console.log("3crv pool added");
 
-    let poolinfo = await booster2.poolInfo(0);
-    let rewardPoolAddress = poolinfo.crvRewards;
-    let rewardPool = await BaseRewardPool.at(rewardPoolAddress);
+    poolinfo = await booster2.poolInfo(0);
+    rewardPoolAddress = poolinfo.crvRewards;
+    rewardPool = await BaseRewardPool.at(rewardPoolAddress);
     console.log("pool lp token " +poolinfo.lptoken);
     console.log("pool gauge " +poolinfo.gauge);
     console.log("pool reward contract at " +rewardPool.address);

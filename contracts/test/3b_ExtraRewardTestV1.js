@@ -172,7 +172,7 @@ contract("ExtraRewardsTest v1", async accounts => {
     await snx.balanceOf(snxRewards.address).then(a=>console.log("snx on rewards (>0,same num as before): " +a));
 
     //increase time
-    await time.increase(2*86400);
+    await time.increase(10*86400);
     await time.advanceBlock();
     await time.advanceBlock();
     await time.advanceBlock();

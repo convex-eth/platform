@@ -46,7 +46,8 @@ interface ISPool {
     ) external;
     
     function claimable_tokens(address) external view returns (uint256);    
-    function claimable_reward(address) external view returns (uint256);    
+    function claimable_reward(address) external view returns (uint256);
+    function claim_rewards(address) external;
 }
 
 interface ICurveGaugeDebug {

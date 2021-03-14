@@ -70,6 +70,7 @@ contract CurveVoterProxy {
         require(stashPool[msg.sender] == true, "!auth");
         balance = _asset.balanceOf(address(this));
         _asset.safeTransfer(msg.sender, balance);
+        return balance;
     }
 
     // Withdraw partial funds
