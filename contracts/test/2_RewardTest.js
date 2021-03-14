@@ -5,18 +5,20 @@ const Booster = artifacts.require("Booster");
 const CrvDepositor = artifacts.require("CrvDepositor");
 const CurveVoterProxy = artifacts.require("CurveVoterProxy");
 const ExtraRewardStashV2 = artifacts.require("ExtraRewardStashV2");
-const ManagedRewardPool = artifacts.require("ManagedRewardPool");
+const BaseRewardPool = artifacts.require("BaseRewardPool");
 const VirtualBalanceRewardPool = artifacts.require("VirtualBalanceRewardPool");
-const cCrvRewardPool = artifacts.require("cCrvRewardPool");
+//const cCrvRewardPool = artifacts.require("cCrvRewardPool");
 const cvxRewardPool = artifacts.require("cvxRewardPool");
 const ConvexToken = artifacts.require("ConvexToken");
 const cCrvToken = artifacts.require("cCrvToken");
 const StashFactory = artifacts.require("StashFactory");
 const RewardFactory = artifacts.require("RewardFactory");
+const DepositToken = artifacts.require("DepositToken");
 
 const IExchange = artifacts.require("IExchange");
 const ICurveFi = artifacts.require("I3CurveFi");
 const IERC20 = artifacts.require("IERC20");
+const ERC20 = artifacts.require("ERC20");
 
 
 
@@ -46,15 +48,20 @@ contract("RewardsTest", async accounts => {
     let crvDeposit = await CrvDepositor.deployed();
     let cCrvRewards = await booster.lockRewards();
     let cvxRewards = await booster.stakerRewards();
-    let cCrvRewardsContract = await cCrvRewardPool.at(cCrvRewards);
+    let cCrvRewardsContract = await BaseRewardPool.at(cCrvRewards);
     let cvxRewardsContract = await cvxRewardPool.at(cvxRewards);
 
     let poolinfo = await booster.poolInfo(0);
     let rewardPoolAddress = poolinfo.crvRewards;
-    let rewardPool = await ManagedRewardPool.at(rewardPoolAddress);
+    let rewardPool = await BaseRewardPool.at(rewardPoolAddress);
+    let depositToken = await ERC20.at(poolinfo.token);
     console.log("pool lp token " +poolinfo.lptoken);
     console.log("pool gauge " +poolinfo.gauge);
     console.log("pool reward contract at " +rewardPool.address);
+    let depositTokenOp = await DepositToken.at(poolinfo.token);
+    await depositToken.name().then(a=>console.log("deposit token name: " +a));
+    await depositToken.symbol().then(a=>console.log("deposit token symbol: " +a));
+    await depositTokenOp.operator().then(a=>console.log("deposit token operator: " +a));
 
     //increase time so that cvx rewards start
     await time.increase(10*86400);
@@ -86,12 +93,24 @@ contract("RewardsTest", async accounts => {
     //approve
     await threeCrv.approve(booster.address,0,{from:userA});
     await threeCrv.approve(booster.address,startingThreeCrv,{from:userA});
+    console.log("approved");
 
     //deposit all for user a
-    await booster.depositAll(0,{from:userA});
-
+    await booster.depositAll(0,true,{from:userA});
+    console.log("deposit all complete");
     //check deposited balance, reward balance, and earned amount(earned should be 0 still)
-    await booster.userPoolInfo(0,userA).then(a=>console.log("deposited lp: " +a));
+    //await booster.userPoolInfo(0,userA).then(a=>console.log("deposited lp: " +a));
+    var deposit = await depositToken.balanceOf(userA);
+    console.log("deposited lp: " +deposit);
+
+    //if manual stake
+    // await depositToken.approve(rewardPool.address,0,{from:userA});
+    // await depositToken.approve(rewardPool.address,deposit,{from:userA});
+    // await rewardPool.stake(deposit,{from:userA});
+
+    //if auto stake, balance should already be on reward pool
+
+
     await rewardPool.balanceOf(userA).then(a=>console.log("reward balance: " +a));
     await rewardPool.earned(userA).then(a=>console.log("rewards earned(unclaimed): " +a));
 
@@ -193,12 +212,19 @@ contract("RewardsTest", async accounts => {
     //withdraw should also claim rewards
     await crv.balanceOf(userA).then(a=>console.log("userA crv: " +a))
     await cvx.balanceOf(userA).then(a=>console.log("userA cvx: " +a))
-    await rewardPool.earned(userA).then(a=>console.log("rewards earned(unclaimed): " +a));
-    await booster.withdrawAll(0,{from:userA});
+
+    //manual unstake + withdraw
+    // await rewardPool.earned(userA).then(a=>console.log("rewards earned(unclaimed): " +a));
+    // await rewardPool.exit({from:userA});
+    // await booster.withdrawAll(0,{from:userA});
+    // console.log("withdrawAll()");
+
+    //auto unstake + unwrap + claim
+    await rewardPool.withdrawAndUnwrap({from:userA});
     console.log("withdrawAll()");
 
     await threeCrv.balanceOf(userA).then(a=>console.log("userA 3crv final: " +a));
-    await booster.userPoolInfo(0,userA).then(a=>console.log("final deposited lp: " +a));
+    await depositToken.balanceOf(userA).then(a=>console.log("final lp balance: " +a));
     await crv.balanceOf(cCrvRewards).then(a=>console.log("crv at cCrvRewards " +a));
     await crv.balanceOf(cvxRewards).then(a=>console.log("crv at cvxRewards " +a));
     await rewardPool.balanceOf(userA).then(a=>console.log("reward pool balance of user(==0): " +a));

@@ -5,9 +5,9 @@ const Booster = artifacts.require("Booster");
 const CrvDepositor = artifacts.require("CrvDepositor");
 const CurveVoterProxy = artifacts.require("CurveVoterProxy");
 const ExtraRewardStashV2 = artifacts.require("ExtraRewardStashV2");
-const ManagedRewardPool = artifacts.require("ManagedRewardPool");
+const BaseRewardPool = artifacts.require("BaseRewardPool");
 const VirtualBalanceRewardPool = artifacts.require("VirtualBalanceRewardPool");
-const cCrvRewardPool = artifacts.require("cCrvRewardPool");
+//const cCrvRewardPool = artifacts.require("cCrvRewardPool");
 const cvxRewardPool = artifacts.require("cvxRewardPool");
 const ConvexToken = artifacts.require("ConvexToken");
 const cCrvToken = artifacts.require("cCrvToken");
@@ -48,12 +48,12 @@ contract("cCrv Rewards", async accounts => {
     let crvDeposit = await CrvDepositor.deployed();
     let cCrvRewards = await booster.lockRewards();
     let cvxRewards = await booster.stakerRewards();
-    let cCrvRewardsContract = await cCrvRewardPool.at(cCrvRewards);
+    let cCrvRewardsContract = await BaseRewardPool.at(cCrvRewards);
     let cvxRewardsContract = await cvxRewardPool.at(cvxRewards);
 
     let poolinfo = await booster.poolInfo(0);
     let rewardPoolAddress = poolinfo.crvRewards;
-    let rewardPool = await ManagedRewardPool.at(rewardPoolAddress);
+    let rewardPool = await BaseRewardPool.at(rewardPoolAddress);
 
     //advance to start cvx farming
     await time.increase(10*86400);
@@ -79,8 +79,8 @@ contract("cCrv Rewards", async accounts => {
     await threeCrv.approve(booster.address,0,{from:userA});
     await threeCrv.approve(booster.address,startingThreeCrv,{from:userA});
 
-    await booster.depositAll(0,{from:userA});
-    await booster.userPoolInfo(0,userA).then(a=>console.log("deposited lp: " +a));
+    await booster.depositAll(0,true,{from:userA});
+    await rewardPool.balanceOf(userA).then(a=>console.log("deposited lp: " +a));
     await rewardPool.balanceOf(userA).then(a=>console.log("reward balance: " +a));
     await rewardPool.earned(userA).then(a=>console.log("rewards earned(unclaimed): " +a));
     console.log("deposited lp tokens");

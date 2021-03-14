@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.0;
+pragma solidity 0.6.12;
 
 import "./Interfaces.sol";
 import '@openzeppelin/contracts/math/SafeMath.sol';
@@ -14,7 +14,6 @@ contract CrvDepositor{
     using SafeMath for uint256;
 
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
-    address constant public chi = address(0x0000000000004946c0e9F43F4Dee607b0eF1fA1c);
     address public constant escrow = address(0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2);
     uint256 private constant MAXTIME = 4 * 364 * 86400;
     uint256 private constant WEEK = 7 * 86400;

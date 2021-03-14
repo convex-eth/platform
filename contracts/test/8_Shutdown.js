@@ -5,9 +5,9 @@ const Booster = artifacts.require("Booster");
 const CrvDepositor = artifacts.require("CrvDepositor");
 const CurveVoterProxy = artifacts.require("CurveVoterProxy");
 const ExtraRewardStashV2 = artifacts.require("ExtraRewardStashV2");
-const ManagedRewardPool = artifacts.require("ManagedRewardPool");
+const BaseRewardPool = artifacts.require("BaseRewardPool");
 const VirtualBalanceRewardPool = artifacts.require("VirtualBalanceRewardPool");
-const cCrvRewardPool = artifacts.require("cCrvRewardPool");
+//const cCrvRewardPool = artifacts.require("cCrvRewardPool");
 const cvxRewardPool = artifacts.require("cvxRewardPool");
 const ConvexToken = artifacts.require("ConvexToken");
 const cCrvToken = artifacts.require("cCrvToken");
@@ -46,7 +46,7 @@ contract("Shutdown Test", async accounts => {
     let crvDeposit = await CrvDepositor.deployed();
     let cCrvRewards = await booster.lockRewards();
     let cvxRewards = await booster.stakerRewards();
-    let cCrvRewardsContract = await cCrvRewardPool.at(cCrvRewards);
+    let cCrvRewardsContract = await BaseRewardPool.at(cCrvRewards);
     let cvxRewardsContract = await cvxRewardPool.at(cvxRewards);
 
     
@@ -70,9 +70,9 @@ contract("Shutdown Test", async accounts => {
     //deposit, funds move to gauge
     await threeCrv.approve(booster.address,0,{from:userA});
     await threeCrv.approve(booster.address,startingThreeCrv,{from:userA});
-    await booster.deposit(0,10000,{from:userA});
+    await booster.deposit(0,10000,true,{from:userA});
     await threeCrv.balanceOf(userA).then(a=>console.log("3crv on wallet: " +a));
-    await booster.userPoolInfo(0,userA).then(a=>console.log("deposited lp: " +a));
+    await rewardPool.balanceOf(userA).then(a=>console.log("deposited lp: " +a));
     await threeCrv.balanceOf(booster.address).then(a=>console.log("3crv at booster " +a));
     await voteproxy.balanceOfPool(threeCrvGauge).then(a=>console.log("3crv on gauge " +a));
 
@@ -86,7 +86,7 @@ contract("Shutdown Test", async accounts => {
 
     //try to deposit while in shutdown state, will revert
     console.log("try deposit again");
-    await booster.deposit(0,10000,{from:userA}).catch(a=>console.log("--> deposit reverted"));
+    await booster.deposit(0,10000,true,{from:userA}).catch(a=>console.log("--> deposit reverted"));
 
     //withdraw lp tokens from old booster
     console.log("withdraw")
@@ -137,7 +137,7 @@ contract("Shutdown Test", async accounts => {
 
     let poolinfo = await booster2.poolInfo(0);
     let rewardPoolAddress = poolinfo.crvRewards;
-    let rewardPool = await ManagedRewardPool.at(rewardPoolAddress);
+    let rewardPool = await BaseRewardPool.at(rewardPoolAddress);
     console.log("pool lp token " +poolinfo.lptoken);
     console.log("pool gauge " +poolinfo.gauge);
     console.log("pool reward contract at " +rewardPool.address);
@@ -146,9 +146,9 @@ contract("Shutdown Test", async accounts => {
     let threeCrvbalance = await threeCrv.balanceOf(userA);
     await threeCrv.approve(booster2.address,0,{from:userA});
     await threeCrv.approve(booster2.address,threeCrvbalance,{from:userA});
-    await booster2.depositAll(0,{from:userA});
+    await booster2.depositAll(0,true,{from:userA});
     await threeCrv.balanceOf(userA).then(a=>console.log("3crv on wallet: " +a));
-    await booster2.userPoolInfo(0,userA).then(a=>console.log("deposited lp: " +a));
+    await rewardPool.balanceOf(userA).then(a=>console.log("deposited lp: " +a));
     await threeCrv.balanceOf(booster2.address).then(a=>console.log("3crv at booster2 " +a));
     await voteproxy.balanceOfPool(threeCrvGauge).then(a=>console.log("3crv on gauge " +a));
 

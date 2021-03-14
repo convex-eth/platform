@@ -7,9 +7,9 @@ const CrvDepositor = artifacts.require("CrvDepositor");
 const CurveVoterProxy = artifacts.require("CurveVoterProxy");
 const ExtraRewardStashV1 = artifacts.require("ExtraRewardStashV1");
 const ExtraRewardStashV2 = artifacts.require("ExtraRewardStashV2");
-const ManagedRewardPool = artifacts.require("ManagedRewardPool");
+const BaseRewardPool = artifacts.require("BaseRewardPool");
 const VirtualBalanceRewardPool = artifacts.require("VirtualBalanceRewardPool");
-const cCrvRewardPool = artifacts.require("cCrvRewardPool");
+//const cCrvRewardPool = artifacts.require("cCrvRewardPool");
 const cvxRewardPool = artifacts.require("cvxRewardPool");
 const ConvexToken = artifacts.require("ConvexToken");
 const cCrvToken = artifacts.require("cCrvToken");
@@ -54,7 +54,7 @@ contract("ExtraRewardsTest v1", async accounts => {
     let crvDeposit = await CrvDepositor.deployed();
     let cCrvRewards = await booster.lockRewards();
     let cvxRewards = await booster.stakerRewards();
-    let cCrvRewardsContract = await cCrvRewardPool.at(cCrvRewards);
+    let cCrvRewardsContract = await BaseRewardPool.at(cCrvRewards);
     let cvxRewardsContract = await cvxRewardPool.at(cvxRewards);
 
     //add pool that uses a v1 gauge with rewards (susd)
@@ -62,7 +62,7 @@ contract("ExtraRewardsTest v1", async accounts => {
     console.log("pool added");
     let poolinfo = await booster.poolInfo(1);
     let rewardPoolAddress = poolinfo.crvRewards;
-    let rewardPool = await ManagedRewardPool.at(rewardPoolAddress);
+    let rewardPool = await BaseRewardPool.at(rewardPoolAddress);
     console.log("reward contract at " +rewardPool.address);
     let stash = poolinfo.stash;
     let rewardStash = await ExtraRewardStashV1.at(stash);
@@ -99,12 +99,12 @@ contract("ExtraRewardsTest v1", async accounts => {
      //approve and partial deposit
     await susdlp.approve(booster.address,0,{from:userA});
     await susdlp.approve(booster.address,startinglp,{from:userA});
-    await booster.deposit(1,web3.utils.toWei("0.1", "ether"),{from:userA});
+    await booster.deposit(1,web3.utils.toWei("0.1", "ether"),true,{from:userA});
     console.log("partial deposit complete");
 
     //confirm deposit
     await susdlp.balanceOf(userA).then(a=>console.log("userA susdlp: " +a));
-    await booster.userPoolInfo(1,userA).then(a=>console.log("deposited lp: " +a));
+    await rewardPool.balanceOf(userA).then(a=>console.log("deposited lp: " +a));
     await susdGauge.balanceOf(voteproxy.address).then(a=>console.log("gaugeBalance: " +a));
     await snx.balanceOf(rewardStash.address).then(a=>console.log("snx on stash (==0): " +a));
     await snx.balanceOf(voteproxy.address).then(a=>console.log("snx on voter (==0): " +a));
@@ -162,7 +162,7 @@ contract("ExtraRewardsTest v1", async accounts => {
     await rewardPool.earned(userA).then(a=>console.log("rewards earned(unclaimed): " +a));
 
     //deposit remaining
-    await booster.depositAll(1,{from:userA});
+    await booster.depositAll(1,true,{from:userA});
     console.log("Deposit All")
 
     //stash should NOT catch rewards after a deposit in v1 stashes

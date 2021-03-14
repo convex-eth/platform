@@ -11,7 +11,7 @@ pragma solidity 0.6.12;
 /___/ \_, //_//_/\__//_//_/\__/ \__//_/ /_\_\
      /___/
 
-* Synthetix: cvxRewardPool.sol
+* Synthetix: BaseRewardPool.sol
 *
 * Docs: https://docs.synthetix.io/
 *
@@ -46,45 +46,19 @@ import '@openzeppelin/contracts/utils/Address.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 
 
-contract DepositManager {
-    using SafeMath for uint256;
-    using SafeERC20 for IERC20;
 
-    uint256 private _totalSupply;
-    mapping(address => uint256) private _balances;
-
-    function totalSupply() public view returns (uint256) {
-        return _totalSupply;
-    }
-
-    function balanceOf(address account) public view returns (uint256) {
-        return _balances[account];
-    }
-
-    function stake(uint256 amount) public virtual {
-        _totalSupply = _totalSupply.add(amount);
-        _balances[msg.sender] = _balances[msg.sender].add(amount);
-    }
-
-    function withdraw(uint256 amount) public virtual {
-        _totalSupply = _totalSupply.sub(amount);
-        _balances[msg.sender] = _balances[msg.sender].sub(amount);
-    }
-}
-
-contract cvxRewardPool is DepositManager {
+contract BaseRewardPool {
+     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
     IERC20 public rewardToken;
     IERC20 public stakingToken;
     uint256 public constant duration = 7 days;
-    uint256 public constant FEE_DENOMINATOR = 10000;
 
     address public operator;
-    address public crvDeposits;
-    IERC20 public cCrvToken;
     address public rewardManager;
 
+    uint256 public pid;
     uint256 public starttime;
     uint256 public periodFinish = 0;
     uint256 public rewardRate = 0;
@@ -93,8 +67,10 @@ contract cvxRewardPool is DepositManager {
     uint256 public queuedRewards = 0;
     uint256 public currentRewards = 0;
     uint256 public constant newRewardRatio = 750;
+    uint256 private _totalSupply;
     mapping(address => uint256) public userRewardPerTokenPaid;
     mapping(address => uint256) public rewards;
+    mapping(address => uint256) private _balances;
 
     address[] public extraRewards;
 
@@ -104,21 +80,27 @@ contract cvxRewardPool is DepositManager {
     event RewardPaid(address indexed user, uint256 reward);
 
     constructor(
+        uint256 pid_,
         address stakingToken_,
         address rewardToken_,
-        address crvDeposits_,
-        address cCrvToken_,
         uint256 starttime_,
         address operator_,
         address rewardManager_
     ) public {
+        pid = pid_;
         stakingToken = IERC20(stakingToken_);
         rewardToken = IERC20(rewardToken_);
         starttime = starttime_;
         operator = operator_;
         rewardManager = rewardManager_;
-        crvDeposits = crvDeposits_;
-        cCrvToken = IERC20(cCrvToken_);
+    }
+
+    function totalSupply() public view returns (uint256) {
+        return _totalSupply;
+    }
+
+    function balanceOf(address account) public view returns (uint256) {
+        return _balances[account];
     }
 
     function extraRewardsLength() external view returns (uint256) {
@@ -145,7 +127,7 @@ contract cvxRewardPool is DepositManager {
         rewardPerTokenStored = rewardPerToken();
         lastUpdateTime = lastTimeRewardApplicable();
         if (account != address(0)) {
-            rewards[account] = earnedReward(account);
+            rewards[account] = earned(account);
             userRewardPerTokenPaid[account] = rewardPerTokenStored;
         }
         _;
@@ -169,7 +151,7 @@ contract cvxRewardPool is DepositManager {
             );
     }
 
-    function earnedReward(address account) internal view returns (uint256) {
+    function earned(address account) public view returns (uint256) {
         return
             balanceOf(account)
                 .mul(rewardPerToken().sub(userRewardPerTokenPaid[account]))
@@ -177,31 +159,23 @@ contract cvxRewardPool is DepositManager {
                 .add(rewards[account]);
     }
 
-    function earned(address account) external view returns (uint256) {
-        uint256 depositFeeRate = ICrvDeposit(crvDeposits).lockIncentive();
-
-        uint256 r = earnedReward(account);
-        uint256 fees = r.mul(depositFeeRate).div(FEE_DENOMINATOR);
-        
-        //fees dont apply until whitelist+vecrv lock begins so will report
-        //slightly less value than what is actually received.
-        return r.sub(fees);
-    }
-
-    function stake(uint256 amount)
+    function stake(uint256 _amount)
         public
-        override
         updateReward(msg.sender)
         checkStart
     {
-        require(amount > 0, 'RewardPool : Cannot stake 0');
-        super.stake(amount);
-        stakingToken.safeTransferFrom(msg.sender, address(this), amount);
-        emit Staked(msg.sender, amount);
+        require(_amount > 0, 'RewardPool : Cannot stake 0');
+        //super.stake(_amount);
+
+        _totalSupply = _totalSupply.add(_amount);
+        _balances[msg.sender] = _balances[msg.sender].add(_amount);
+
+        stakingToken.safeTransferFrom(msg.sender, address(this), _amount);
+        emit Staked(msg.sender, _amount);
 
         //also stake to linked rewards
         for(uint i=0; i < extraRewards.length; i++){
-            IRewards(extraRewards[i]).stake(msg.sender, amount);
+            IRewards(extraRewards[i]).stake(msg.sender, _amount);
         }
     }
 
@@ -210,14 +184,39 @@ contract cvxRewardPool is DepositManager {
         stake(balance);
     }
 
+    function stakeFor(address _for, uint256 _amount)
+        public
+        updateReward(_for)
+        checkStart
+    {
+        require(_amount > 0, 'RewardPool : Cannot stake 0');
+        //super.stake(_amount);
+
+        //give to _for
+        _totalSupply = _totalSupply.add(_amount);
+        _balances[_for] = _balances[_for].add(_amount);
+
+        //take away from sender
+        stakingToken.safeTransferFrom(msg.sender, address(this), _amount);
+        emit Staked(_for, _amount);
+
+        //also stake to linked rewards
+        for(uint i=0; i < extraRewards.length; i++){
+            IRewards(extraRewards[i]).stake(_for, _amount);
+        }
+    }
+
+
     function withdraw(uint256 amount)
         public
-        override
         updateReward(msg.sender)
         checkStart
     {
         require(amount > 0, 'RewardPool : Cannot withdraw 0');
-        super.withdraw(amount);
+        //super.withdraw(amount);
+        _totalSupply = _totalSupply.sub(amount);
+        _balances[msg.sender] = _balances[msg.sender].sub(amount);
+
         stakingToken.safeTransfer(msg.sender, amount);
         emit Withdrawn(msg.sender, amount);
 
@@ -232,17 +231,31 @@ contract cvxRewardPool is DepositManager {
         withdraw(balanceOf(msg.sender));
     }
 
+    function withdrawAndUnwrap() external{
+        getReward(true);
+        uint256 amount = balanceOf(msg.sender);
+
+        _totalSupply = _totalSupply.sub(amount);
+        _balances[msg.sender] = _balances[msg.sender].sub(amount);
+
+        //send to operator instead
+        stakingToken.safeTransfer(operator, amount);
+        IDeposit(operator).withdrawTo(pid,amount,msg.sender);
+        emit Withdrawn(msg.sender, amount);
+
+        //also withdraw from linked rewards
+        for(uint i=0; i < extraRewards.length; i++){
+            IRewards(extraRewards[i]).withdraw(msg.sender, amount);
+        }
+    }
+
     function getReward(bool _claimExtras) public updateReward(msg.sender) checkStart{
-        uint256 reward = earnedReward(msg.sender);
+        uint256 reward = earned(msg.sender);
         if (reward > 0) {
             rewards[msg.sender] = 0;
-            rewardToken.safeApprove(crvDeposits,0);
-            rewardToken.safeApprove(crvDeposits,reward);
-            ICrvDeposit(crvDeposits).deposit(reward,false);
-
-            uint256 cCrvBalance = cCrvToken.balanceOf(address(this));
-            cCrvToken.safeTransfer(msg.sender, cCrvBalance);
-            emit RewardPaid(msg.sender, cCrvBalance);
+            rewardToken.safeTransfer(msg.sender, reward);
+            IDeposit(operator).rewardClaimed(pid, msg.sender, reward);
+            emit RewardPaid(msg.sender, reward);
         }
 
         //also get rewards from linked rewards

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.0;
+pragma solidity 0.6.12;
 
 import "./Interfaces.sol";
 import '@openzeppelin/contracts/math/SafeMath.sol';
@@ -77,7 +77,7 @@ contract ExtraRewardStashV2 {
     	if(_token == address(0)) return;
 
         //get address of main rewards of pool
-         (,,address mainRewardContract,) = IDeposit(operator).poolInfo(pid);
+         (,,,address mainRewardContract,) = IDeposit(operator).poolInfo(pid);
 
          //create a new reward contract for this extra reward token
         address rewardContract = IRewardFactory(rewardFactory).CreateTokenRewards(
@@ -105,7 +105,7 @@ contract ExtraRewardStashV2 {
             	tokenInfo[_tid].rewardAddress = address(0);
             }else{
 	            //create new reward contract
-	             (,,address mainRewardContract,) = IDeposit(operator).poolInfo(pid);
+	             (,,,address mainRewardContract,) = IDeposit(operator).poolInfo(pid);
 	        	address rewardContract = IRewardFactory(rewardFactory).CreateTokenRewards(
 		        	_token,
 		        	mainRewardContract,

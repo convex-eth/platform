@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.0;
+pragma solidity 0.6.12;
 
 import "./Interfaces.sol";
 import '@openzeppelin/contracts/math/SafeMath.sol';
@@ -14,7 +14,6 @@ contract Booster{
     using SafeMath for uint256;
 
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
-    address constant public chi = address(0x0000000000004946c0e9F43F4Dee607b0eF1fA1c);
     address public constant escrow = address(0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2);
     address public constant registry = address(0x0000000022D53366457F9d5E68Ec105046FC4383);
 
@@ -32,6 +31,7 @@ contract Booster{
     address public minter;
     address public rewardFactory;
     address public stashFactory;
+    address public tokenFactory;
     address public voteDelegate;
     address public treasury;
     address public stakerRewards;
@@ -43,12 +43,9 @@ contract Booster{
 
     bool public isShutdown;
 
-    struct UserInfo {
-        uint256 amount;
-    }
-
     struct PoolInfo {
         address lptoken;
+        address token;
         address gauge;
         address crvRewards;
         address stash;
@@ -56,8 +53,6 @@ contract Booster{
 
     //index(pid) -> pool
     PoolInfo[] public poolInfo;
-    //pid -> user address -> user info
-    mapping (uint256 => mapping (address => UserInfo)) public userPoolInfo;
 
     event Deposited(address indexed user, uint256 indexed poolid, uint256 amount);
     event Withdrawn(address indexed user, uint256 indexed poolid, uint256 amount);
@@ -97,10 +92,11 @@ contract Booster{
         mintStart = _mintStart;
     }
 
-    function setFactories(address _rfactory, address _sfactory) external {
+    function setFactories(address _rfactory, address _sfactory, address _tfactory) external {
         require(msg.sender == owner, "!auth");
         rewardFactory = _rfactory;
         stashFactory = _sfactory;
+        tokenFactory = _tfactory;
     }
 
     function setVoteDelegate(address _voteDelegate) external {
@@ -133,21 +129,18 @@ contract Booster{
 
     function setFees(uint256 _lockFees, uint256 _stakerFees, uint256 _callerFees, uint256 _platform) external{
         require(msg.sender==feeManager, "!auth");
-        // require(_lockFees >= 1000 && _lockFees <= 1500, "fee range error");
-        // require(_stakerFees >= 300 && _stakerFees <= 600, "fee range error");
-        // require(_callerFees >= 25 && _callerFees <= 100, "fee range error");
+        require(_lockFees >= 1000 && _lockFees <= 1500, "fee range");
+        require(_stakerFees >= 300 && _stakerFees <= 600, "fee range");
+        require(_callerFees >= 25 && _callerFees <= 100, "fee range");
+        require(_platform <= 200, "fee range");
+
         uint256 total = _lockFees.add(_stakerFees).add(_callerFees).add(_platform);
         require(total <= MaxFees, ">MaxFees");
         
-        if(_lockFees >= 1000 && _lockFees <= 1500
-            && _stakerFees >= 300 && _stakerFees <= 600
-            && _callerFees >= 25 && _callerFees <= 100
-            && _platform <= 200){
-            lockIncentive = _lockFees;
-            stakerIncentive = _stakerFees;
-            earmarkIncentive = _callerFees;
-            platformFee = _platform;
-       }
+        lockIncentive = _lockFees;
+        stakerIncentive = _stakerFees;
+        earmarkIncentive = _callerFees;
+        platformFee = _platform;
     }
 
     function setTreasury(address _treasury) external {
@@ -199,15 +192,18 @@ contract Booster{
         //the next pool's pid
         uint256 pid = poolInfo.length;
 
+        //create a tokenized deposit
+        address token = ITokenFactory(tokenFactory).CreateDepositToken(lptoken);
         //create a reward contract for crv rewards
-        address newRewardPool = IRewardFactory(rewardFactory).CreateCrvRewards(pid);
+        address newRewardPool = IRewardFactory(rewardFactory).CreateCrvRewards(pid,token);
         //create a stash to handle extra incentives
         address stash = IStashFactory(stashFactory).CreateStash(pid,_gauge,staker,_stashVersion);
-        
+
         //add the new pool
         poolInfo.push(
             PoolInfo({
                 lptoken: lptoken,
+                token: token,
                 gauge: _gauge,
                 crvRewards: newRewardPool,
                 stash: stash
@@ -255,8 +251,8 @@ contract Booster{
     }
 
 
-    //stake coins on the staker account
-    function stakeTokens(uint256 _pid) private {
+    //stake coins on curve's gauge contracts via the staker account
+    function sendTokensToGauge(uint256 _pid) private {
         address token = poolInfo[_pid].lptoken;
         uint256 bal = IERC20(token).balanceOf(address(this));
 
@@ -276,42 +272,47 @@ contract Booster{
     }
 
     //deposit lp tokens and stake
-    function deposit(uint256 _pid, uint256 _amount) public{
+    function deposit(uint256 _pid, uint256 _amount, bool _stake) public{
         require(!isShutdown,"shutdown");
-        address token = poolInfo[_pid].lptoken;
-        IERC20(token).safeTransferFrom(msg.sender, address(this), _amount);
+        address lptoken = poolInfo[_pid].lptoken;
+        IERC20(lptoken).safeTransferFrom(msg.sender, address(this), _amount);
 
-        //add user balance
-        uint256 userBal = _amount.add(userPoolInfo[_pid][msg.sender].amount);
-        userPoolInfo[_pid][msg.sender].amount = userBal;
+        //move to curve gauge
+        sendTokensToGauge(_pid);
+
+        address token = poolInfo[_pid].token;
+        if(_stake){
+            //mint here and send to rewards on user behalf
+            ITokenMinter(token).mint(address(this),_amount);
+            address rewardContract = poolInfo[_pid].crvRewards;
+            IERC20(token).approve(rewardContract,_amount);
+            IRewards(rewardContract).stakeFor(msg.sender,_amount);
+        }else{
+            //add user balance directly
+            ITokenMinter(token).mint(msg.sender,_amount);
+        }
+
         
-        //add amount to rewards
-        address rewardContract = poolInfo[_pid].crvRewards;
-        IRewards(rewardContract).stake(msg.sender, _amount);
-
-        //stake
-        stakeTokens(_pid);
-
         emit Deposited(msg.sender, _pid, _amount);
     }
 
     //deposit all lp tokens and stake
-    function depositAll(uint256 _pid) external {
-        address token = poolInfo[_pid].lptoken;
-        uint256 balance = IERC20(token).balanceOf(msg.sender);
-        deposit(_pid,balance);
+    function depositAll(uint256 _pid, bool _stake) external {
+        address lptoken = poolInfo[_pid].lptoken;
+        uint256 balance = IERC20(lptoken).balanceOf(msg.sender);
+        deposit(_pid,balance,_stake);
     }
 
     //withdraw lp tokens
-    function withdraw(uint256 _pid, uint256 _amount, bool _claimRewards) public {
-        address token = poolInfo[_pid].lptoken;
+    function _withdraw(uint256 _pid, uint256 _amount, address _from, address _to) internal {
+        address lptoken = poolInfo[_pid].lptoken;
         address gauge = poolInfo[_pid].gauge;
-        uint256 before = IERC20(token).balanceOf(address(this));
+        uint256 before = IERC20(lptoken).balanceOf(address(this));
 
         //pull whats needed from gauge
         //  should always be full amount unless we withdrew everything to shutdown this contract
         if (before < _amount) {
-            IStaker(staker).withdraw(token,gauge, _amount.sub(before));
+            IStaker(staker).withdraw(lptoken,gauge, _amount.sub(before));
         }
 
         //some gauges claim rewards when withdrawing, stash them in a seperate contract until next claim
@@ -321,43 +322,37 @@ contract Booster{
             IStash(stash).stashRewards();
         }
         
-        //reward contract for the pool
-        address rewardContract = poolInfo[_pid].crvRewards;
-
-        //if withdraw+claim
-        //mostly a what-if reward claiming doesnt work
-        if(_claimRewards){
-            //get remaining rewards
-            IRewards(rewardContract).getReward(msg.sender);
-        }
-
-        //update balance on reward contracts
-        IRewards(rewardContract).withdraw(msg.sender, _amount);
-
         //remove lp balance
-        uint256 userBal = userPoolInfo[_pid][msg.sender].amount;
-        userBal = userBal.sub(_amount);
-        userPoolInfo[_pid][msg.sender].amount = userBal;
+        address token = poolInfo[_pid].token;
+        ITokenMinter(token).burn(_from,_amount);
 
         //return lp tokens
-        IERC20(token).safeTransfer(msg.sender, _amount);
+        IERC20(lptoken).safeTransfer(_to, _amount);
 
-        emit Withdrawn(msg.sender, _pid, _amount);
+        emit Withdrawn(_to, _pid, _amount);
     }
 
-     function withdraw(uint256 _pid, uint256 _amount) public {
-        withdraw(_pid,_amount,true);
-     }
+    //withdraw lp tokens
+    function withdraw(uint256 _pid, uint256 _amount) public{
+        _withdraw(_pid,_amount,msg.sender,msg.sender);
+    }
 
     //withdraw all lp tokens
-    function withdrawAll(uint256 _pid, bool _claimRewards) public {
-        uint256 userBal = userPoolInfo[_pid][msg.sender].amount;
-        withdraw(_pid, userBal, _claimRewards);
+    function withdrawAll(uint256 _pid) public {
+       // uint256 userBal = userPoolInfo[_pid][msg.sender].amount;
+        address token = poolInfo[_pid].token;
+        uint256 userBal = IERC20(token).balanceOf(msg.sender);
+        withdraw(_pid, userBal);
     }
 
-    function withdrawAll(uint256 _pid) external {
-        withdrawAll(_pid, true);
+    //allow reward contracts to send here and withdraw to user
+    function withdrawTo(uint256 _pid, uint256 _amount, address _to) external{
+        address rewardContract = poolInfo[_pid].crvRewards;
+        require(msg.sender == rewardContract,"!auth");
+
+        _withdraw(_pid,_amount,address(this),_to);
     }
+
 
     //delegate address votes on dao
     function vote(uint256 _voteId, address _votingAddress, bool _support) external {
@@ -365,9 +360,12 @@ contract Booster{
         IStaker(staker).vote(_voteId,_votingAddress,_support);
     }
 
-    function voteGaugeWeight(address _gauge, uint256 _weight ) external {
+    function voteGaugeWeight(address[] calldata _gauge, uint256[] calldata _weight ) external {
         require(msg.sender == voteDelegate, "!auth");
-        IStaker(staker).voteGaugeWeight(_gauge,_weight);
+
+        for(uint256 i = 0; i < _gauge.length; i++){
+            IStaker(staker).voteGaugeWeight(_gauge[i],_weight[i]);
+        }
     }
 
     //claim crv and extra rewards, convert extra to crv, disperse to reward contracts

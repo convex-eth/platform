@@ -4,9 +4,9 @@ const Booster = artifacts.require("Booster");
 const CrvDepositor = artifacts.require("CrvDepositor");
 const CurveVoterProxy = artifacts.require("CurveVoterProxy");
 const ExtraRewardStashV2 = artifacts.require("ExtraRewardStashV2");
-const ManagedRewardPool = artifacts.require("ManagedRewardPool");
+const BaseRewardPool = artifacts.require("BaseRewardPool");
 const VirtualBalanceRewardPool = artifacts.require("VirtualBalanceRewardPool");
-const cCrvRewardPool = artifacts.require("cCrvRewardPool");
+//const cCrvRewardPool = artifacts.require("cCrvRewardPool");
 const cvxRewardPool = artifacts.require("cvxRewardPool");
 const ConvexToken = artifacts.require("ConvexToken");
 const cCrvToken = artifacts.require("cCrvToken");
@@ -49,7 +49,8 @@ contract("BasicDepositWithdraw", async accounts => {
 
     let poolinfo = await booster.poolInfo(0);
     let rewardPoolAddress = poolinfo.crvRewards;
-    let rewardPool = await ManagedRewardPool.at(rewardPoolAddress);
+    let rewardPool = await BaseRewardPool.at(rewardPoolAddress);
+    let depositToken = await IERC20.at(poolinfo.token);
     console.log("pool lp token " +poolinfo.lptoken);
     console.log("pool gauge " +poolinfo.gauge);
     console.log("pool reward contract at " +rewardPool.address);
@@ -76,42 +77,46 @@ contract("BasicDepositWithdraw", async accounts => {
     //first try depositing too much
     console.log("try depositing too much");
     await expectRevert(
-        booster.deposit(0,startingThreeCrv+1,{from:userA}),
+        booster.deposit(0,startingThreeCrv+1,false,{from:userA}),
         "SafeERC20");
     console.log(" ->reverted");
 
     //deposit a small portion
-    await booster.deposit(0,web3.utils.toWei("500.0", "ether"),{from:userA});
+    await booster.deposit(0,web3.utils.toWei("500.0", "ether"),false,{from:userA});
     console.log("deposited portion");
 
     //check wallet balance and deposit credit
     await threeCrv.balanceOf(userA).then(a=>console.log("wallet balance: " +a));
-    await booster.userPoolInfo(0,userA).then(a=>console.log("lp balance: " +a));
+    await depositToken.balanceOf(userA).then(a=>console.log("lp balance: " +a));
+   // await booster.userPoolInfo(0,userA).then(a=>console.log("lp balance: " +a));
 
     //deposit reset of funds
-    await booster.depositAll(0,{from:userA});
+    await booster.depositAll(0,false,{from:userA});
     console.log("deposited all");
 
     //check wallet balance and deposit credit
     await threeCrv.balanceOf(userA).then(a=>console.log("wallet balance: " +a));
-    await booster.userPoolInfo(0,userA).then(a=>console.log("lp balance: " +a));
+    await depositToken.balanceOf(userA).then(a=>console.log("lp balance: " +a));
+    //await booster.userPoolInfo(0,userA).then(a=>console.log("lp balance: " +a));
 
     //check that deposit is also reflected on reward contract
     await rewardPool.balanceOf(userA).then(a=>console.log("reward balance: " +a));
 
     //withdraw a portion
-    await booster.withdraw(0,web3.utils.toWei("500.0", "ether"),{from:userA});
+    await booster.withdraw(0,web3.utils.toWei("500.0", "ether"),true,{from:userA});
+    console.log("withdrawn portion");
 
     //check wallet increased and that deposit credit/reward balance decreased
     await threeCrv.balanceOf(userA).then(a=>console.log("wallet balance: " +a));
-    await booster.userPoolInfo(0,userA).then(a=>console.log("lp balance: " +a));
+    await depositToken.balanceOf(userA).then(a=>console.log("lp balance: " +a));
+    //await booster.userPoolInfo(0,userA).then(a=>console.log("lp balance: " +a));
     await rewardPool.balanceOf(userA).then(a=>console.log("reward balance: " +a));
 
     //withdraw too much error check
     // this will error on the gauge not having enough balance
     console.log("try withdraw too much");
     await expectRevert(
-        booster.withdraw(0,startingThreeCrv+1,{from:userA}),
+        booster.withdraw(0,startingThreeCrv+1,true,{from:userA}),
         "revert");
     console.log(" ->reverted (fail on unstake)");
 
@@ -126,8 +131,9 @@ contract("BasicDepositWithdraw", async accounts => {
     let userBThreeCrv = await threeCrv.balanceOf(userB);
     await threeCrv.approve(booster.address,0,{from:userB});
     await threeCrv.approve(booster.address,userBThreeCrv,{from:userB});
-    await booster.depositAll(0,{from:userB});
-    await booster.userPoolInfo(0,userB).then(a=>console.log("user b deposits: " +a));
+    await booster.depositAll(0,false,{from:userB});
+    await depositToken.balanceOf(userB).then(a=>console.log("lp balance: " +a));
+    //await booster.userPoolInfo(0,userB).then(a=>console.log("user b deposits: " +a));
 
     //withdraw too much error check again
     // this will error on the deposit balance not being high enough (gauge balance check passes though because of userB)
@@ -144,7 +150,8 @@ contract("BasicDepositWithdraw", async accounts => {
 
     //all balance should be back on wallet and equal to starting value
     await threeCrv.balanceOf(userA).then(a=>console.log("wallet balance: " +a));
-    await booster.userPoolInfo(0,userA).then(a=>console.log("lp balance: " +a));
+    await depositToken.balanceOf(userA).then(a=>console.log("lp balance: " +a));
+    //await booster.userPoolInfo(0,userA).then(a=>console.log("lp balance: " +a));
     await rewardPool.balanceOf(userA).then(a=>console.log("reward balance: " +a));
   });
 });

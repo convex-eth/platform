@@ -5,9 +5,9 @@ const Booster = artifacts.require("Booster");
 const CrvDepositor = artifacts.require("CrvDepositor");
 const CurveVoterProxy = artifacts.require("CurveVoterProxy");
 const ExtraRewardStashV2 = artifacts.require("ExtraRewardStashV2");
-const ManagedRewardPool = artifacts.require("ManagedRewardPool");
+const BaseRewardPool = artifacts.require("BaseRewardPool");
 const VirtualBalanceRewardPool = artifacts.require("VirtualBalanceRewardPool");
-const cCrvRewardPool = artifacts.require("cCrvRewardPool");
+//const cCrvRewardPool = artifacts.require("cCrvRewardPool");
 const cvxRewardPool = artifacts.require("cvxRewardPool");
 const ConvexToken = artifacts.require("ConvexToken");
 const cCrvToken = artifacts.require("cCrvToken");
@@ -54,12 +54,12 @@ contract("Whitelist Test", async accounts => {
     let crvDeposit = await CrvDepositor.deployed();
     let cCrvRewards = await booster.lockRewards();
     let cvxRewards = await booster.stakerRewards();
-    let cCrvRewardsContract = await cCrvRewardPool.at(cCrvRewards);
+    let cCrvRewardsContract = await BaseRewardPool.at(cCrvRewards);
     let cvxRewardsContract = await cvxRewardPool.at(cvxRewards);
 
     let poolinfo = await booster.poolInfo(0);
     let rewardPoolAddress = poolinfo.crvRewards;
-    let rewardPool = await ManagedRewardPool.at(rewardPoolAddress);
+    let rewardPool = await BaseRewardPool.at(rewardPoolAddress);
 
     let starttime = await time.latest();
     console.log("current block time: " +starttime)

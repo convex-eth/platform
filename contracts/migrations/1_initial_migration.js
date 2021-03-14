@@ -2,10 +2,11 @@ const Booster = artifacts.require("Booster");
 const CurveVoterProxy = artifacts.require("CurveVoterProxy");
 const RewardFactory = artifacts.require("RewardFactory");
 const StashFactory = artifacts.require("StashFactory");
+const TokenFactory = artifacts.require("TokenFactory");
 const ConvexToken = artifacts.require("ConvexToken");
 const cCrvToken = artifacts.require("cCrvToken");
 const CrvDepositor = artifacts.require("CrvDepositor");
-const cCrvRewardPool = artifacts.require("cCrvRewardPool");
+const BaseRewardPool = artifacts.require("BaseRewardPool");
 const cvxRewardPool = artifacts.require("cvxRewardPool");
 
 
@@ -21,7 +22,7 @@ module.exports = function (deployer, network, accounts) {
 
     let admin = accounts[0];
 
-	var booster, voter, rFactory, sFactory, cvx, ccrv, deposit;
+	var booster, voter, rFactory, sFactory, tFactory, cvx, ccrv, deposit;
 	var ccrvRewards, cvxRewards;
   	deployer.deploy(CurveVoterProxy).then(function(instance) {
   		voter = instance;
@@ -41,6 +42,9 @@ module.exports = function (deployer, network, accounts) {
 	}).then(function(instance) {
 		rFactory = instance;
 	}).then(function() {
+		return deployer.deploy(TokenFactory,booster.address)
+	}).then(function(instance) {
+		tFactory = instance;
 		return deployer.deploy(StashFactory,booster.address,rFactory.address)
 	}).then(function(instance) {
 		sFactory = instance;
@@ -56,7 +60,7 @@ module.exports = function (deployer, network, accounts) {
 	}).then(function() {
 		return booster.setTreasury(deposit.address)
 	}).then(function() {
-		return deployer.deploy(cCrvRewardPool,ccrv.address,crv,0,booster.address,rFactory.address)
+		return deployer.deploy(BaseRewardPool,0,ccrv.address,crv,0,booster.address,rFactory.address)
 	}).then(function(instance) {
 		ccrvRewards = instance;
 
@@ -66,7 +70,7 @@ module.exports = function (deployer, network, accounts) {
 		cvxRewards = instance;
 		return booster.setRewardContracts(ccrvRewards.address,cvxRewards.address)
 	}).then(function() {
-		return booster.setFactories(rFactory.address,sFactory.address)
+		return booster.setFactories(rFactory.address,sFactory.address,tFactory.address)
 	}).then(function() {
 		return booster.setMinter(cvx.address)
 	}).then(function() {
@@ -80,6 +84,7 @@ module.exports = function (deployer, network, accounts) {
 		console.log("cvxRewards: " +cvxRewards.address)
 		console.log("sFactory: " +sFactory.address)
 		console.log("rFactory: " +rFactory.address)
+		console.log("tFactory: " +tFactory.address)
 		console.log("cvx: " +cvx.address)
 		console.log("booster: " +booster.address)
 		console.log("voter: " +voter.address)

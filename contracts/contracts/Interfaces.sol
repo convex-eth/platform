@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.0;
+pragma solidity 0.6.12;
 
 
 /**
@@ -88,6 +88,7 @@ interface IStaker{
 
 interface IRewards{
     function stake(address, uint256) external;
+    function stakeFor(address, uint256) external;
     function withdraw(address, uint256) external;
     function exit(address) external;
     function getReward(address) external;
@@ -115,8 +116,9 @@ interface IDeposit{
     function isShutdown() external view returns(bool);
     function balanceOf(address _account) external view returns(uint256);
     function totalSupply() external view returns(uint256);
-    function poolInfo(uint256) external view returns(address,address,address,address);
+    function poolInfo(uint256) external view returns(address,address,address,address,address);
     function rewardClaimed(uint256,address,uint256) external;
+    function withdrawTo(uint256,uint256,address) external;
 }
 
 interface ICrvDeposit{
@@ -126,7 +128,7 @@ interface ICrvDeposit{
 
 interface IRewardFactory{
     function setAccess(address,bool) external;
-    function CreateCrvRewards(uint256) external returns(address);
+    function CreateCrvRewards(uint256,address) external returns(address);
     function CreateTokenRewards(address,address,address) external returns(address);
 }
 
@@ -134,6 +136,6 @@ interface IStashFactory{
     function CreateStash(uint256,address,address,uint256) external returns(address);
 }
 
-interface Chi {
-    function freeFromUpTo(address,uint256) external;
+interface ITokenFactory{
+    function CreateDepositToken(address) external returns(address);
 }

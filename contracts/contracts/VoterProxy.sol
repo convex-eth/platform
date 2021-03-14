@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.0;
+pragma solidity 0.6.12;
 
 import "./Interfaces.sol";
 import '@openzeppelin/contracts/math/SafeMath.sol';
@@ -17,7 +17,7 @@ contract CurveVoterProxy {
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
 
     address public constant escrow = address(0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2);
-    address public constant registry = address(0x0000000022D53366457F9d5E68Ec105046FC4383);
+    address public constant gaugeController = address(0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB);
     
     address public owner;
     address public operator;
@@ -125,12 +125,6 @@ contract CurveVoterProxy {
 
     function voteGaugeWeight(address _gauge, uint256 _weight) external {
         require(msg.sender == operator, "!auth");
-        //get curve's registery
-        address mainReg = IRegistry(registry).get_registry();
-
-        //get controller address from registry
-        //0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB
-        address gaugeController = IRegistry(mainReg).gauge_controller();
 
         //vote
         IVoting(gaugeController).vote_for_gauge_weights(_gauge, _weight);
@@ -161,16 +155,4 @@ contract CurveVoterProxy {
         return ICurveGauge(_gauge).balanceOf(address(this));
     }
 
-    //only allow executes from owner if there is no operator
-    function execute(
-        address to,
-        uint256 value,
-        bytes calldata data
-    ) external returns (bool, bytes memory) {
-        require( (msg.sender == owner && operator == address(0)) || msg.sender == operator,"!auth");
-
-        (bool success, bytes memory result) = to.call.value(value)(data);
-
-        return (success, result);
-    }
 }

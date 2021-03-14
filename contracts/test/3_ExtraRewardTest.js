@@ -5,9 +5,9 @@ const Booster = artifacts.require("Booster");
 const CrvDepositor = artifacts.require("CrvDepositor");
 const CurveVoterProxy = artifacts.require("CurveVoterProxy");
 const ExtraRewardStashV2 = artifacts.require("ExtraRewardStashV2");
-const ManagedRewardPool = artifacts.require("ManagedRewardPool");
+const BaseRewardPool = artifacts.require("BaseRewardPool");
 const VirtualBalanceRewardPool = artifacts.require("VirtualBalanceRewardPool");
-const cCrvRewardPool = artifacts.require("cCrvRewardPool");
+//const cCrvRewardPool = artifacts.require("cCrvRewardPool");
 const cvxRewardPool = artifacts.require("cvxRewardPool");
 const ConvexToken = artifacts.require("ConvexToken");
 const cCrvToken = artifacts.require("cCrvToken");
@@ -56,7 +56,7 @@ contract("ExtraRewardsTest v2", async accounts => {
     let crvDeposit = await CrvDepositor.deployed();
     let cCrvRewards = await booster.lockRewards();
     let cvxRewards = await booster.stakerRewards();
-    let cCrvRewardsContract = await cCrvRewardPool.at(cCrvRewards);
+    let cCrvRewardsContract = await BaseRewardPool.at(cCrvRewards);
     let cvxRewardsContract = await cvxRewardPool.at(cvxRewards);
 
 
@@ -67,7 +67,7 @@ contract("ExtraRewardsTest v2", async accounts => {
     console.log("pool added");
     let poolinfo = await booster.poolInfo(1);
     let rewardPoolAddress = poolinfo.crvRewards;
-    let rewardPool = await ManagedRewardPool.at(rewardPoolAddress);
+    let rewardPool = await BaseRewardPool.at(rewardPoolAddress);
     console.log("pool lp token " +poolinfo.lptoken);
     console.log("pool gauge " +poolinfo.gauge);
     console.log("pool reward contract at " +rewardPool.address);
@@ -99,13 +99,13 @@ contract("ExtraRewardsTest v2", async accounts => {
     //approve and partial deposit
     await obtc.approve(booster.address,0,{from:userA});
     await obtc.approve(booster.address,startingobtc,{from:userA});
-    await booster.deposit(1,web3.utils.toWei("0.1", "ether"),{from:userA});
+    await booster.deposit(1,web3.utils.toWei("0.1", "ether"),true,{from:userA});
     console.log("partial deposit complete");
 
     //confirm deposit
     //should be no bor collected yet
     await obtc.balanceOf(userA).then(a=>console.log("userA obtc: " +a));
-    await booster.userPoolInfo(1,userA).then(a=>console.log("deposited lp: " +a));
+    await rewardPool.balanceOf(userA).then(a=>console.log("deposited lp: " +a));
     await obtcGauge.balanceOf(voteproxy.address).then(a=>console.log("gaugeBalance: " +a));
     await bor.balanceOf(rewardStash.address).then(a=>console.log("bor on stash (==0): " +a));
     await bor.balanceOf(voteproxy.address).then(a=>console.log("bor on voter (==0): " +a));
@@ -163,7 +163,7 @@ contract("ExtraRewardsTest v2", async accounts => {
     await obtcGaugeDebug.claimable_reward(voteproxy.address, bor.address).then(a=>console.log("claimableRewards: " +a));
 
     //deposit remaining funds,  should trigger bor rewards to be claimed
-    await booster.depositAll(1,{from:userA});
+    await booster.depositAll(1,true,{from:userA});
     console.log("Deposit All")
 
     //stash should catch rewards after a deposit
