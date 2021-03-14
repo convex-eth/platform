@@ -87,19 +87,23 @@ Contract Components
 	- Pools with no reward functionality do not need a stash
 	- Curve gauges v1 and v2 need different type of stashes to handle api changes
 
-- cCrvRewardPool
-	- User transfers cCrv tokens to contract to stake and recieves platform fees (CRV)
+- BaseRewardPool
+	- Modified synthetix reward contract for staking for rewards
+	- Edits
+		- queueing of new rewards that are mined throughout the epohc
+		- list of child reward pools to link together
+		- notify Booster contract when claims are made (to mint cvx)
+		- allow withdrawing directly to main booster contract so that it can exit your position in one transaction.
 
 - cvxRewardPool
-	- User transfers cvx tokens to contract to stake and receives platform fees (cCrv)
-
-- ManagedRewardPool
-	- System stakes and withdraws for you
-	- Determines balance based on staked lp tokens in the system
+	- Modified synthetix reward contract for staking for rewards
+	- Edits
+		- queueing of new rewards that are mined throughout the epohc
+		- list of child reward pools to link together
+		- upon withdrawing, automatically deposit into crvdepositor
 
 - VirtualBalanceRewardPool
-	- System stakes and withdraws for you
-	- Linked to cCrv/cvx/managed reward pools
+	- Linked to base reward pools
 	- Balance is pulled from linked reward pool
 	- Claiming rewards from base pool will claim from virtual pools as well
 
