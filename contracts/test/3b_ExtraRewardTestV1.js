@@ -73,12 +73,7 @@ contract("ExtraRewardsTest v1", async accounts => {
     //make sure statsh is v1
     let stashName = await rewardStash.getName();
     console.log("stash name: " +stashName);
-
-    //advance time to start cvx rewards
-    await time.increase(10*86400);
-    await time.advanceBlock();
-    await time.advanceBlock();
-    console.log("advance time...");
+   
 
     let starttime = await time.latest();
     console.log("current block time: " +starttime)
@@ -172,7 +167,7 @@ contract("ExtraRewardsTest v1", async accounts => {
     await snx.balanceOf(snxRewards.address).then(a=>console.log("snx on rewards (>0,same num as before): " +a));
 
     //increase time
-    await time.increase(10*86400);
+    await time.increase(1*86400);
     await time.advanceBlock();
     await time.advanceBlock();
     await time.advanceBlock();
@@ -205,9 +200,11 @@ contract("ExtraRewardsTest v1", async accounts => {
     await snx.balanceOf(userA).then(a=>console.log("userA snx: " +a))
 
 
-    await time.increase(86400);
+    //advance time ahead enough to start cvx rewards
+    await time.increase(10*86400);
     await time.advanceBlock();
     await time.advanceBlock();
+    console.log("advance time...");
 
     //claim crv reward pool, should also trigger cvx and snx
     await rewardPool.earned(userA).then(a=>console.log("crv rewards earned(unclaimed): " +a));

@@ -272,7 +272,7 @@ contract Booster{
     }
 
     //deposit lp tokens and stake
-    function deposit(uint256 _pid, uint256 _amount, bool _stake) public{
+    function deposit(uint256 _pid, uint256 _amount, bool _stake) public returns(bool){
         require(!isShutdown,"shutdown");
         address lptoken = poolInfo[_pid].lptoken;
         IERC20(lptoken).safeTransferFrom(msg.sender, address(this), _amount);
@@ -294,13 +294,15 @@ contract Booster{
 
         
         emit Deposited(msg.sender, _pid, _amount);
+        return true;
     }
 
     //deposit all lp tokens and stake
-    function depositAll(uint256 _pid, bool _stake) external {
+    function depositAll(uint256 _pid, bool _stake) external returns(bool){
         address lptoken = poolInfo[_pid].lptoken;
         uint256 balance = IERC20(lptoken).balanceOf(msg.sender);
         deposit(_pid,balance,_stake);
+        return true;
     }
 
     //withdraw lp tokens
@@ -333,39 +335,44 @@ contract Booster{
     }
 
     //withdraw lp tokens
-    function withdraw(uint256 _pid, uint256 _amount) public{
+    function withdraw(uint256 _pid, uint256 _amount) public returns(bool){
         _withdraw(_pid,_amount,msg.sender,msg.sender);
+        return true;
     }
 
     //withdraw all lp tokens
-    function withdrawAll(uint256 _pid) public {
+    function withdrawAll(uint256 _pid) public returns(bool){
        // uint256 userBal = userPoolInfo[_pid][msg.sender].amount;
         address token = poolInfo[_pid].token;
         uint256 userBal = IERC20(token).balanceOf(msg.sender);
         withdraw(_pid, userBal);
+        return true;
     }
 
     //allow reward contracts to send here and withdraw to user
-    function withdrawTo(uint256 _pid, uint256 _amount, address _to) external{
+    function withdrawTo(uint256 _pid, uint256 _amount, address _to) external returns(bool){
         address rewardContract = poolInfo[_pid].crvRewards;
         require(msg.sender == rewardContract,"!auth");
 
         _withdraw(_pid,_amount,address(this),_to);
+        return true;
     }
 
 
     //delegate address votes on dao
-    function vote(uint256 _voteId, address _votingAddress, bool _support) external {
+    function vote(uint256 _voteId, address _votingAddress, bool _support) external returns(bool){
         require(msg.sender == voteDelegate, "!auth");
         IStaker(staker).vote(_voteId,_votingAddress,_support);
+        return true;
     }
 
-    function voteGaugeWeight(address[] calldata _gauge, uint256[] calldata _weight ) external {
+    function voteGaugeWeight(address[] calldata _gauge, uint256[] calldata _weight ) external returns(bool){
         require(msg.sender == voteDelegate, "!auth");
 
         for(uint256 i = 0; i < _gauge.length; i++){
             IStaker(staker).voteGaugeWeight(_gauge[i],_weight[i]);
         }
+        return true;
     }
 
     //claim crv and extra rewards, convert extra to crv, disperse to reward contracts
@@ -423,13 +430,14 @@ contract Booster{
         }
     }
 
-    function earmarkRewards(uint256 _pid) external {
+    function earmarkRewards(uint256 _pid) external returns(bool){
         // require(!isShutdown,"shutdown");
         _earmarkRewards(_pid);
+        return true;
     }
 
     //claim fees from curve distro contract, put in lockers' reward contract
-    function earmarkFees() external{
+    function earmarkFees() external returns(bool){
        // require(!isShutdown,"shutdown");
         //claim fee rewards
         IStaker(staker).claimFees(feeDistro, feeToken);
@@ -437,10 +445,11 @@ contract Booster{
         uint256 _balance = IERC20(feeToken).balanceOf(address(this));
         IERC20(feeToken).safeTransfer(lockFees, _balance);
         IRewards(lockFees).queueNewRewards(_balance);
+        return true;
     }
 
     //callback from reward contract when crv is received.
-    function rewardClaimed(uint256 _pid, address _address, uint256 _amount) external{
+    function rewardClaimed(uint256 _pid, address _address, uint256 _amount) external returns(bool){
         address rewardContract = poolInfo[_pid].crvRewards;
         require(msg.sender == lockRewards||msg.sender == rewardContract,"!auth");
 
@@ -448,6 +457,7 @@ contract Booster{
             //mint reward tokens
             ITokenMinter(minter).mint(_address,_amount);
         }
+        return true;
     }
 
 }

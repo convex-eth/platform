@@ -107,11 +107,12 @@ contract BaseRewardPool {
         return extraRewards.length;
     }
 
-    function addExtraReward(address _reward) external {
+    function addExtraReward(address _reward) external returns(bool){
         require(msg.sender == rewardManager, "!authorized");
         require(_reward != address(0),"!reward setting");
 
         extraRewards.push(_reward);
+        return true;
     }
     function clearExtraRewards() external{
         require(msg.sender == rewardManager, "!authorized");
@@ -163,6 +164,7 @@ contract BaseRewardPool {
         public
         updateReward(msg.sender)
         checkStart
+        returns(bool)
     {
         require(_amount > 0, 'RewardPool : Cannot stake 0');
         //super.stake(_amount);
@@ -177,17 +179,20 @@ contract BaseRewardPool {
         for(uint i=0; i < extraRewards.length; i++){
             IRewards(extraRewards[i]).stake(msg.sender, _amount);
         }
+        return true;
     }
 
-    function stakeAll() external{
+    function stakeAll() external returns(bool){
         uint256 balance = stakingToken.balanceOf(msg.sender);
         stake(balance);
+        return true;
     }
 
     function stakeFor(address _for, uint256 _amount)
         public
         updateReward(_for)
         checkStart
+        returns(bool)
     {
         require(_amount > 0, 'RewardPool : Cannot stake 0');
         //super.stake(_amount);
@@ -204,6 +209,7 @@ contract BaseRewardPool {
         for(uint i=0; i < extraRewards.length; i++){
             IRewards(extraRewards[i]).stake(_for, _amount);
         }
+        return true;
     }
 
 
@@ -211,6 +217,7 @@ contract BaseRewardPool {
         public
         updateReward(msg.sender)
         checkStart
+        returns(bool)
     {
         require(amount > 0, 'RewardPool : Cannot withdraw 0');
         //super.withdraw(amount);
@@ -224,14 +231,16 @@ contract BaseRewardPool {
         for(uint i=0; i < extraRewards.length; i++){
             IRewards(extraRewards[i]).withdraw(msg.sender, amount);
         }
+        return true;
     }
 
-    function exit() public {
+    function exit() public returns(bool){
         getReward(true);
         withdraw(balanceOf(msg.sender));
+        return true;
     }
 
-    function withdrawAndUnwrap() external{
+    function withdrawAndUnwrap() external returns(bool){
         getReward(true);
         uint256 amount = balanceOf(msg.sender);
 
@@ -247,9 +256,10 @@ contract BaseRewardPool {
         for(uint i=0; i < extraRewards.length; i++){
             IRewards(extraRewards[i]).withdraw(msg.sender, amount);
         }
+        return true;
     }
 
-    function getReward(bool _claimExtras) public updateReward(msg.sender) checkStart{
+    function getReward(bool _claimExtras) public updateReward(msg.sender) checkStart returns(bool){
         uint256 reward = earned(msg.sender);
         if (reward > 0) {
             rewards[msg.sender] = 0;
@@ -264,13 +274,15 @@ contract BaseRewardPool {
                 IRewards(extraRewards[i]).getReward(msg.sender);
             }
         }
+        return true;
     }
 
-    function getReward() external{
+    function getReward() external returns(bool){
         getReward(true);
+        return true;
     }
 
-    function queueNewRewards(uint256 _rewards) external{
+    function queueNewRewards(uint256 _rewards) external returns(bool){
         require(msg.sender == operator, "!authorized");
 
         _rewards = _rewards.add(queuedRewards);
@@ -278,7 +290,7 @@ contract BaseRewardPool {
         if (block.timestamp >= periodFinish) {
             notifyRewardAmount(_rewards);
             queuedRewards = 0;
-            return;
+            return true;
         }
 
         uint256 queuedRatio = currentRewards.mul(1000).div(_rewards);
@@ -288,6 +300,7 @@ contract BaseRewardPool {
         }else{
             queuedRewards = _rewards;
         }
+        return true;
     }
 
     function notifyRewardAmount(uint256 reward)

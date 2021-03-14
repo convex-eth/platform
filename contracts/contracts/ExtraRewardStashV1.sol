@@ -66,18 +66,19 @@ contract ExtraRewardStashV1 {
     }
 
     //pull assigned tokens from staker to stash
-    function stashRewards() external view {
+    function stashRewards() external view returns(bool){
         //stashRewards() is also called on deposit
         //so dont need to try withdrawing here for v1
         // -> move withdraw() call to processStash() which is only called during reward claiming
+        return true;
     }
 
     //send all extra rewards to their reward contracts
-    function processStash() external {
+    function processStash() external returns(bool){
         require(msg.sender == operator, "!authorized");
 
         address token = tokenInfo.token;
-        if(token == address(0)) return;
+        if(token == address(0)) return true;
 
         //take off voter proxy
         IStaker(staker).withdraw(token);
@@ -87,10 +88,10 @@ contract ExtraRewardStashV1 {
         if (amount > 0) {
         	//add to reward contract
         	address rewards = tokenInfo.rewardAddress;
-        	if(rewards == address(0)) return;
+        	if(rewards == address(0)) return true;
         	IERC20(token).safeTransfer(rewards, amount);
         	IRewards(rewards).queueNewRewards(amount);
         }
-       
+        return true;
     }
 }

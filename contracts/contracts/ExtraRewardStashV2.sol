@@ -116,7 +116,7 @@ contract ExtraRewardStashV2 {
     }
 
     //pull assigned tokens from staker to stash
-    function stashRewards() external {
+    function stashRewards() external returns(bool){
         require(msg.sender == operator, "!authorized");
 
         //after depositing/withdrawing, extra incentive tokens are transfered to the staking contract
@@ -126,10 +126,11 @@ contract ExtraRewardStashV2 {
             if(token == address(0)) continue;
             IStaker(staker).withdraw(token);
         }
+        return true;
     }
 
     //send all extra rewards to their reward contracts
-    function processStash() external {
+    function processStash() external returns(bool){
         require(msg.sender == operator, "!authorized");
 
         for(uint i=0; i < tokenInfo.length; i++){
@@ -144,6 +145,7 @@ contract ExtraRewardStashV2 {
             	IRewards(rewards).queueNewRewards(amount);
             }
         }
+        return true;
     }
 
 }

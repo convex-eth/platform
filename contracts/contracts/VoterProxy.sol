@@ -51,18 +51,20 @@ contract CurveVoterProxy {
         depositor = _depositor;
     }
 
-    function setStashAccess(address _stash, bool _status) external{
+    function setStashAccess(address _stash, bool _status) external returns(bool){
         require(msg.sender == operator, "!auth");
         stashPool[_stash] = _status;
+        return true;
     }
 
-    function deposit(address _token, address _gauge) external {
+    function deposit(address _token, address _gauge) external returns(bool){
         uint256 balance = IERC20(_token).balanceOf(address(this));
         if (balance > 0) {
             IERC20(_token).safeApprove(_gauge, 0);
             IERC20(_token).safeApprove(_gauge, balance);
             ICurveGauge(_gauge).deposit(balance);
         }
+        return true;
     }
 
     //stash only function for pulling extra incentive reward tokens out
@@ -74,7 +76,7 @@ contract CurveVoterProxy {
     }
 
     // Withdraw partial funds
-    function withdraw(address _token, address _gauge, uint256 _amount) public {
+    function withdraw(address _token, address _gauge, uint256 _amount) public returns(bool){
         require(msg.sender == operator, "!auth");
         uint256 _balance = IERC20(_token).balanceOf(address(this));
         if (_balance < _amount) {
@@ -82,12 +84,14 @@ contract CurveVoterProxy {
             _amount = _amount.add(_balance);
         }
         IERC20(_token).safeTransfer(msg.sender, _amount);
+        return true;
     }
 
-     function withdrawAll(address _token, address _gauge) external {
+     function withdrawAll(address _token, address _gauge) external returns(bool){
         require(msg.sender == operator, "!auth");
         uint256 amount = balanceOfPool(_gauge);
         withdraw(_token, _gauge, amount);
+        return true;
     }
 
     function _withdrawSome(address _gauge, uint256 _amount) internal returns (uint256) {
@@ -95,40 +99,46 @@ contract CurveVoterProxy {
         return _amount;
     }
 
-    function createLock(uint256 _value, uint256 _unlockTime) external {
+    function createLock(uint256 _value, uint256 _unlockTime) external returns(bool){
         require(msg.sender == depositor, "!auth");
         IERC20(crv).safeApprove(escrow, 0);
         IERC20(crv).safeApprove(escrow, _value);
         ICurveVoteEscrow(escrow).create_lock(_value, _unlockTime);
+        return true;
     }
 
-    function increaseAmount(uint256 _value) external {
+    function increaseAmount(uint256 _value) external returns(bool){
         require(msg.sender == depositor, "!auth");
         IERC20(crv).safeApprove(escrow, 0);
         IERC20(crv).safeApprove(escrow, _value);
         ICurveVoteEscrow(escrow).increase_amount(_value);
+        return true;
     }
 
-    function increaseTime(uint256 _value) external {
+    function increaseTime(uint256 _value) external returns(bool){
         require(msg.sender == depositor, "!auth");
         ICurveVoteEscrow(escrow).increase_unlock_time(_value);
+        return true;
     }
 
-    function release() external {
+    function release() external returns(bool){
         require(msg.sender == depositor, "!auth");
         ICurveVoteEscrow(escrow).withdraw();
+        return true;
     }
 
-    function vote(uint256 _voteId, address _votingAddress, bool _support) external {
+    function vote(uint256 _voteId, address _votingAddress, bool _support) external returns(bool){
         require(msg.sender == operator, "!auth");
         IVoting(_votingAddress).vote(_voteId,_support,false);
+        return true;
     }
 
-    function voteGaugeWeight(address _gauge, uint256 _weight) external {
+    function voteGaugeWeight(address _gauge, uint256 _weight) external returns(bool){
         require(msg.sender == operator, "!auth");
 
         //vote
         IVoting(gaugeController).vote_for_gauge_weights(_gauge, _weight);
+        return true;
     }
 
     function claimCrv(address _gauge) external returns (uint256){
@@ -139,9 +149,10 @@ contract CurveVoterProxy {
         return _balance;
     }
 
-    function claimRewards(address _gauge) external{
+    function claimRewards(address _gauge) external returns(bool){
         require(msg.sender == operator, "!auth");
         ICurveGauge(_gauge).claim_rewards();
+        return true;
     }
 
     function claimFees(address _distroContract, address _token) external returns (uint256){
