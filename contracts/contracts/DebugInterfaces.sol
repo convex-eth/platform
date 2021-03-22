@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.6.12;
 
+import '@openzeppelin/contracts/math/SafeMath.sol';
+
 interface IExchange {
     function swapExactTokensForTokens(
         uint256,
@@ -78,4 +80,36 @@ interface IEscro{
 
 interface IGaugeController{
     function vote_user_slopes(address,address) external view returns(uint256,uint256,uint256);//slope,power,end
+}
+
+interface ISnxRewards{
+    function notifyRewardAmount(uint256) external;
+}
+
+interface IUniswapV2Router01 {
+    function factory() external pure returns (address);
+    function WETH() external pure returns (address);
+
+    function addLiquidity(
+        address tokenA,
+        address tokenB,
+        uint amountADesired,
+        uint amountBDesired,
+        uint amountAMin,
+        uint amountBMin,
+        address to,
+        uint deadline
+    ) external returns (uint amountA, uint amountB, uint liquidity);
+    function addLiquidityETH(
+        address token,
+        uint amountTokenDesired,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline
+    ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
+}
+
+interface IUniswapV2Factory {
+    function getPair(address tokenA, address tokenB) external view returns (address pair);
 }

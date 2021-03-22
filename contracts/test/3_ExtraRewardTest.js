@@ -30,15 +30,15 @@ contract("ExtraRewardsTest v2", async accounts => {
     let threeCrv = await IERC20.at("0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490");
     let weth = await IERC20.at("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
     let wbtc = await IERC20.at("0x2260fac5e5542a773aa44fbcfedf7c193bc2c599");
-    let bor = await IERC20.at("0x3c9d6c1C73b31c837832c72E04D3152f051fc1A9");
+    let bor = await IERC20.at("0x89Ab32156e46F46D02ade3FEcbe5Fc4243B9AAeD");
     let exchange = await IExchange.at("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D");
     let sbtcswap = await I3CurveFi.at("0x7fC77b5c7614E1533320Ea6DDc2Eb61fa00A9714");
     let sbtc = await IERC20.at("0x075b1bb99792c9E1041bA13afEf80C91a1e70fB3");
-    let obtcswap = await I2CurveFi.at("0xd81dA8D904b52208541Bade1bD6595D8a251F8dd");
-    let obtc = await IERC20.at("0x2fE94ea3d5d4a175184081439753DE15AeF9d614");
-    let obtcGauge = await ICurveGauge.at("0x11137b10c210b579405c21a07489e28f3c040ab1");
-    let obtcGaugeDebug = await ICurveGaugeDebug.at("0x11137b10c210b579405c21a07489e28f3c040ab1");
-    let obtcSwap = "0xd81dA8D904b52208541Bade1bD6595D8a251F8dd";
+    let obtcswap = await I2CurveFi.at("0x7F55DDe206dbAD629C080068923b36fe9D6bDBeF");
+    let obtc = await IERC20.at("0xDE5331AC4B3630f94853Ff322B66407e0D6331E8");
+    let obtcGauge = await ICurveGauge.at("0xd7d147c6Bb90A718c3De8C0568F9B560C79fa416");
+    let obtcGaugeDebug = await ICurveGaugeDebug.at("0xd7d147c6Bb90A718c3De8C0568F9B560C79fa416");
+    let obtcSwap = "0x7F55DDe206dbAD629C080068923b36fe9D6bDBeF";
 
 
     let admin = accounts[0];
@@ -149,7 +149,11 @@ contract("ExtraRewardsTest v2", async accounts => {
     await bor.balanceOf(borRewards.address).then(a=>console.log("bor on rewards (>0): " +a));
     
     //increase time
-    await time.increase(10*86400);
+    //if over a week with no claiming and rewards stoped,
+    //rewards on staker could become unretriable. we assume proper claiming happens
+    //multiple times within the week timeframe
+    //await time.increase(10*86400); 
+    await time.increase(6*86400);
     await time.advanceBlock();
     await time.advanceBlock();
     await time.advanceBlock();

@@ -46,34 +46,9 @@ import '@openzeppelin/contracts/utils/Address.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 
 
-contract DepositManager {
+contract cvxRewardPool{
+    using SafeERC20 for IERC20;
     using SafeMath for uint256;
-    using SafeERC20 for IERC20;
-
-    uint256 private _totalSupply;
-    mapping(address => uint256) private _balances;
-
-    function totalSupply() public view returns (uint256) {
-        return _totalSupply;
-    }
-
-    function balanceOf(address account) public view returns (uint256) {
-        return _balances[account];
-    }
-
-    function stake(uint256 amount) public virtual {
-        _totalSupply = _totalSupply.add(amount);
-        _balances[msg.sender] = _balances[msg.sender].add(amount);
-    }
-
-    function withdraw(uint256 amount) public virtual {
-        _totalSupply = _totalSupply.sub(amount);
-        _balances[msg.sender] = _balances[msg.sender].sub(amount);
-    }
-}
-
-contract cvxRewardPool is DepositManager {
-    using SafeERC20 for IERC20;
 
     IERC20 public rewardToken;
     IERC20 public stakingToken;
@@ -93,6 +68,8 @@ contract cvxRewardPool is DepositManager {
     uint256 public queuedRewards = 0;
     uint256 public currentRewards = 0;
     uint256 public constant newRewardRatio = 750;
+    uint256 private _totalSupply;
+    mapping(address => uint256) private _balances;
     mapping(address => uint256) public userRewardPerTokenPaid;
     mapping(address => uint256) public rewards;
 
@@ -119,6 +96,14 @@ contract cvxRewardPool is DepositManager {
         rewardManager = rewardManager_;
         crvDeposits = crvDeposits_;
         cCrvToken = IERC20(cCrvToken_);
+    }
+
+    function totalSupply() public view returns (uint256) {
+        return _totalSupply;
+    }
+
+    function balanceOf(address account) public view returns (uint256) {
+        return _balances[account];
     }
 
     function extraRewardsLength() external view returns (uint256) {
@@ -188,20 +173,25 @@ contract cvxRewardPool is DepositManager {
         return r.sub(fees);
     }
 
-    function stake(uint256 amount)
+    function stake(uint256 _amount)
         public
-        override
         updateReward(msg.sender)
         checkStart
     {
-        require(amount > 0, 'RewardPool : Cannot stake 0');
-        super.stake(amount);
-        stakingToken.safeTransferFrom(msg.sender, address(this), amount);
-        emit Staked(msg.sender, amount);
+        require(_amount > 0, 'RewardPool : Cannot stake 0');
+
+        //add supply
+        _totalSupply = _totalSupply.add(_amount);
+        //add to sender balance sheet
+        _balances[msg.sender] = _balances[msg.sender].add(_amount);
+        //take tokens from sender
+        stakingToken.safeTransferFrom(msg.sender, address(this), _amount);
+
+        emit Staked(msg.sender, _amount);
 
         //also stake to linked rewards
         for(uint i=0; i < extraRewards.length; i++){
-            IRewards(extraRewards[i]).stake(msg.sender, amount);
+            IRewards(extraRewards[i]).stake(msg.sender, _amount);
         }
     }
 
@@ -210,20 +200,42 @@ contract cvxRewardPool is DepositManager {
         stake(balance);
     }
 
-    function withdraw(uint256 amount)
+    function stakeFor(address _for, uint256 _amount)
         public
-        override
+        updateReward(_for)
+        checkStart
+    {
+        require(_amount > 0, 'RewardPool : Cannot stake 0');
+
+         //add supply
+        _totalSupply = _totalSupply.add(_amount);
+        //add to _for's balance sheet
+        _balances[_for] = _balances[_for].add(_amount);
+        //take tokens from sender
+        stakingToken.safeTransferFrom(msg.sender, address(this), _amount);
+
+        emit Staked(msg.sender, _amount);
+
+        //also stake to linked rewards
+        for(uint i=0; i < extraRewards.length; i++){
+            IRewards(extraRewards[i]).stake(_for, _amount);
+        }
+    }
+
+    function withdraw(uint256 _amount)
+        public
         updateReward(msg.sender)
         checkStart
     {
-        require(amount > 0, 'RewardPool : Cannot withdraw 0');
-        super.withdraw(amount);
-        stakingToken.safeTransfer(msg.sender, amount);
-        emit Withdrawn(msg.sender, amount);
+        require(_amount > 0, 'RewardPool : Cannot withdraw 0');
+        _totalSupply = _totalSupply.sub(_amount);
+        _balances[msg.sender] = _balances[msg.sender].sub(_amount);
+        stakingToken.safeTransfer(msg.sender, _amount);
+        emit Withdrawn(msg.sender, _amount);
 
         //also withdraw from linked rewards
         for(uint i=0; i < extraRewards.length; i++){
-            IRewards(extraRewards[i]).withdraw(msg.sender, amount);
+            IRewards(extraRewards[i]).withdraw(msg.sender, _amount);
         }
     }
 

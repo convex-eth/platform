@@ -67,8 +67,9 @@ contract("ExtraRewardsTest v1", async accounts => {
     let stash = poolinfo.stash;
     let rewardStash = await ExtraRewardStashV1.at(stash);
     console.log("stash contract at " +rewardStash.address);
-    let canclaim = await rewardStash.canClaimRewards();
-   // console.log("stash can claim? " +JSON.stringify(canclaim));
+    
+    //earmark to make sure snx is registered
+    await booster.earmarkRewards(1,{from:caller});
     
     //make sure statsh is v1
     let stashName = await rewardStash.getName();

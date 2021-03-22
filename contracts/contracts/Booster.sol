@@ -32,6 +32,7 @@ contract Booster{
     address public rewardFactory;
     address public stashFactory;
     address public tokenFactory;
+    address public rewardArbitrator;
     address public voteDelegate;
     address public treasury;
     address public stakerRewards;
@@ -53,6 +54,7 @@ contract Booster{
 
     //index(pid) -> pool
     PoolInfo[] public poolInfo;
+    
 
     event Deposited(address indexed user, uint256 indexed poolid, uint256 amount);
     event Withdrawn(address indexed user, uint256 indexed poolid, uint256 amount);
@@ -94,9 +96,16 @@ contract Booster{
 
     function setFactories(address _rfactory, address _sfactory, address _tfactory) external {
         require(msg.sender == owner, "!auth");
+        //only allow this to be called once even if owner
+        require(rewardFactory == address(0),"only once");
         rewardFactory = _rfactory;
         stashFactory = _sfactory;
         tokenFactory = _tfactory;
+    }
+
+    function setArbitrator(address _arb) external {
+        require(msg.sender==voteDelegate, "!auth");
+        rewardArbitrator = _arb;
     }
 
     function setVoteDelegate(address _voteDelegate) external {
@@ -375,6 +384,14 @@ contract Booster{
         return true;
     }
 
+    function claimRewards(uint256 _pid, address _gauge) external returns(bool){
+        address stash = poolInfo[_pid].stash;
+        require(msg.sender == stash,"!auth");
+
+        IStaker(staker).claimRewards(_gauge);
+        return true;
+    }
+
     //claim crv and extra rewards, convert extra to crv, disperse to reward contracts
     function _earmarkRewards(uint256 _pid) internal {
         address gauge = poolInfo[_pid].gauge;
@@ -384,11 +401,9 @@ contract Booster{
 
         //check if there are extra rewards
         address stash = poolInfo[_pid].stash;
-        if(stash != address(0) && IStash(stash).canClaimRewards()){
+        if(stash != address(0)){
             //claim extra rewards
-            IStaker(staker).claimRewards(gauge);
-            //move rewards from staker to stash
-            IStash(stash).stashRewards();
+            IStash(stash).claimRewards();
             //process extra rewards
             IStash(stash).processStash();
         }
