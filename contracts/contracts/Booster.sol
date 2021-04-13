@@ -131,7 +131,6 @@ contract Booster{
     // the fee reward contract is always created via the factory, and not assigned directly.
     function setFeeInfo(address _feeDistro, address _feeToken) external {
         require(msg.sender==feeManager, "!auth");
-        //require(lockRewards != address(0),"set locker rewards first");
         
         if(feeToken != _feeToken){
             //create a new reward contract for the new token
@@ -144,18 +143,20 @@ contract Booster{
 
     function setFees(uint256 _lockFees, uint256 _stakerFees, uint256 _callerFees, uint256 _platform) external{
         require(msg.sender==feeManager, "!auth");
-        require(_lockFees >= 1000 && _lockFees <= 1500, "fee range");
-        require(_stakerFees >= 300 && _stakerFees <= 600, "fee range");
-        require(_callerFees >= 25 && _callerFees <= 100, "fee range");
-        require(_platform <= 200, "fee range");
 
         uint256 total = _lockFees.add(_stakerFees).add(_callerFees).add(_platform);
         require(total <= MaxFees, ">MaxFees");
-        
-        lockIncentive = _lockFees;
-        stakerIncentive = _stakerFees;
-        earmarkIncentive = _callerFees;
-        platformFee = _platform;
+
+        //if statements to reduce contract size        
+        if(_lockFees >= 1000 && _lockFees <= 1500
+            && _stakerFees >= 300 && _stakerFees <= 600
+            && _callerFees >= 25 && _callerFees <= 100
+            && _platform <= 200){
+            lockIncentive = _lockFees;
+            stakerIncentive = _stakerFees;
+            earmarkIncentive = _callerFees;
+            platformFee = _platform;
+        }
     }
 
     function setTreasury(address _treasury) external {
@@ -312,6 +313,10 @@ contract Booster{
         address gauge = poolInfo[_pid].gauge;
         uint256 before = IERC20(lptoken).balanceOf(address(this));
 
+        //remove lp balance
+        address token = poolInfo[_pid].token;
+        ITokenMinter(token).burn(_from,_amount);
+
         //pull whats needed from gauge
         //  should always be full amount unless we withdrew everything to shutdown this contract
         if (before < _amount) {
@@ -325,10 +330,6 @@ contract Booster{
             IStash(stash).stashRewards();
         }
         
-        //remove lp balance
-        address token = poolInfo[_pid].token;
-        ITokenMinter(token).burn(_from,_amount);
-
         //return lp tokens
         IERC20(lptoken).safeTransfer(_to, _amount);
 
@@ -343,7 +344,6 @@ contract Booster{
 
     //withdraw all lp tokens
     function withdrawAll(uint256 _pid) public returns(bool){
-       // uint256 userBal = userPoolInfo[_pid][msg.sender].amount;
         address token = poolInfo[_pid].token;
         uint256 userBal = IERC20(token).balanceOf(msg.sender);
         withdraw(_pid, userBal);
