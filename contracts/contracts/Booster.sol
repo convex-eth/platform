@@ -266,10 +266,11 @@ contract Booster{
     function deposit(uint256 _pid, uint256 _amount, bool _stake) public returns(bool){
         require(!isShutdown,"shutdown");
         require(poolInfo[_pid].shutdown == false, "pool is closed");
-        
+
         address lptoken = poolInfo[_pid].lptoken;
         IERC20(lptoken).safeTransferFrom(msg.sender, address(this), _amount);
-
+        _amount = IERC20(lptoken).balanceOf(address(this));
+        
         //move to curve gauge
         sendTokensToGauge(_pid);
 
