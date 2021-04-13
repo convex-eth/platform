@@ -27,6 +27,7 @@ contract Booster{
 
     address public owner;
     address public feeManager;
+    address public poolManager;
     address public staker;
     address public minter;
     address public rewardFactory;
@@ -49,6 +50,7 @@ contract Booster{
         address gauge;
         address crvRewards;
         address stash;
+        bool shutdown;
     }
 
     //index(pid) -> pool
@@ -63,6 +65,7 @@ contract Booster{
         owner = msg.sender;
         voteDelegate = msg.sender;
         feeManager = msg.sender;
+        poolManager = msg.sender;
         feeDistro = address(0); //address(0xA464e6DCda8AC41e03616F95f4BC98a13b8922Dc);
         feeToken = address(0); //address(0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490);
         treasury = address(0);
@@ -80,6 +83,11 @@ contract Booster{
     function setFeeManager(address _feeM) external {
         require(msg.sender == feeManager, "!auth");
         feeManager = _feeM;
+    }
+
+    function setPoolManager(address _poolM) external {
+        require(msg.sender == poolManager, "!auth");
+        poolManager = _poolM;
     }
 
     function setMinter(address _minter) external {
@@ -155,45 +163,17 @@ contract Booster{
         return poolInfo.length;
     }
 
-    //add a new curve pool to the system.
-    //gauge must be on curve's registry, thus anyone can call
-    function addPool(address _swap, address _gauge, uint256 _stashVersion) external {
-        
-        //get curve's registery
-        address mainReg = IRegistry(registry).get_registry();
-        
-        //get lp token and gauge list from swap address
-        address lptoken = IRegistry(mainReg).get_lp_token(_swap);
+    //create a new pool
+    function addPool(address _lptoken, address _gauge, uint256 _stashVersion) external returns(bool){
+        require(msg.sender==poolManager, "!auth");
+        require(_gauge != address(0),"gauge is 0");
+        require(_lptoken != address(0),"token is 0");
 
-        (address[10] memory gaugeList,) = IRegistry(mainReg).get_gauges(_swap);
-
-        //confirm the gauge passed in calldata is in the list
-        //  a passed gauge address is needed if there is ever multiple gauges
-        //  as the fact that an array is returned implies.
-        bool found = false;
-        for(uint256 i = 0; i < gaugeList.length; i++){
-            if(gaugeList[i] == _gauge){
-                found = true;
-                break;
-            }
-        }
-        require(found, "!registry");
-
-        //now make sure this pool/gauge hasnt been added before
-        found = false;
-        for(uint256 i = 0; i < poolInfo.length; i++){
-            if(poolInfo[i].gauge == _gauge){
-                found = true;
-                break;
-            }
-        }
-        require(!found, "already registered");
-        
         //the next pool's pid
         uint256 pid = poolInfo.length;
 
         //create a tokenized deposit
-        address token = ITokenFactory(tokenFactory).CreateDepositToken(lptoken);
+        address token = ITokenFactory(tokenFactory).CreateDepositToken(_lptoken);
         //create a reward contract for crv rewards
         address newRewardPool = IRewardFactory(rewardFactory).CreateCrvRewards(pid,token);
         //create a stash to handle extra incentives
@@ -202,11 +182,12 @@ contract Booster{
         //add the new pool
         poolInfo.push(
             PoolInfo({
-                lptoken: lptoken,
+                lptoken: _lptoken,
                 token: token,
                 gauge: _gauge,
                 crvRewards: newRewardPool,
-                stash: stash
+                stash: stash,
+                shutdown: false
             })
         );
 
@@ -218,6 +199,15 @@ contract Booster{
             IStaker(staker).setStashAccess(stash,true);
             IRewardFactory(rewardFactory).setAccess(stash,true);
         }
+        return true;
+    }
+
+    //shutdown pool
+    function shutdownPool(uint256 _pid) external returns(bool){
+        require(msg.sender==poolManager, "!auth");
+
+        poolInfo[_pid].shutdown = true;
+        return true;
     }
 
     //shutdown this contract.
@@ -233,12 +223,13 @@ contract Booster{
             address token = poolInfo[i].lptoken;
             address gauge = poolInfo[i].gauge;
             address stash = poolInfo[i].stash;
+            bool poolShutdown = poolInfo[i].shutdown;
 
             //withdraw from gauge
             try IStaker(staker).withdrawAll(token,gauge){
             }catch{}
             
-            if(_claimRewards){
+            if(_claimRewards && poolShutdown == false){
                 //earmark remaining rewards
                 _earmarkRewards(i);
             }
@@ -274,6 +265,8 @@ contract Booster{
     //deposit lp tokens and stake
     function deposit(uint256 _pid, uint256 _amount, bool _stake) public returns(bool){
         require(!isShutdown,"shutdown");
+        require(poolInfo[_pid].shutdown == false, "pool is closed");
+        
         address lptoken = poolInfo[_pid].lptoken;
         IERC20(lptoken).safeTransferFrom(msg.sender, address(this), _amount);
 
@@ -377,6 +370,8 @@ contract Booster{
 
     //claim crv and extra rewards, convert extra to crv, disperse to reward contracts
     function _earmarkRewards(uint256 _pid) internal {
+        require(poolInfo[_pid].shutdown == false, "pool is closed");
+
         address gauge = poolInfo[_pid].gauge;
 
         //claim crv

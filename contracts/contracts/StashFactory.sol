@@ -50,13 +50,13 @@ contract StashFactory {
 
     function IsV1(address _gauge) private returns(bool){
         bytes memory data = abi.encode(rewarded_token);
-        (bool success,) = _gauge.call.value(0)(data);
+        (bool success,) = _gauge.call(data);
         return success;
     }
 
     function IsV2(address _gauge) private returns(bool){
         bytes memory data = abi.encodeWithSelector(reward_tokens,uint256(0));
-        (bool success,) = _gauge.call.value(0)(data);
+        (bool success,) = _gauge.call(data);
         return success;
     }
 }

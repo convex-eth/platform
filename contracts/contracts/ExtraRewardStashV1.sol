@@ -56,7 +56,7 @@ contract ExtraRewardStashV1 {
             tokenInfo.token = token;
 
             //create new reward contract
-            (,,,address mainRewardContract,) = IDeposit(operator).poolInfo(pid);
+            (,,,address mainRewardContract,,) = IDeposit(operator).poolInfo(pid);
         	address rewardContract = IRewardFactory(rewardFactory).CreateTokenRewards(
 	        	token,
 	        	mainRewardContract,
@@ -66,7 +66,7 @@ contract ExtraRewardStashV1 {
     }
 
     //pull assigned tokens from staker to stash
-    function stashRewards() external view returns(bool){
+    function stashRewards() external pure returns(bool){
         //stashRewards() is also called on deposit
         //so dont need to try withdrawing here for v1
         // -> move withdraw() call to processStash() which is only called during reward claiming

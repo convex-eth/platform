@@ -116,7 +116,7 @@ interface IDeposit{
     function isShutdown() external view returns(bool);
     function balanceOf(address _account) external view returns(uint256);
     function totalSupply() external view returns(uint256);
-    function poolInfo(uint256) external view returns(address,address,address,address,address);
+    function poolInfo(uint256) external view returns(address,address,address,address,address,bool);
     function rewardClaimed(uint256,address,uint256) external;
     function withdrawTo(uint256,uint256,address) external;
 }
@@ -138,4 +138,12 @@ interface IStashFactory{
 
 interface ITokenFactory{
     function CreateDepositToken(address) external returns(address);
+}
+
+interface IPools{
+    function addPool(address _lptoken, address _gauge, uint256 _stashVersion) external returns(bool);
+    function shutdownPool(uint256 _pid) external returns(bool);
+    function poolInfo(uint256) external view returns(address,address,address,address,address,bool);
+    function poolLength() external view returns (uint256);
+    function setPoolManager(address _poolM) external;
 }
