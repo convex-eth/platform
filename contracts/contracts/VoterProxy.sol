@@ -24,6 +24,7 @@ contract CurveVoterProxy {
     address public depositor;
     
     mapping (address => bool) private stashPool;
+    mapping (address => bool) private protectedTokens;
 
     constructor() public {
         owner = msg.sender;
@@ -57,7 +58,15 @@ contract CurveVoterProxy {
         return true;
     }
 
+
     function deposit(address _token, address _gauge) external returns(bool){
+        require(msg.sender == operator, "!auth");
+        if(protectedTokens[_token] == false){
+            protectedTokens[_token] = true;
+        }
+        if(protectedTokens[_gauge] == false){
+            protectedTokens[_gauge] = true;
+        }
         uint256 balance = IERC20(_token).balanceOf(address(this));
         if (balance > 0) {
             IERC20(_token).safeApprove(_gauge, 0);
@@ -70,6 +79,12 @@ contract CurveVoterProxy {
     //stash only function for pulling extra incentive reward tokens out
     function withdraw(IERC20 _asset) external returns (uint256 balance) {
         require(stashPool[msg.sender] == true, "!auth");
+
+        //check protection
+        if(protectedTokens[address(_asset)] == true){
+            return 0;
+        }
+
         balance = _asset.balanceOf(address(this));
         _asset.safeTransfer(msg.sender, balance);
         return balance;
@@ -89,7 +104,7 @@ contract CurveVoterProxy {
 
      function withdrawAll(address _token, address _gauge) external returns(bool){
         require(msg.sender == operator, "!auth");
-        uint256 amount = balanceOfPool(_gauge);
+        uint256 amount = balanceOfPool(_gauge).add(IERC20(_token).balanceOf(address(this)));
         withdraw(_token, _gauge, amount);
         return true;
     }
