@@ -173,9 +173,8 @@ contract Booster{
 
     //create a new pool
     function addPool(address _lptoken, address _gauge, uint256 _stashVersion) external returns(bool){
-        require(msg.sender==poolManager, "!auth");
-        require(_gauge != address(0),"gauge is 0");
-        require(_lptoken != address(0),"token is 0");
+        require(msg.sender==poolManager && !isShutdown, "!add");
+        require(_gauge != address(0) && _lptoken != address(0),"!param");
 
         //the next pool's pid
         uint256 pid = poolInfo.length;
