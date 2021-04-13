@@ -405,7 +405,7 @@ contract Booster{
             uint256 _callIncentive = crvBal.mul(earmarkIncentive).div(FEE_DENOMINATOR);
             
             //send treasury
-            if(treasury != address(0) && treasury != address(this)){
+            if(treasury != address(0) && treasury != address(this) && platformFee > 0){
                 //only subtract after address condition check
                 uint256 _platform = crvBal.mul(platformFee).div(FEE_DENOMINATOR);
                 crvBal = crvBal.sub(_platform);
