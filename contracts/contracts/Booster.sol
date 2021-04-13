@@ -227,7 +227,7 @@ contract Booster{
         isShutdown = true;
 
         for(uint i=0; i < poolInfo.length; i++){
-            PoolInfo storage pool = poolInfo[_pid];
+            PoolInfo storage pool = poolInfo[i];
             address token = pool.lptoken;
             address gauge = pool.gauge;
             address stash = pool.stash;
