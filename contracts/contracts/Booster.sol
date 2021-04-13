@@ -270,7 +270,7 @@ contract Booster{
         address lptoken = poolInfo[_pid].lptoken;
         IERC20(lptoken).safeTransferFrom(msg.sender, address(this), _amount);
         _amount = IERC20(lptoken).balanceOf(address(this));
-        
+
         //move to curve gauge
         sendTokensToGauge(_pid);
 
@@ -427,14 +427,14 @@ contract Booster{
     }
 
     function earmarkRewards(uint256 _pid) external returns(bool){
-        // require(!isShutdown,"shutdown");
+        require(!isShutdown,"shutdown");
         _earmarkRewards(_pid);
         return true;
     }
 
     //claim fees from curve distro contract, put in lockers' reward contract
     function earmarkFees() external returns(bool){
-       // require(!isShutdown,"shutdown");
+        require(!isShutdown,"shutdown");
         //claim fee rewards
         IStaker(staker).claimFees(feeDistro, feeToken);
         //send fee rewards to reward contract
