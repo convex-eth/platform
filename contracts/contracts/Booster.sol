@@ -279,7 +279,7 @@ contract Booster{
             //mint here and send to rewards on user behalf
             ITokenMinter(token).mint(address(this),_amount);
             address rewardContract = poolInfo[_pid].crvRewards;
-            IERC20(token).approve(rewardContract,_amount);
+            IERC20(token).safeApprove(rewardContract,_amount);
             IRewards(rewardContract).stakeFor(msg.sender,_amount);
         }else{
             //add user balance directly
