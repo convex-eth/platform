@@ -14,6 +14,8 @@ contract Booster{
     using SafeMath for uint256;
 
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
+    address public constant voteOwnership = address(0xE478de485ad2fe566d49342Cbd03E49ed7DB3356);
+    address public constant voteParameter = address(0xBCfF8B0b9419b9A88c44546519b1e909cF330399);
  
     uint256 public lockIncentive = 1000; //incentive to crv stakers
     uint256 public stakerIncentive = 450; //incentive to native token stakers
@@ -358,6 +360,8 @@ contract Booster{
     //delegate address votes on dao
     function vote(uint256 _voteId, address _votingAddress, bool _support) external returns(bool){
         require(msg.sender == voteDelegate, "!auth");
+        require(_votingAddress == voteOwnership || _votingAddress == voteParameter, "!voteAddr");
+        
         IStaker(staker).vote(_voteId,_votingAddress,_support);
         return true;
     }
