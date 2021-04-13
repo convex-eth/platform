@@ -227,10 +227,11 @@ contract Booster{
         isShutdown = true;
 
         for(uint i=0; i < poolInfo.length; i++){
-            address token = poolInfo[i].lptoken;
-            address gauge = poolInfo[i].gauge;
-            address stash = poolInfo[i].stash;
-            bool poolShutdown = poolInfo[i].shutdown;
+            PoolInfo storage pool = poolInfo[_pid];
+            address token = pool.lptoken;
+            address gauge = pool.gauge;
+            address stash = pool.stash;
+            bool poolShutdown =  pool.shutdown;
 
             //withdraw from gauge
             try IStaker(staker).withdrawAll(token,gauge){
@@ -248,44 +249,38 @@ contract Booster{
         }
     }
 
-
-    //stake coins on curve's gauge contracts via the staker account
-    function sendTokensToGauge(uint256 _pid) private {
-        address token = poolInfo[_pid].lptoken;
-        uint256 bal = IERC20(token).balanceOf(address(this));
-
-        //send to proxy to stake
-        IERC20(token).safeTransfer(staker, bal);
-
-        //stake
-        address gauge = poolInfo[_pid].gauge;
-        require(gauge != address(0),"!gauge setting");
-        IStaker(staker).deposit(token,gauge);
-
-        //some gauges claim rewards when depositing, stash them in a seperate contract until next claim
-        address stash = poolInfo[_pid].stash;
-        if(stash != address(0)){
-            IStash(stash).stashRewards();
-        }
-    }
-
     //deposit lp tokens and stake
     function deposit(uint256 _pid, uint256 _amount, bool _stake) public returns(bool){
         require(!isShutdown,"shutdown");
-        require(poolInfo[_pid].shutdown == false, "pool is closed");
+        PoolInfo storage pool = poolInfo[_pid];
+        require(pool.shutdown == false, "pool is closed");
 
-        address lptoken = poolInfo[_pid].lptoken;
+        address lptoken = pool.lptoken;
         IERC20(lptoken).safeTransferFrom(msg.sender, address(this), _amount);
         _amount = IERC20(lptoken).balanceOf(address(this));
 
         //move to curve gauge
-        sendTokensToGauge(_pid);
+        uint256 bal = IERC20(lptoken).balanceOf(address(this));
 
-        address token = poolInfo[_pid].token;
+        //send to proxy to stake
+        IERC20(lptoken).safeTransfer(staker, bal);
+
+        //stake
+        address gauge = pool.gauge;
+        require(gauge != address(0),"!gauge setting");
+        IStaker(staker).deposit(lptoken,gauge);
+
+        //some gauges claim rewards when depositing, stash them in a seperate contract until next claim
+        address stash = pool.stash;
+        if(stash != address(0)){
+            IStash(stash).stashRewards();
+        }
+
+        address token = pool.token;
         if(_stake){
             //mint here and send to rewards on user behalf
             ITokenMinter(token).mint(address(this),_amount);
-            address rewardContract = poolInfo[_pid].crvRewards;
+            address rewardContract = pool.crvRewards;
             IERC20(token).safeApprove(rewardContract,_amount);
             IRewards(rewardContract).stakeFor(msg.sender,_amount);
         }else{
@@ -308,12 +303,13 @@ contract Booster{
 
     //withdraw lp tokens
     function _withdraw(uint256 _pid, uint256 _amount, address _from, address _to) internal {
-        address lptoken = poolInfo[_pid].lptoken;
-        address gauge = poolInfo[_pid].gauge;
+        PoolInfo storage pool = poolInfo[_pid];
+        address lptoken = pool.lptoken;
+        address gauge = pool.gauge;
         uint256 before = IERC20(lptoken).balanceOf(address(this));
 
         //remove lp balance
-        address token = poolInfo[_pid].token;
+        address token = pool.token;
         ITokenMinter(token).burn(_from,_amount);
 
         //pull whats needed from gauge
@@ -324,7 +320,7 @@ contract Booster{
 
         //some gauges claim rewards when withdrawing, stash them in a seperate contract until next claim
         //do not call if shutdown since stashes wont have access
-        address stash = poolInfo[_pid].stash;
+        address stash = pool.stash;
         if(stash != address(0) && !isShutdown){
             IStash(stash).stashRewards();
         }
@@ -377,15 +373,16 @@ contract Booster{
 
     //claim crv and extra rewards, convert extra to crv, disperse to reward contracts
     function _earmarkRewards(uint256 _pid) internal {
-        require(poolInfo[_pid].shutdown == false, "pool is closed");
+        PoolInfo storage pool = poolInfo[_pid];
+        require(pool.shutdown == false, "pool is closed");
 
-        address gauge = poolInfo[_pid].gauge;
+        address gauge = pool.gauge;
 
         //claim crv
         IStaker(staker).claimCrv(gauge);
 
         //check if there are extra rewards
-        address stash = poolInfo[_pid].stash;
+        address stash = pool.stash;
         if(stash != address(0) && IStash(stash).canClaimRewards()){
             //claim extra rewards
             IStaker(staker).claimRewards(gauge);
@@ -418,7 +415,7 @@ contract Booster{
             IERC20(crv).safeTransfer(msg.sender, _callIncentive);          
 
             //send crv to lp provider reward contract
-            address rewardContract = poolInfo[_pid].crvRewards;
+            address rewardContract = pool.crvRewards;
             IERC20(crv).safeTransfer(rewardContract, crvBal);
             IRewards(rewardContract).queueNewRewards(crvBal);
 
