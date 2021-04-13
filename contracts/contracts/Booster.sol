@@ -14,10 +14,7 @@ contract Booster{
     using SafeMath for uint256;
 
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
-    address public constant escrow = address(0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2);
-    address public constant registry = address(0x0000000022D53366457F9d5E68Ec105046FC4383);
-
-
+ 
     uint256 public lockIncentive = 1000; //incentive to crv stakers
     uint256 public stakerIncentive = 450; //incentive to native token stakers
     uint256 public earmarkIncentive = 50; //incentive to users who spend gas to make calls
@@ -102,9 +99,19 @@ contract Booster{
 
     function setFactories(address _rfactory, address _sfactory, address _tfactory) external {
         require(msg.sender == owner, "!auth");
-        rewardFactory = _rfactory;
+        
+        //reward factory only allow this to be called once even if owner
+        //removes ability to inject malicious staking contracts
+        //token factory can also be immutable
+        if(rewardFactory == address(0)){
+            rewardFactory = _rfactory;
+            tokenFactory = _tfactory;
+        }
+
+        //stash factory should be considered more safe to change
+        //at worst a "bad" stash could take extra rewards like snx etc.
+        //but updating may be required to handle new types of gauges
         stashFactory = _sfactory;
-        tokenFactory = _tfactory;
     }
 
     function setVoteDelegate(address _voteDelegate) external {
