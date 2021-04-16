@@ -95,12 +95,13 @@ interface IRewards{
     function queueNewRewards(uint256) external;
     function notifyRewardAmount(uint256) external;
     function addExtraReward(address) external;
+    function stakingToken() external returns (address);
 }
 
 interface IStash{
-    function stashRewards() external;
-    function processStash() external;
-    function canClaimRewards() external returns (bool);
+    function stashRewards() external returns (bool);
+    function processStash() external returns (bool);
+    function claimRewards() external returns (bool);
 }
 
 interface IFeeDistro{
@@ -116,9 +117,11 @@ interface IDeposit{
     function isShutdown() external view returns(bool);
     function balanceOf(address _account) external view returns(uint256);
     function totalSupply() external view returns(uint256);
-    function poolInfo(uint256) external view returns(address,address,address,address,address,bool);
+    function poolInfo(uint256) external view returns(address,address,address,address,address, bool);
     function rewardClaimed(uint256,address,uint256) external;
     function withdrawTo(uint256,uint256,address) external;
+    function claimRewards(uint256,address) external returns(bool);
+    function rewardArbitrator() external returns(address);
 }
 
 interface ICrvDeposit{
@@ -130,6 +133,9 @@ interface IRewardFactory{
     function setAccess(address,bool) external;
     function CreateCrvRewards(uint256,address) external returns(address);
     function CreateTokenRewards(address,address,address) external returns(address);
+    function activeRewardCount(address) external view returns(uint256);
+    function addActiveReward(address,uint256) external returns(bool);
+    function removeActiveReward(address,uint256) external returns(bool);
 }
 
 interface IStashFactory{
@@ -147,3 +153,9 @@ interface IPools{
     function poolLength() external view returns (uint256);
     function setPoolManager(address _poolM) external;
 }
+
+interface IVestedEscrow{
+    function fund(address[] calldata _recipient, uint256[] calldata _amount) external returns(bool);
+}
+
+

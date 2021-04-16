@@ -66,6 +66,7 @@ contract BaseRewardPool {
     uint256 public rewardPerTokenStored;
     uint256 public queuedRewards = 0;
     uint256 public currentRewards = 0;
+    uint256 public historicalRewards = 0;
     uint256 public constant newRewardRatio = 750;
     uint256 private _totalSupply;
     mapping(address => uint256) public userRewardPerTokenPaid;
@@ -167,7 +168,11 @@ contract BaseRewardPool {
         returns(bool)
     {
         require(_amount > 0, 'RewardPool : Cannot stake 0');
-        //super.stake(_amount);
+        
+        //also stake to linked rewards
+        for(uint i=0; i < extraRewards.length; i++){
+            IRewards(extraRewards[i]).stake(msg.sender, _amount);
+        }
 
         _totalSupply = _totalSupply.add(_amount);
         _balances[msg.sender] = _balances[msg.sender].add(_amount);
@@ -175,10 +180,7 @@ contract BaseRewardPool {
         stakingToken.safeTransferFrom(msg.sender, address(this), _amount);
         emit Staked(msg.sender, _amount);
 
-        //also stake to linked rewards
-        for(uint i=0; i < extraRewards.length; i++){
-            IRewards(extraRewards[i]).stake(msg.sender, _amount);
-        }
+        
         return true;
     }
 
@@ -195,7 +197,11 @@ contract BaseRewardPool {
         returns(bool)
     {
         require(_amount > 0, 'RewardPool : Cannot stake 0');
-        //super.stake(_amount);
+        
+        //also stake to linked rewards
+        for(uint i=0; i < extraRewards.length; i++){
+            IRewards(extraRewards[i]).stake(_for, _amount);
+        }
 
         //give to _for
         _totalSupply = _totalSupply.add(_amount);
@@ -204,46 +210,44 @@ contract BaseRewardPool {
         //take away from sender
         stakingToken.safeTransferFrom(msg.sender, address(this), _amount);
         emit Staked(_for, _amount);
-
-        //also stake to linked rewards
-        for(uint i=0; i < extraRewards.length; i++){
-            IRewards(extraRewards[i]).stake(_for, _amount);
-        }
+        
         return true;
     }
 
 
-    function withdraw(uint256 amount)
+    function withdraw(uint256 amount, bool claim)
         public
         updateReward(msg.sender)
         checkStart
         returns(bool)
     {
         require(amount > 0, 'RewardPool : Cannot withdraw 0');
-        //super.withdraw(amount);
-        _totalSupply = _totalSupply.sub(amount);
-        _balances[msg.sender] = _balances[msg.sender].sub(amount);
-
-        stakingToken.safeTransfer(msg.sender, amount);
-        emit Withdrawn(msg.sender, amount);
 
         //also withdraw from linked rewards
         for(uint i=0; i < extraRewards.length; i++){
             IRewards(extraRewards[i]).withdraw(msg.sender, amount);
         }
+
+        _totalSupply = _totalSupply.sub(amount);
+        _balances[msg.sender] = _balances[msg.sender].sub(amount);
+
+        stakingToken.safeTransfer(msg.sender, amount);
+        emit Withdrawn(msg.sender, amount);
+     
+        if(claim){
+            getReward(msg.sender,true);
+        }
+
         return true;
     }
 
-    function exit() public returns(bool){
-        getReward(true);
-        withdraw(balanceOf(msg.sender));
-        return true;
-    }
+    function withdrawAndUnwrap(uint256 amount, bool claim) external updateReward(msg.sender) checkStart returns(bool){
 
-    function withdrawAndUnwrap() external returns(bool){
-        getReward(true);
-        uint256 amount = balanceOf(msg.sender);
-
+        //also withdraw from linked rewards
+        for(uint i=0; i < extraRewards.length; i++){
+            IRewards(extraRewards[i]).withdraw(msg.sender, amount);
+        }
+        
         _totalSupply = _totalSupply.sub(amount);
         _balances[msg.sender] = _balances[msg.sender].sub(amount);
 
@@ -252,34 +256,39 @@ contract BaseRewardPool {
         IDeposit(operator).withdrawTo(pid,amount,msg.sender);
         emit Withdrawn(msg.sender, amount);
 
-        //also withdraw from linked rewards
-        for(uint i=0; i < extraRewards.length; i++){
-            IRewards(extraRewards[i]).withdraw(msg.sender, amount);
+        //get rewards too
+        if(claim){
+            getReward(msg.sender,true);
         }
         return true;
     }
 
-    function getReward(bool _claimExtras) public updateReward(msg.sender) checkStart returns(bool){
-        uint256 reward = earned(msg.sender);
+    function getReward(address _account, bool _claimExtras) public updateReward(_account) checkStart returns(bool){
+        uint256 reward = earned(_account);
         if (reward > 0) {
-            rewards[msg.sender] = 0;
-            rewardToken.safeTransfer(msg.sender, reward);
-            IDeposit(operator).rewardClaimed(pid, msg.sender, reward);
-            emit RewardPaid(msg.sender, reward);
+            rewards[_account] = 0;
+            rewardToken.safeTransfer(_account, reward);
+            IDeposit(operator).rewardClaimed(pid, _account, reward);
+            emit RewardPaid(_account, reward);
         }
 
         //also get rewards from linked rewards
         if(_claimExtras){
             for(uint i=0; i < extraRewards.length; i++){
-                IRewards(extraRewards[i]).getReward(msg.sender);
+                IRewards(extraRewards[i]).getReward(_account);
             }
         }
         return true;
     }
 
     function getReward() external returns(bool){
-        getReward(true);
+        getReward(msg.sender,true);
         return true;
+    }
+
+    function donate(uint256 _amount) external returns(bool){
+        IERC20(rewardToken).safeTransferFrom(msg.sender, address(this), _amount);
+        queuedRewards = queuedRewards.add(_amount);
     }
 
     function queueNewRewards(uint256 _rewards) external returns(bool){
@@ -307,7 +316,7 @@ contract BaseRewardPool {
         internal
         updateReward(address(0))
     {
-       // require(msg.sender == operator, "!authorized");
+        historicalRewards = historicalRewards.add(reward);
         if (block.timestamp > starttime) {
             if (block.timestamp >= periodFinish) {
                 rewardRate = reward.div(duration);

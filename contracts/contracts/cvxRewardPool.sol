@@ -46,34 +46,9 @@ import '@openzeppelin/contracts/utils/Address.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 
 
-contract DepositManager {
+contract cvxRewardPool{
+    using SafeERC20 for IERC20;
     using SafeMath for uint256;
-    using SafeERC20 for IERC20;
-
-    uint256 private _totalSupply;
-    mapping(address => uint256) private _balances;
-
-    function totalSupply() public view returns (uint256) {
-        return _totalSupply;
-    }
-
-    function balanceOf(address account) public view returns (uint256) {
-        return _balances[account];
-    }
-
-    function stake(uint256 amount) public virtual {
-        _totalSupply = _totalSupply.add(amount);
-        _balances[msg.sender] = _balances[msg.sender].add(amount);
-    }
-
-    function withdraw(uint256 amount) public virtual {
-        _totalSupply = _totalSupply.sub(amount);
-        _balances[msg.sender] = _balances[msg.sender].sub(amount);
-    }
-}
-
-contract cvxRewardPool is DepositManager {
-    using SafeERC20 for IERC20;
 
     IERC20 public rewardToken;
     IERC20 public stakingToken;
@@ -82,7 +57,8 @@ contract cvxRewardPool is DepositManager {
 
     address public operator;
     address public crvDeposits;
-    IERC20 public cCrvToken;
+    address public cvxCrvRewards;
+    IERC20 public cvxCrvToken;
     address public rewardManager;
 
     uint256 public starttime;
@@ -92,7 +68,10 @@ contract cvxRewardPool is DepositManager {
     uint256 public rewardPerTokenStored;
     uint256 public queuedRewards = 0;
     uint256 public currentRewards = 0;
+    uint256 public historicalRewards = 0;
     uint256 public constant newRewardRatio = 750;
+    uint256 private _totalSupply;
+    mapping(address => uint256) private _balances;
     mapping(address => uint256) public userRewardPerTokenPaid;
     mapping(address => uint256) public rewards;
 
@@ -107,7 +86,8 @@ contract cvxRewardPool is DepositManager {
         address stakingToken_,
         address rewardToken_,
         address crvDeposits_,
-        address cCrvToken_,
+        address cvxCrvRewards_,
+        address cvxCrvToken_,
         uint256 starttime_,
         address operator_,
         address rewardManager_
@@ -118,7 +98,16 @@ contract cvxRewardPool is DepositManager {
         operator = operator_;
         rewardManager = rewardManager_;
         crvDeposits = crvDeposits_;
-        cCrvToken = IERC20(cCrvToken_);
+        cvxCrvRewards = cvxCrvRewards_;
+        cvxCrvToken = IERC20(cvxCrvToken_);
+    }
+
+    function totalSupply() public view returns (uint256) {
+        return _totalSupply;
+    }
+
+    function balanceOf(address account) public view returns (uint256) {
+        return _balances[account];
     }
 
     function extraRewardsLength() external view returns (uint256) {
@@ -188,21 +177,26 @@ contract cvxRewardPool is DepositManager {
         return r.sub(fees);
     }
 
-    function stake(uint256 amount)
+    function stake(uint256 _amount)
         public
-        override
         updateReward(msg.sender)
         checkStart
     {
-        require(amount > 0, 'RewardPool : Cannot stake 0');
-        super.stake(amount);
-        stakingToken.safeTransferFrom(msg.sender, address(this), amount);
-        emit Staked(msg.sender, amount);
+        require(_amount > 0, 'RewardPool : Cannot stake 0');
 
         //also stake to linked rewards
         for(uint i=0; i < extraRewards.length; i++){
-            IRewards(extraRewards[i]).stake(msg.sender, amount);
+            IRewards(extraRewards[i]).stake(msg.sender, _amount);
         }
+
+        //add supply
+        _totalSupply = _totalSupply.add(_amount);
+        //add to sender balance sheet
+        _balances[msg.sender] = _balances[msg.sender].add(_amount);
+        //take tokens from sender
+        stakingToken.safeTransferFrom(msg.sender, address(this), _amount);
+
+        emit Staked(msg.sender, _amount);
     }
 
     function stakeAll() external{
@@ -210,51 +204,83 @@ contract cvxRewardPool is DepositManager {
         stake(balance);
     }
 
-    function withdraw(uint256 amount)
+    function stakeFor(address _for, uint256 _amount)
         public
-        override
+        updateReward(_for)
+        checkStart
+    {
+        require(_amount > 0, 'RewardPool : Cannot stake 0');
+
+        //also stake to linked rewards
+        for(uint i=0; i < extraRewards.length; i++){
+            IRewards(extraRewards[i]).stake(_for, _amount);
+        }
+
+         //add supply
+        _totalSupply = _totalSupply.add(_amount);
+        //add to _for's balance sheet
+        _balances[_for] = _balances[_for].add(_amount);
+        //take tokens from sender
+        stakingToken.safeTransferFrom(msg.sender, address(this), _amount);
+
+        emit Staked(msg.sender, _amount);
+    }
+
+    function withdraw(uint256 _amount, bool claim)
+        public
         updateReward(msg.sender)
         checkStart
     {
-        require(amount > 0, 'RewardPool : Cannot withdraw 0');
-        super.withdraw(amount);
-        stakingToken.safeTransfer(msg.sender, amount);
-        emit Withdrawn(msg.sender, amount);
+        require(_amount > 0, 'RewardPool : Cannot withdraw 0');
 
         //also withdraw from linked rewards
         for(uint i=0; i < extraRewards.length; i++){
-            IRewards(extraRewards[i]).withdraw(msg.sender, amount);
+            IRewards(extraRewards[i]).withdraw(msg.sender, _amount);
+        }
+
+        _totalSupply = _totalSupply.sub(_amount);
+        _balances[msg.sender] = _balances[msg.sender].sub(_amount);
+        stakingToken.safeTransfer(msg.sender, _amount);
+        emit Withdrawn(msg.sender, _amount);
+
+        if(claim){
+            getReward(msg.sender,true,false);
         }
     }
 
-    function exit() public {
-        getReward(true);
-        withdraw(balanceOf(msg.sender));
-    }
-
-    function getReward(bool _claimExtras) public updateReward(msg.sender) checkStart{
-        uint256 reward = earnedReward(msg.sender);
+    function getReward(address _account, bool _claimExtras, bool _stake) public updateReward(_account) checkStart{
+        uint256 reward = earnedReward(_account);
         if (reward > 0) {
-            rewards[msg.sender] = 0;
+            rewards[_account] = 0;
             rewardToken.safeApprove(crvDeposits,0);
             rewardToken.safeApprove(crvDeposits,reward);
             ICrvDeposit(crvDeposits).deposit(reward,false);
 
-            uint256 cCrvBalance = cCrvToken.balanceOf(address(this));
-            cCrvToken.safeTransfer(msg.sender, cCrvBalance);
-            emit RewardPaid(msg.sender, cCrvBalance);
+            uint256 cvxCrvBalance = cvxCrvToken.balanceOf(address(this));
+            if(_stake){
+                IERC20(cvxCrvToken).safeApprove(cvxCrvRewards,cvxCrvBalance);
+                IRewards(cvxCrvRewards).stakeFor(_account,cvxCrvBalance);
+            }else{
+                cvxCrvToken.safeTransfer(_account, cvxCrvBalance);
+            }
+            emit RewardPaid(_account, cvxCrvBalance);
         }
 
         //also get rewards from linked rewards
         if(_claimExtras){
             for(uint i=0; i < extraRewards.length; i++){
-                IRewards(extraRewards[i]).getReward(msg.sender);
+                IRewards(extraRewards[i]).getReward(_account);
             }
         }
     }
 
-    function getReward() external{
-        getReward(true);
+    function getReward(bool _stake) external{
+        getReward(msg.sender,true, _stake);
+    }
+
+    function donate(uint256 _amount) external returns(bool){
+        IERC20(rewardToken).safeTransferFrom(msg.sender, address(this), _amount);
+        queuedRewards = queuedRewards.add(_amount);
     }
 
     function queueNewRewards(uint256 _rewards) external{
@@ -281,7 +307,7 @@ contract cvxRewardPool is DepositManager {
         internal
         updateReward(address(0))
     {
-       // require(msg.sender == operator, "!authorized");
+        historicalRewards = historicalRewards.add(reward);
         if (block.timestamp > starttime) {
             if (block.timestamp >= periodFinish) {
                 rewardRate = reward.div(duration);

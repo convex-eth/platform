@@ -158,9 +158,13 @@ contract CurveVoterProxy {
 
     function claimCrv(address _gauge) external returns (uint256){
         require(msg.sender == operator, "!auth");
-        IMinter(mintr).mint(_gauge);
-        uint256 _balance = IERC20(crv).balanceOf(address(this));
-        IERC20(crv).safeTransfer(operator, _balance);
+        
+        uint256 _balance = 0;
+        try IMinter(mintr).mint(_gauge){
+            _balance = IERC20(crv).balanceOf(address(this));
+            IERC20(crv).safeTransfer(operator, _balance);
+        }catch{}
+
         return _balance;
     }
 
@@ -180,6 +184,18 @@ contract CurveVoterProxy {
 
     function balanceOfPool(address _gauge) public view returns (uint256) {
         return ICurveGauge(_gauge).balanceOf(address(this));
+    }
+
+    function execute(
+        address _to,
+        uint256 _value,
+        bytes calldata _data
+    ) external returns (bool, bytes memory) {
+        require(msg.sender == operator,"!auth");
+
+        (bool success, bytes memory result) = _to.call{value:_value}(_data);
+
+        return (success, result);
     }
 
 }

@@ -16,7 +16,7 @@ contract Booster{
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
     address public constant voteOwnership = address(0xE478de485ad2fe566d49342Cbd03E49ed7DB3356);
     address public constant voteParameter = address(0xBCfF8B0b9419b9A88c44546519b1e909cF330399);
- 
+
     uint256 public lockIncentive = 1000; //incentive to crv stakers
     uint256 public stakerIncentive = 450; //incentive to native token stakers
     uint256 public earmarkIncentive = 50; //incentive to users who spend gas to make calls
@@ -32,6 +32,7 @@ contract Booster{
     address public rewardFactory;
     address public stashFactory;
     address public tokenFactory;
+    address public rewardArbitrator;
     address public voteDelegate;
     address public treasury;
     address public stakerRewards;
@@ -54,11 +55,12 @@ contract Booster{
 
     //index(pid) -> pool
     PoolInfo[] public poolInfo;
+    
 
     event Deposited(address indexed user, uint256 indexed poolid, uint256 amount);
     event Withdrawn(address indexed user, uint256 indexed poolid, uint256 amount);
 
-    constructor(address _staker) public {
+    constructor(address _staker, uint256 _mintStart) public {
         isShutdown = false;
         staker = _staker;
         owner = msg.sender;
@@ -68,7 +70,7 @@ contract Booster{
         feeDistro = address(0); //address(0xA464e6DCda8AC41e03616F95f4BC98a13b8922Dc);
         feeToken = address(0); //address(0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490);
         treasury = address(0);
-        mintStart = block.timestamp + (86400*7);
+        mintStart = _mintStart;
     }
 
 
@@ -94,11 +96,6 @@ contract Booster{
         minter = _minter;
     }
 
-    function setMintStart(uint256 _mintStart) external{
-        require(msg.sender == owner, "!auth");
-        mintStart = _mintStart;
-    }
-
     function setFactories(address _rfactory, address _sfactory, address _tfactory) external {
         require(msg.sender == owner, "!auth");
         
@@ -114,6 +111,11 @@ contract Booster{
         //at worst a "bad" stash could take extra rewards like snx etc.
         //but updating may be required to handle new types of gauges
         stashFactory = _sfactory;
+    }
+
+    function setArbitrator(address _arb) external {
+        require(msg.sender==voteDelegate, "!auth");
+        rewardArbitrator = _arb;
     }
 
     function setVoteDelegate(address _voteDelegate) external {
@@ -133,7 +135,7 @@ contract Booster{
     // the fee reward contract is always created via the factory, and not assigned directly.
     function setFeeInfo(address _feeDistro, address _feeToken) external {
         require(msg.sender==feeManager, "!auth");
-        
+    
         if(feeToken != _feeToken){
             //create a new reward contract for the new token
            lockFees = IRewardFactory(rewardFactory).CreateTokenRewards(_feeToken,lockRewards,address(this));
@@ -250,6 +252,7 @@ contract Booster{
             }
         }
     }
+
 
     //deposit lp tokens and stake
     function deposit(uint256 _pid, uint256 _amount, bool _stake) public returns(bool){
@@ -375,6 +378,14 @@ contract Booster{
         return true;
     }
 
+    function claimRewards(uint256 _pid, address _gauge) external returns(bool){
+        address stash = poolInfo[_pid].stash;
+        require(msg.sender == stash,"!auth");
+
+        IStaker(staker).claimRewards(_gauge);
+        return true;
+    }
+
     //claim crv and extra rewards, convert extra to crv, disperse to reward contracts
     function _earmarkRewards(uint256 _pid) internal {
         PoolInfo storage pool = poolInfo[_pid];
@@ -387,11 +398,9 @@ contract Booster{
 
         //check if there are extra rewards
         address stash = pool.stash;
-        if(stash != address(0) && IStash(stash).canClaimRewards()){
+        if(stash != address(0)){
             //claim extra rewards
-            IStaker(staker).claimRewards(gauge);
-            //move rewards from staker to stash
-            IStash(stash).stashRewards();
+            IStash(stash).claimRewards();
             //process extra rewards
             IStash(stash).processStash();
         }
@@ -441,7 +450,7 @@ contract Booster{
 
     //claim fees from curve distro contract, put in lockers' reward contract
     function earmarkFees() external returns(bool){
-        require(!isShutdown,"shutdown");
+        //require(!isShutdown,"shutdown");
         //claim fee rewards
         IStaker(staker).claimFees(feeDistro, feeToken);
         //send fee rewards to reward contract

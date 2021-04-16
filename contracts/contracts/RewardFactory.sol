@@ -17,9 +17,57 @@ contract RewardFactory {
 
     address public operator;
     mapping (address => bool) private rewardAccess;
+    mapping(address => uint256[]) public rewardActiveList;
 
     constructor(address _operator) public {
         operator = _operator;
+    }
+
+    //todo: Get active count function
+    function activeRewardCount(address _reward) external view returns(uint256){
+        uint256[] storage activeList = rewardActiveList[_reward];
+        //uint256 pid = _pid+1; //offset by 1 so that we can use 0 as empty
+        uint256 count = 0;
+        for(uint256 i = 0; i < activeList.length; i++){
+            if(activeList[i] > 0){
+                count = count + 1;
+            }
+        }
+        return count;
+    }
+
+    function addActiveReward(address _reward, uint256 _pid) external returns(bool){
+        require(rewardAccess[msg.sender] == true,"!auth");
+
+        uint256[] storage activeList = rewardActiveList[_reward];
+        uint256 pid = _pid+1; //offset by 1 so that we can use 0 as empty
+
+        for(uint256 i = 0; i < activeList.length; i++){
+            if(activeList[i] == pid) return true;
+        }
+        for(uint256 i = 0; i < activeList.length; i++){
+            if(activeList[i] == 0){
+                activeList[i] = pid;
+                return true;
+            }
+        }
+        activeList.push(pid);
+        return true;
+    }
+
+    function removeActiveReward(address _reward, uint256 _pid) external returns(bool){
+        require(rewardAccess[msg.sender] == true,"!auth");
+
+        uint256[] storage activeList = rewardActiveList[_reward];
+        uint256 pid = _pid+1; //offset by 1 so that we can use 0 as empty
+
+        for(uint256 i = 0; i < activeList.length; i++){
+            if(activeList[i] == pid){
+                activeList[i] = 0;
+                return true;
+            }
+        }
+        return true;
     }
 
     //stash contracts need access to create new Virtual balance pools for extra gauge incentives(ex. snx)

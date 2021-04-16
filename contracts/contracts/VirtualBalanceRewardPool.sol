@@ -77,6 +77,7 @@ contract VirtualBalanceRewardPool is VirtualBalanceWrapper {
     uint256 public rewardPerTokenStored;
     uint256 public queuedRewards = 0;
     uint256 public currentRewards = 0;
+    uint256 public historicalRewards = 0;
     uint256 public newRewardRatio = 750;
     mapping(address => uint256) public userRewardPerTokenPaid;
     mapping(address => uint256) public rewards;
@@ -175,6 +176,10 @@ contract VirtualBalanceRewardPool is VirtualBalanceWrapper {
         getReward(msg.sender);
     }
 
+    function donate(uint256 _amount) external returns(bool){
+        IERC20(rewardToken).safeTransferFrom(msg.sender, address(this), _amount);
+        queuedRewards = queuedRewards.add(_amount);
+    }
 
     function queueNewRewards(uint256 _rewards) external{
         require(msg.sender == operator, "!authorized");
@@ -200,7 +205,7 @@ contract VirtualBalanceRewardPool is VirtualBalanceWrapper {
         internal
         updateReward(address(0))
     {
-       // require(msg.sender == operator, "!authorized");
+       historicalRewards = historicalRewards.add(reward);
         if (block.timestamp > starttime) {
             if (block.timestamp >= periodFinish) {
                 rewardRate = reward.div(duration);

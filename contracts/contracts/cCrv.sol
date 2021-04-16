@@ -20,7 +20,7 @@ contract cCrvToken is ERC20 {
         public
         ERC20(
             "Convex Crv",
-            "cCrv"
+            "cvxCrv"
         )
     {
         operator = msg.sender;
