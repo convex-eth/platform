@@ -82,7 +82,7 @@ contract RewardFactory {
 
         //operator = booster(deposit) contract so that new crv can be added and distributed
         //reward manager = this factory so that extra incentive tokens(ex. snx) can be linked to the main managed reward pool
-        BaseRewardPool rewardPool = new BaseRewardPool(_pid,_depositToken,crv,block.timestamp,operator, address(this));
+        BaseRewardPool rewardPool = new BaseRewardPool(_pid,_depositToken,crv,operator, address(this));
         return address(rewardPool);
     }
 
@@ -92,7 +92,7 @@ contract RewardFactory {
         require(msg.sender == operator || rewardAccess[msg.sender] == true, "!auth");
 
         //create new pool, use main pool for balance lookup
-        VirtualBalanceRewardPool rewardPool = new VirtualBalanceRewardPool(_mainRewards,_token,block.timestamp,_operator);
+        VirtualBalanceRewardPool rewardPool = new VirtualBalanceRewardPool(_mainRewards,_token,_operator);
         address rAddress = address(rewardPool);
         //add the new pool to main pool's list of extra rewards, assuming this factory has "reward manager" role
         IRewards(_mainRewards).addExtraReward(rAddress);

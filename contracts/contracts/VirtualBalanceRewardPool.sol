@@ -68,9 +68,7 @@ contract VirtualBalanceRewardPool is VirtualBalanceWrapper {
     uint256 public constant duration = 7 days;
 
     address public operator;
-   // address public governance;
 
-    uint256 public starttime;
     uint256 public periodFinish = 0;
     uint256 public rewardRate = 0;
     uint256 public lastUpdateTime;
@@ -78,7 +76,7 @@ contract VirtualBalanceRewardPool is VirtualBalanceWrapper {
     uint256 public queuedRewards = 0;
     uint256 public currentRewards = 0;
     uint256 public historicalRewards = 0;
-    uint256 public newRewardRatio = 750;
+    uint256 public newRewardRatio = 830;
     mapping(address => uint256) public userRewardPerTokenPaid;
     mapping(address => uint256) public rewards;
 
@@ -90,20 +88,13 @@ contract VirtualBalanceRewardPool is VirtualBalanceWrapper {
     constructor(
         address deposit_,
         address reward_,
-        uint256 starttime_,
         address op_
     ) public {
         deposits = IDeposit(deposit_);
         rewardToken = IERC20(reward_);
-        starttime = starttime_;
         operator = op_;
     }
 
-
-    modifier checkStart() {
-        require(block.timestamp >= starttime, 'VirtualDepositRewardPool: not start');
-        _;
-    }
 
     modifier updateReward(address account) {
         rewardPerTokenStored = rewardPerToken();
@@ -145,7 +136,6 @@ contract VirtualBalanceRewardPool is VirtualBalanceWrapper {
     function stake(address _account, uint256 amount)
         external
         updateReward(_account)
-        checkStart
     {
         require(msg.sender == address(deposits), "!authorized");
        // require(amount > 0, 'VirtualDepositRewardPool: Cannot stake 0');
@@ -155,7 +145,6 @@ contract VirtualBalanceRewardPool is VirtualBalanceWrapper {
     function withdraw(address _account, uint256 amount)
         public
         updateReward(_account)
-        checkStart
     {
         require(msg.sender == address(deposits), "!authorized");
         //require(amount > 0, 'VirtualDepositRewardPool : Cannot withdraw 0');
@@ -163,7 +152,7 @@ contract VirtualBalanceRewardPool is VirtualBalanceWrapper {
         emit Withdrawn(_account, amount);
     }
 
-    function getReward(address _account) public updateReward(_account) checkStart {
+    function getReward(address _account) public updateReward(_account){
         uint256 reward = earned(_account);
         if (reward > 0) {
             rewards[_account] = 0;
@@ -192,7 +181,11 @@ contract VirtualBalanceRewardPool is VirtualBalanceWrapper {
             return;
         }
 
-        uint256 queuedRatio = currentRewards.mul(1000).div(_rewards);
+        //et = now - (finish-duration)
+        uint256 elapsedTime = block.timestamp.sub(periodFinish.sub(duration));
+        //current at now: rewardRate * elapsedTime
+        uint256 currentAtNow = rewardRate * elapsedTime;
+        uint256 queuedRatio = currentAtNow.mul(1000).div(_rewards);
         if(queuedRatio < newRewardRatio){
             notifyRewardAmount(_rewards);
             queuedRewards = 0;
@@ -205,26 +198,18 @@ contract VirtualBalanceRewardPool is VirtualBalanceWrapper {
         internal
         updateReward(address(0))
     {
-       historicalRewards = historicalRewards.add(reward);
-        if (block.timestamp > starttime) {
-            if (block.timestamp >= periodFinish) {
-                rewardRate = reward.div(duration);
-            } else {
-                uint256 remaining = periodFinish.sub(block.timestamp);
-                uint256 leftover = remaining.mul(rewardRate);
-                reward = reward.add(leftover);
-                rewardRate = reward.div(duration);
-            }
-            currentRewards = reward;
-            lastUpdateTime = block.timestamp;
-            periodFinish = block.timestamp.add(duration);
-            emit RewardAdded(reward);
-        } else {
+        historicalRewards = historicalRewards.add(reward);
+        if (block.timestamp >= periodFinish) {
             rewardRate = reward.div(duration);
-            lastUpdateTime = starttime;
-            periodFinish = starttime.add(duration);
-            currentRewards = reward;
-            emit RewardAdded(reward);
+        } else {
+            uint256 remaining = periodFinish.sub(block.timestamp);
+            uint256 leftover = remaining.mul(rewardRate);
+            reward = reward.add(leftover);
+            rewardRate = reward.div(duration);
         }
+        currentRewards = reward;
+        lastUpdateTime = block.timestamp;
+        periodFinish = block.timestamp.add(duration);
+        emit RewardAdded(reward);
     }
 }
