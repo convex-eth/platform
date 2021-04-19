@@ -216,8 +216,16 @@ contract Booster{
     //shutdown pool
     function shutdownPool(uint256 _pid) external returns(bool){
         require(msg.sender==poolManager, "!auth");
+        PoolInfo storage pool = poolInfo[_pid];
 
-        poolInfo[_pid].shutdown = true;
+        //withdraw from gauge
+        try IStaker(staker).withdrawAll(pool.lptoken,pool.gauge){
+        }catch{}
+
+        //remove stash rights
+        IStaker(staker).setStashAccess(pool.stash,false);
+
+        pool.shutdown = true;
         return true;
     }
 
@@ -236,20 +244,22 @@ contract Booster{
             address gauge = pool.gauge;
             address stash = pool.stash;
             bool poolShutdown =  pool.shutdown;
+            if(poolShutdown){
+                //already shutdown
+                continue;
+            }
 
             //withdraw from gauge
             try IStaker(staker).withdrawAll(token,gauge){
             }catch{}
             
-            if(_claimRewards && poolShutdown == false){
+            if(_claimRewards){
                 //earmark remaining rewards
                 _earmarkRewards(i);
             }
 
             //remove stash rights
-            if(stash != address(0)){
-                IStaker(staker).setStashAccess(stash,false);
-            }
+            IStaker(staker).setStashAccess(stash,false);
         }
     }
 
@@ -262,13 +272,13 @@ contract Booster{
 
         address lptoken = pool.lptoken;
         IERC20(lptoken).safeTransferFrom(msg.sender, address(this), _amount);
-        _amount = IERC20(lptoken).balanceOf(address(this));
-
-        //move to curve gauge
-        uint256 bal = IERC20(lptoken).balanceOf(address(this));
+        
+        //do not update amount based on balanceOf(this)
+        //if a pool is shutdown and remade it will unstake the old pool's coins
+        //and hold here
 
         //send to proxy to stake
-        IERC20(lptoken).safeTransfer(staker, bal);
+        IERC20(lptoken).safeTransfer(staker, _amount);
 
         //stake
         address gauge = pool.gauge;
@@ -311,22 +321,21 @@ contract Booster{
         PoolInfo storage pool = poolInfo[_pid];
         address lptoken = pool.lptoken;
         address gauge = pool.gauge;
-        uint256 before = IERC20(lptoken).balanceOf(address(this));
 
         //remove lp balance
         address token = pool.token;
         ITokenMinter(token).burn(_from,_amount);
 
-        //pull whats needed from gauge
-        //  should always be full amount unless we withdrew everything to shutdown this contract
-        if (before < _amount) {
-            IStaker(staker).withdraw(lptoken,gauge, _amount.sub(before));
+        //pull from gauge if not shutdown
+        // if shutdown tokens will be in this contract
+        if (!pool.shutdown) {
+            IStaker(staker).withdraw(lptoken,gauge, _amount);
         }
 
         //some gauges claim rewards when withdrawing, stash them in a seperate contract until next claim
         //do not call if shutdown since stashes wont have access
         address stash = pool.stash;
-        if(stash != address(0) && !isShutdown){
+        if(stash != address(0) && !isShutdown && !pool.shutdown){
             IStash(stash).stashRewards();
         }
         
