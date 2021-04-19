@@ -23,7 +23,7 @@ contract RewardFactory {
         operator = _operator;
     }
 
-    //todo: Get active count function
+    //Get active count function
     function activeRewardCount(address _reward) external view returns(uint256){
         if(_reward == address(0)){
             return 0;

@@ -124,6 +124,7 @@ contract CrvDepositor{
             //mint here 
             ITokenMinter(minter).mint(address(this),_amount);
             //stake for msg.sender
+            IERC20(minter).safeApprove(_stakeAddress,0);
             IERC20(minter).safeApprove(_stakeAddress,_amount);
             IRewards(_stakeAddress).stakeFor(msg.sender,_amount);
         }

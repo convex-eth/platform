@@ -296,6 +296,7 @@ contract Booster{
             //mint here and send to rewards on user behalf
             ITokenMinter(token).mint(address(this),_amount);
             address rewardContract = pool.crvRewards;
+            IERC20(token).safeApprove(rewardContract,0);
             IERC20(token).safeApprove(rewardContract,_amount);
             IRewards(rewardContract).stakeFor(msg.sender,_amount);
         }else{

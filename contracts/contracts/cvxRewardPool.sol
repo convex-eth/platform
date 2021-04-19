@@ -247,6 +247,7 @@ contract cvxRewardPool{
 
             uint256 cvxCrvBalance = cvxCrvToken.balanceOf(address(this));
             if(_stake){
+                IERC20(cvxCrvToken).safeApprove(cvxCrvRewards,0);
                 IERC20(cvxCrvToken).safeApprove(cvxCrvRewards,cvxCrvBalance);
                 IRewards(cvxCrvRewards).stakeFor(_account,cvxCrvBalance);
             }else{
