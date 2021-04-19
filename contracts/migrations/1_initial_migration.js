@@ -16,6 +16,7 @@ const BaseRewardPool = artifacts.require("BaseRewardPool");
 const cvxRewardPool = artifacts.require("cvxRewardPool");
 const ArbitratorVault = artifacts.require("ArbitratorVault");
 const ClaimZap = artifacts.require("ClaimZap");
+const ConvexMasterChef = artifacts.require("ConvexMasterChef");
 // const MerkleAirdrop = artifacts.require("MerkleAirdrop");
 // const MerkleAirdropFactory = artifacts.require("MerkleAirdropFactory");
 // const VestedEscrow = artifacts.require("VestedEscrow");
@@ -42,7 +43,7 @@ module.exports = function (deployer, network, accounts) {
     let admin = accounts[0];
 
 	var booster, voter, rFactory, sFactory, tFactory, cvx, ccrv, deposit, arb, pools;
-	var ccrvRewards, cvxRewards, airdrop, vecrvVesting;
+	var ccrvRewards, cvxRewards, airdrop, vecrvVesting, chef;
 	var sushiRouter, sushiFactory, pairToken;
 
 	var rewardsStart = Math.floor(Date.now() / 1000)+86400;
@@ -131,7 +132,18 @@ module.exports = function (deployer, network, accounts) {
 		return booster.setArbitrator(arb.address)
 	})
 	.then(function() {
-		return deployer.deploy(ClaimZap,cvxRewards.address, ccrvRewards.address)
+		var chefCvx = new BN(distroList.lpincentives);
+		var numberOfBlocks = new BN(6000*365*4);
+		var rewardPerBlock = new BN(chefCvx).div(numberOfBlocks)
+		console.log("cvx to chef: " +chefCvx.toString())
+		console.log("rewards per block: " +rewardPerBlock.toString());
+		return deployer.deploy(ConvexMasterChef,cvx.address,rewardPerBlock, rewardsStart, rewardsStart+80220 )
+	}).then(function(instance) {
+		chef = instance;
+		systemContracts["chef"] = chef.address;
+	})
+	.then(function() {
+		return deployer.deploy(ClaimZap,cvxRewards.address, ccrvRewards.address, chef.address)
 	}).then(function(instance) {
 		systemContracts["claimZap"] = instance.address;
 	})

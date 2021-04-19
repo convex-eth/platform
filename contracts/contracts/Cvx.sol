@@ -17,7 +17,7 @@ contract ConvexToken is ERC20{
     address public operator;
     address public vecrvProxy;
 
-    uint256 public maxSupply = 10000000 * 1e18; //10mil
+    uint256 public maxSupply = 100 * 1000000 * 1e18; //100mil
     uint256 public totalCliffs = 200;
     uint256 public reductionPerCliff;
 
