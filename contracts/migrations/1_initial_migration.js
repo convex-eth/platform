@@ -17,9 +17,10 @@ const cvxRewardPool = artifacts.require("cvxRewardPool");
 const ArbitratorVault = artifacts.require("ArbitratorVault");
 const ClaimZap = artifacts.require("ClaimZap");
 const ConvexMasterChef = artifacts.require("ConvexMasterChef");
+const VestedEscrow = artifacts.require("VestedEscrow");
 // const MerkleAirdrop = artifacts.require("MerkleAirdrop");
 // const MerkleAirdropFactory = artifacts.require("MerkleAirdropFactory");
-// const VestedEscrow = artifacts.require("VestedEscrow");
+
 
 // const IUniswapV2Router01 = artifacts.require("IUniswapV2Router01");
 // const IUniswapV2Factory = artifacts.require("IUniswapV2Factory");
@@ -147,6 +148,36 @@ module.exports = function (deployer, network, accounts) {
 	}).then(function(instance) {
 		systemContracts["claimZap"] = instance.address;
 	})
+	.then(function() {
+		//vecrv holder rewards changed to instant drop
+		//no need to set a funding contract
+		return deployer.deploy(VestedEscrow,cvx.address, rewardsStart, rewardsEnd, cvxRewards.address, admin)
+	})
+	.then(function(instance) {
+		vecrvVesting = instance;
+		systemContracts["vestedEscrow"] = vecrvVesting.address;
+		return cvx.approve(vecrvVesting.address, distroList.vested.total);
+	})
+	.then(function() {
+		return vecrvVesting.addTokens(distroList.vested.total);
+	})
+	.then(function() {
+		return vecrvVesting.fund(distroList.vested.team.addresses,distroList.vested.team.amounts);
+	})
+	.then(function() {
+		return vecrvVesting.fund(distroList.vested.investor.addresses,distroList.vested.investor.amounts);
+	})
+	.then(function() {
+		return vecrvVesting.unallocatedSupply();
+	})
+	.then(function(unallocatedSupply) {
+		console.log("vesting unallocatedSupply: " +unallocatedSupply)
+		return vecrvVesting.initialLockedSupply();
+	})
+	.then(function(initialLockedSupply) {
+		console.log("vesting initialLockedSupply: " +initialLockedSupply)
+	})
+
 	// .then(function() {
 	// 	return deployer.deploy(MerkleAirdrop)
 	// }).then(function(instance) {
