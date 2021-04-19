@@ -131,7 +131,7 @@ module.exports = function (deployer, network, accounts) {
 		return booster.setArbitrator(arb.address)
 	})
 	.then(function() {
-		return deployer.deploy(ClaimZap)
+		return deployer.deploy(ClaimZap,cvxRewards.address, ccrvRewards.address)
 	}).then(function(instance) {
 		systemContracts["claimZap"] = instance.address;
 	})

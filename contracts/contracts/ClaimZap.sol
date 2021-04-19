@@ -18,8 +18,10 @@ contract ClaimZap{
     address public cvxRewards;
     address public cvxCrvRewards;
 
-    constructor() public {
+    constructor(address _cvxRewards, address _cvxCrvRewards) public {
         owner = msg.sender;
+        cvxRewards = _cvxRewards;
+        cvxCrvRewards = _cvxCrvRewards;
     }
 
     function setCvxRewards(address _rewards) external {
