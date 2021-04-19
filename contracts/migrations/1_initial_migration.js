@@ -18,8 +18,8 @@ const ArbitratorVault = artifacts.require("ArbitratorVault");
 const ClaimZap = artifacts.require("ClaimZap");
 const ConvexMasterChef = artifacts.require("ConvexMasterChef");
 const VestedEscrow = artifacts.require("VestedEscrow");
-// const MerkleAirdrop = artifacts.require("MerkleAirdrop");
-// const MerkleAirdropFactory = artifacts.require("MerkleAirdropFactory");
+const MerkleAirdrop = artifacts.require("MerkleAirdrop");
+const MerkleAirdropFactory = artifacts.require("MerkleAirdropFactory");
 
 
 // const IUniswapV2Router01 = artifacts.require("IUniswapV2Router01");
@@ -177,7 +177,31 @@ module.exports = function (deployer, network, accounts) {
 	.then(function(initialLockedSupply) {
 		console.log("vesting initialLockedSupply: " +initialLockedSupply)
 	})
-
+	.then(function() {
+		return deployer.deploy(MerkleAirdropFactory)
+	})
+	.then(function(dropFactory) {
+		systemContracts["dropFactory"] = dropFactory.address;
+		return dropFactory.CreateMerkleAirdrop()
+	})
+	.then(function(tx) {
+      	console.log("factory return: " +tx.logs[0].args.drop)
+  		return MerkleAirdrop.at(tx.logs[0].args.drop);
+  	})
+  	.then(function(instance) {
+  		airdrop = instance;
+  		systemContracts["airdrop"] = airdrop.address;
+  		return airdrop.setRewardToken(cvx.address)
+  	})
+  	.then(function() {
+  		return cvx.transfer(airdrop.address, distroList.vecrv);
+  	})
+  	.then(function() {
+		return cvx.balanceOf(airdrop.address);
+	})
+	.then(function(dropBalance) {
+		console.log("airdrop balance: " +dropBalance);
+	})
 	// .then(function() {
 	// 	return deployer.deploy(MerkleAirdrop)
 	// }).then(function(instance) {
