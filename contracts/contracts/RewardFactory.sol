@@ -25,6 +25,10 @@ contract RewardFactory {
 
     //todo: Get active count function
     function activeRewardCount(address _reward) external view returns(uint256){
+        if(_reward == address(0)){
+            return 0;
+        }
+
         uint256[] storage activeList = rewardActiveList[_reward];
         //uint256 pid = _pid+1; //offset by 1 so that we can use 0 as empty
         uint256 count = 0;
@@ -38,6 +42,9 @@ contract RewardFactory {
 
     function addActiveReward(address _reward, uint256 _pid) external returns(bool){
         require(rewardAccess[msg.sender] == true,"!auth");
+        if(_reward == address(0)){
+            return true;
+        }
 
         uint256[] storage activeList = rewardActiveList[_reward];
         uint256 pid = _pid+1; //offset by 1 so that we can use 0 as empty
@@ -57,6 +64,9 @@ contract RewardFactory {
 
     function removeActiveReward(address _reward, uint256 _pid) external returns(bool){
         require(rewardAccess[msg.sender] == true,"!auth");
+        if(_reward == address(0)){
+            return true;
+        }
 
         uint256[] storage activeList = rewardActiveList[_reward];
         uint256 pid = _pid+1; //offset by 1 so that we can use 0 as empty
