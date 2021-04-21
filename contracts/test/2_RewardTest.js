@@ -1,5 +1,6 @@
 const { BN, constants, expectEvent, expectRevert, time } = require('openzeppelin-test-helpers');
-
+var jsonfile = require('jsonfile');
+var contractList = jsonfile.readFileSync('./contracts.json');
 
 const Booster = artifacts.require("Booster");
 const CrvDepositor = artifacts.require("CrvDepositor");
@@ -51,7 +52,8 @@ contract("RewardsTest", async accounts => {
     let cCrvRewardsContract = await BaseRewardPool.at(cCrvRewards);
     let cvxRewardsContract = await cvxRewardPool.at(cvxRewards);
 
-    let poolinfo = await booster.poolInfo(0);
+    var poolId = contractList.pools.find(pool => pool.name == "3pool").id;
+    let poolinfo = await booster.poolInfo(poolId);
     let rewardPoolAddress = poolinfo.crvRewards;
     let rewardPool = await BaseRewardPool.at(rewardPoolAddress);
     let depositToken = await ERC20.at(poolinfo.token);
@@ -96,7 +98,7 @@ contract("RewardsTest", async accounts => {
     console.log("approved");
 
     //deposit all for user a
-    await booster.depositAll(0,true,{from:userA});
+    await booster.depositAll(poolId,true,{from:userA});
     console.log("deposit all complete");
     //check deposited balance, reward balance, and earned amount(earned should be 0 still)
     //await booster.userPoolInfo(0,userA).then(a=>console.log("deposited lp: " +a));
@@ -126,7 +128,7 @@ contract("RewardsTest", async accounts => {
     await cvx.balanceOf(userA).then(a=>console.log("userA cvx: " +a))
 
     //claim crv rewards from gauge and send to reward contract
-    await booster.earmarkRewards(0,{from:caller});
+    await booster.earmarkRewards(poolId,{from:caller});
     console.log("earmarked");
 
     //check crv at various addresses, should all be at reward contracts(3) and caller address(gas incentive)
@@ -179,7 +181,7 @@ contract("RewardsTest", async accounts => {
     await crv.balanceOf(rewardPool.address).then(a=>console.log("rewards left: " +a));
 
     //earmark again
-    await booster.earmarkRewards(0,{from:caller});
+    await booster.earmarkRewards(poolId,{from:caller});
     console.log("earmarked (2)");
     //crv on reward contract should have increased again
     await crv.balanceOf(rewardPool.address).then(a=>console.log("rewards left: " +a));
@@ -216,11 +218,12 @@ contract("RewardsTest", async accounts => {
     //manual unstake + withdraw
     // await rewardPool.earned(userA).then(a=>console.log("rewards earned(unclaimed): " +a));
     // await rewardPool.exit({from:userA});
-    // await booster.withdrawAll(0,{from:userA});
+    // await booster.withdrawAll(poolId,{from:userA});
     // console.log("withdrawAll()");
 
     //auto unstake + unwrap + claim
-    await rewardPool.withdrawAndUnwrap({from:userA});
+    let rbal = await rewardPool.balanceOf(userA);
+    await rewardPool.withdrawAndUnwrap(rbal,true,{from:userA});
     console.log("withdrawAll()");
 
     await threeCrv.balanceOf(userA).then(a=>console.log("userA 3crv final: " +a));
@@ -234,10 +237,13 @@ contract("RewardsTest", async accounts => {
     //meanwhile user B should be receiving ccrv rewards via cvx staking
     await crv.balanceOf(userB).then(a=>console.log("userB crv(before claim): " +a))
     await cCrv.balanceOf(userB).then(a=>console.log("userB cCrv(before claim): " +a))
+    await cCrvRewardsContract.balanceOf(userB).then(a=>console.log("userB staked cCrv(before claim): " +a))
     await cvxRewardsContract.earned(userB).then(a=>console.log("userB earned: " +a));
-    await cvxRewardsContract.getReward({from:userB});
+    //await cvxRewardsContract.getReward(false,{from:userB});
+    await cvxRewardsContract.getReward(true,{from:userB});
     await crv.balanceOf(userB).then(a=>console.log("userB crv(after claim): " +a))
     await cCrv.balanceOf(userB).then(a=>console.log("userB cCrv(after claim): " +a))
+    await cCrvRewardsContract.balanceOf(userB).then(a=>console.log("userB staked cCrv(after claim): " +a))
   });
 });
 

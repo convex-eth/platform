@@ -1,5 +1,6 @@
 const { BN, constants, expectEvent, expectRevert, time } = require('openzeppelin-test-helpers');
-
+var jsonfile = require('jsonfile');
+var contractList = jsonfile.readFileSync('./contracts.json');
 
 const Booster = artifacts.require("Booster");
 const CrvDepositor = artifacts.require("CrvDepositor");
@@ -51,7 +52,8 @@ contract("cCrv Rewards", async accounts => {
     let cCrvRewardsContract = await BaseRewardPool.at(cCrvRewards);
     let cvxRewardsContract = await cvxRewardPool.at(cvxRewards);
 
-    let poolinfo = await booster.poolInfo(0);
+    var poolId = contractList.pools.find(pool => pool.name == "3pool").id;
+    let poolinfo = await booster.poolInfo(poolId);
     let rewardPoolAddress = poolinfo.crvRewards;
     let rewardPool = await BaseRewardPool.at(rewardPoolAddress);
 

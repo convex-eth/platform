@@ -69,7 +69,6 @@ module.exports = function (deployer, network, accounts) {
 	}).then(function(instance) {
 		cvx = instance;
 		systemContracts["cvx"] = cvx.address;
-		return cvx.mint(accounts[0],distroList.premine)//"5000000000000000000000000")
 	})
 	.then(function() {
 		return deployer.deploy(Booster, voter.address, cvx.address, rewardsStart)
@@ -80,6 +79,9 @@ module.exports = function (deployer, network, accounts) {
 	})
 	.then(function() {
 		return voter.setOperator(booster.address)
+	})
+	.then(function(){
+		return cvx.mint(accounts[0],distroList.premine)//"5000000000000000000000000")
 	})
 	.then(function() {
 		return deployer.deploy(RewardFactory,booster.address)
