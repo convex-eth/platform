@@ -60,7 +60,7 @@ contract Booster{
     event Deposited(address indexed user, uint256 indexed poolid, uint256 amount);
     event Withdrawn(address indexed user, uint256 indexed poolid, uint256 amount);
 
-    constructor(address _staker, uint256 _mintStart) public {
+    constructor(address _staker, address _minter, uint256 _mintStart) public {
         isShutdown = false;
         staker = _staker;
         owner = msg.sender;
@@ -70,6 +70,7 @@ contract Booster{
         feeDistro = address(0); //address(0xA464e6DCda8AC41e03616F95f4BC98a13b8922Dc);
         feeToken = address(0); //address(0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490);
         treasury = address(0);
+        minter = _minter;
         mintStart = _mintStart;
     }
 
@@ -89,11 +90,6 @@ contract Booster{
     function setPoolManager(address _poolM) external {
         require(msg.sender == poolManager, "!auth");
         poolManager = _poolM;
-    }
-
-    function setMinter(address _minter) external {
-        require(msg.sender == owner, "!auth");
-        minter = _minter;
     }
 
     function setFactories(address _rfactory, address _sfactory, address _tfactory) external {
