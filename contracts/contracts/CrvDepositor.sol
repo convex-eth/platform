@@ -95,7 +95,7 @@ contract CrvDepositor{
     //can locking immediately or defer locking to someone else by paying a fee.
     //while users can choose to lock or defer, this is mostly in place so that
     //the cvx reward contract isnt costly to claim rewards
-    function deposit(uint256 _amount, bool _lock) external {
+    function deposit(uint256 _amount, bool _lock, address _stakeAddress) public {
         require(_amount > 0,"!>0");
         IERC20(crv).safeTransferFrom(msg.sender, address(this), _amount);
 
@@ -117,8 +117,21 @@ contract CrvDepositor{
             incentiveCrv = incentiveCrv.add(callIncentive);
         }
 
-        //mint
-        ITokenMinter(minter).mint(msg.sender,_amount);//shares do not gain interest so mint 1:1 for crv
+        if(_stakeAddress == address(0)){
+            //mint for msg.sender
+            ITokenMinter(minter).mint(msg.sender,_amount);
+        }else{
+            //mint here 
+            ITokenMinter(minter).mint(address(this),_amount);
+            //stake for msg.sender
+            IERC20(minter).safeApprove(_stakeAddress,0);
+            IERC20(minter).safeApprove(_stakeAddress,_amount);
+            IRewards(_stakeAddress).stakeFor(msg.sender,_amount);
+        }
+    }
+
+    function deposit(uint256 _amount, bool _lock) external {
+        deposit(_amount,_lock,address(0));
     }
 
     //allow retrival of crv before whitelisting and first lock

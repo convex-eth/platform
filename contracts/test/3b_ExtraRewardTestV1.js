@@ -1,6 +1,7 @@
 // const { BN, constants, expectEvent, expectRevert, time } = require('openzeppelin-test-helpers');
 const { BN, time } = require('openzeppelin-test-helpers');
-//const { expect } = require('chai');
+var jsonfile = require('jsonfile');
+var contractList = jsonfile.readFileSync('./contracts.json');
 
 const Booster = artifacts.require("Booster");
 const CrvDepositor = artifacts.require("CrvDepositor");
@@ -9,12 +10,12 @@ const ExtraRewardStashV1 = artifacts.require("ExtraRewardStashV1");
 const ExtraRewardStashV2 = artifacts.require("ExtraRewardStashV2");
 const BaseRewardPool = artifacts.require("BaseRewardPool");
 const VirtualBalanceRewardPool = artifacts.require("VirtualBalanceRewardPool");
-//const cCrvRewardPool = artifacts.require("cCrvRewardPool");
 const cvxRewardPool = artifacts.require("cvxRewardPool");
 const ConvexToken = artifacts.require("ConvexToken");
 const cCrvToken = artifacts.require("cCrvToken");
 const StashFactory = artifacts.require("StashFactory");
 const RewardFactory = artifacts.require("RewardFactory");
+const PoolManager = artifacts.require("PoolManager");
 
 
 const IExchange = artifacts.require("IExchange");
@@ -49,6 +50,7 @@ contract("ExtraRewardsTest v1", async accounts => {
     let booster = await Booster.deployed();
     let rewardFactory = await RewardFactory.deployed();
     let stashFactory = await StashFactory.deployed();
+    let poolManager = await PoolManager.deployed();
     let cvx = await ConvexToken.deployed();
     let cCrv = await cCrvToken.deployed();
     let crvDeposit = await CrvDepositor.deployed();
@@ -57,18 +59,17 @@ contract("ExtraRewardsTest v1", async accounts => {
     let cCrvRewardsContract = await BaseRewardPool.at(cCrvRewards);
     let cvxRewardsContract = await cvxRewardPool.at(cvxRewards);
 
-    //add pool that uses a v1 gauge with rewards (susd)
-    await booster.addPool(susdswap.address,susdGauge.address,1);
-    console.log("pool added");
-    let poolinfo = await booster.poolInfo(1);
+    var poolId = contractList.pools.find(pool => pool.name == "susd").id;
+    let poolinfo = await booster.poolInfo(poolId);
     let rewardPoolAddress = poolinfo.crvRewards;
     let rewardPool = await BaseRewardPool.at(rewardPoolAddress);
     console.log("reward contract at " +rewardPool.address);
     let stash = poolinfo.stash;
     let rewardStash = await ExtraRewardStashV1.at(stash);
     console.log("stash contract at " +rewardStash.address);
-    let canclaim = await rewardStash.canClaimRewards();
-   // console.log("stash can claim? " +JSON.stringify(canclaim));
+    
+    //earmark to make sure snx is registered
+    await booster.earmarkRewards(poolId,{from:caller});
     
     //make sure statsh is v1
     let stashName = await rewardStash.getName();
@@ -94,7 +95,7 @@ contract("ExtraRewardsTest v1", async accounts => {
      //approve and partial deposit
     await susdlp.approve(booster.address,0,{from:userA});
     await susdlp.approve(booster.address,startinglp,{from:userA});
-    await booster.deposit(1,web3.utils.toWei("0.1", "ether"),true,{from:userA});
+    await booster.deposit(poolId,web3.utils.toWei("0.1", "ether"),true,{from:userA});
     console.log("partial deposit complete");
 
     //confirm deposit
@@ -115,7 +116,7 @@ contract("ExtraRewardsTest v1", async accounts => {
     await time.latestBlock().then(a=>console.log("current block: " +a));
 
     //collect and distribute rewards off gauge
-    await booster.earmarkRewards(1,{from:caller});
+    await booster.earmarkRewards(poolId,{from:caller});
     console.log("earmark 1")
 
     //get new snx reward contract
@@ -157,7 +158,7 @@ contract("ExtraRewardsTest v1", async accounts => {
     await rewardPool.earned(userA).then(a=>console.log("rewards earned(unclaimed): " +a));
 
     //deposit remaining
-    await booster.depositAll(1,true,{from:userA});
+    await booster.depositAll(poolId,true,{from:userA});
     console.log("Deposit All")
 
     //stash should NOT catch rewards after a deposit in v1 stashes
@@ -181,7 +182,7 @@ contract("ExtraRewardsTest v1", async accounts => {
     await susdGaugeDebug.claimable_reward(voteproxy.address).then(a=>console.log("claimableRewards: " +a));
     
     //claim rewards off gauge and distribute
-    await booster.earmarkRewards(1,{from:caller});
+    await booster.earmarkRewards(poolId,{from:caller});
     console.log("earmark 2")
 
     //check balances, snx/crv should be moved to their reward contracts

@@ -16,7 +16,7 @@ contract Booster{
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
     address public constant voteOwnership = address(0xE478de485ad2fe566d49342Cbd03E49ed7DB3356);
     address public constant voteParameter = address(0xBCfF8B0b9419b9A88c44546519b1e909cF330399);
- 
+
     uint256 public lockIncentive = 1000; //incentive to crv stakers
     uint256 public stakerIncentive = 450; //incentive to native token stakers
     uint256 public earmarkIncentive = 50; //incentive to users who spend gas to make calls
@@ -32,6 +32,7 @@ contract Booster{
     address public rewardFactory;
     address public stashFactory;
     address public tokenFactory;
+    address public rewardArbitrator;
     address public voteDelegate;
     address public treasury;
     address public stakerRewards;
@@ -54,11 +55,12 @@ contract Booster{
 
     //index(pid) -> pool
     PoolInfo[] public poolInfo;
+    
 
     event Deposited(address indexed user, uint256 indexed poolid, uint256 amount);
     event Withdrawn(address indexed user, uint256 indexed poolid, uint256 amount);
 
-    constructor(address _staker) public {
+    constructor(address _staker, address _minter, uint256 _mintStart) public {
         isShutdown = false;
         staker = _staker;
         owner = msg.sender;
@@ -68,7 +70,8 @@ contract Booster{
         feeDistro = address(0); //address(0xA464e6DCda8AC41e03616F95f4BC98a13b8922Dc);
         feeToken = address(0); //address(0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490);
         treasury = address(0);
-        mintStart = block.timestamp + (86400*7);
+        minter = _minter;
+        mintStart = _mintStart;
     }
 
 
@@ -89,16 +92,6 @@ contract Booster{
         poolManager = _poolM;
     }
 
-    function setMinter(address _minter) external {
-        require(msg.sender == owner, "!auth");
-        minter = _minter;
-    }
-
-    function setMintStart(uint256 _mintStart) external{
-        require(msg.sender == owner, "!auth");
-        mintStart = _mintStart;
-    }
-
     function setFactories(address _rfactory, address _sfactory, address _tfactory) external {
         require(msg.sender == owner, "!auth");
         
@@ -116,6 +109,11 @@ contract Booster{
         stashFactory = _sfactory;
     }
 
+    function setArbitrator(address _arb) external {
+        require(msg.sender==owner, "!auth");
+        rewardArbitrator = _arb;
+    }
+
     function setVoteDelegate(address _voteDelegate) external {
         require(msg.sender==voteDelegate, "!auth");
         voteDelegate = _voteDelegate;
@@ -123,8 +121,13 @@ contract Booster{
 
     function setRewardContracts(address _rewards, address _stakerRewards) external {
         require(msg.sender == owner, "!auth");
-        lockRewards = _rewards;
-        stakerRewards = _stakerRewards;
+        
+        //reward contracts are immutable or else the owner
+        //has a means to redeploy and mint cvx via rewardClaimed()
+        if(lockRewards == address(0)){
+            lockRewards = _rewards;
+            stakerRewards = _stakerRewards;
+        }
     }
 
     // Set reward token and claim contract
@@ -133,7 +136,7 @@ contract Booster{
     // the fee reward contract is always created via the factory, and not assigned directly.
     function setFeeInfo(address _feeDistro, address _feeToken) external {
         require(msg.sender==feeManager, "!auth");
-        
+    
         if(feeToken != _feeToken){
             //create a new reward contract for the new token
            lockFees = IRewardFactory(rewardFactory).CreateTokenRewards(_feeToken,lockRewards,address(this));
@@ -214,8 +217,16 @@ contract Booster{
     //shutdown pool
     function shutdownPool(uint256 _pid) external returns(bool){
         require(msg.sender==poolManager, "!auth");
+        PoolInfo storage pool = poolInfo[_pid];
 
-        poolInfo[_pid].shutdown = true;
+        //withdraw from gauge
+        try IStaker(staker).withdrawAll(pool.lptoken,pool.gauge){
+        }catch{}
+
+        //remove stash rights
+        IStaker(staker).setStashAccess(pool.stash,false);
+
+        pool.shutdown = true;
         return true;
     }
 
@@ -234,22 +245,25 @@ contract Booster{
             address gauge = pool.gauge;
             address stash = pool.stash;
             bool poolShutdown =  pool.shutdown;
+            if(poolShutdown){
+                //already shutdown
+                continue;
+            }
 
             //withdraw from gauge
             try IStaker(staker).withdrawAll(token,gauge){
             }catch{}
             
-            if(_claimRewards && poolShutdown == false){
+            if(_claimRewards){
                 //earmark remaining rewards
                 _earmarkRewards(i);
             }
 
             //remove stash rights
-            if(stash != address(0)){
-                IStaker(staker).setStashAccess(stash,false);
-            }
+            IStaker(staker).setStashAccess(stash,false);
         }
     }
+
 
     //deposit lp tokens and stake
     function deposit(uint256 _pid, uint256 _amount, bool _stake) public returns(bool){
@@ -259,13 +273,13 @@ contract Booster{
 
         address lptoken = pool.lptoken;
         IERC20(lptoken).safeTransferFrom(msg.sender, address(this), _amount);
-        _amount = IERC20(lptoken).balanceOf(address(this));
-
-        //move to curve gauge
-        uint256 bal = IERC20(lptoken).balanceOf(address(this));
+        
+        //do not update amount based on balanceOf(this)
+        //if a pool is shutdown and remade it will unstake the old pool's coins
+        //and hold here
 
         //send to proxy to stake
-        IERC20(lptoken).safeTransfer(staker, bal);
+        IERC20(lptoken).safeTransfer(staker, _amount);
 
         //stake
         address gauge = pool.gauge;
@@ -309,22 +323,21 @@ contract Booster{
         PoolInfo storage pool = poolInfo[_pid];
         address lptoken = pool.lptoken;
         address gauge = pool.gauge;
-        uint256 before = IERC20(lptoken).balanceOf(address(this));
 
         //remove lp balance
         address token = pool.token;
         ITokenMinter(token).burn(_from,_amount);
 
-        //pull whats needed from gauge
-        //  should always be full amount unless we withdrew everything to shutdown this contract
-        if (before < _amount) {
-            IStaker(staker).withdraw(lptoken,gauge, _amount.sub(before));
+        //pull from gauge if not shutdown
+        // if shutdown tokens will be in this contract
+        if (!pool.shutdown) {
+            IStaker(staker).withdraw(lptoken,gauge, _amount);
         }
 
         //some gauges claim rewards when withdrawing, stash them in a seperate contract until next claim
         //do not call if shutdown since stashes wont have access
         address stash = pool.stash;
-        if(stash != address(0) && !isShutdown){
+        if(stash != address(0) && !isShutdown && !pool.shutdown){
             IStash(stash).stashRewards();
         }
         
@@ -376,6 +389,14 @@ contract Booster{
         return true;
     }
 
+    function claimRewards(uint256 _pid, address _gauge) external returns(bool){
+        address stash = poolInfo[_pid].stash;
+        require(msg.sender == stash,"!auth");
+
+        IStaker(staker).claimRewards(_gauge);
+        return true;
+    }
+
     //claim crv and extra rewards, convert extra to crv, disperse to reward contracts
     function _earmarkRewards(uint256 _pid) internal {
         PoolInfo storage pool = poolInfo[_pid];
@@ -388,11 +409,9 @@ contract Booster{
 
         //check if there are extra rewards
         address stash = pool.stash;
-        if(stash != address(0) && IStash(stash).canClaimRewards()){
+        if(stash != address(0)){
             //claim extra rewards
-            IStaker(staker).claimRewards(gauge);
-            //move rewards from staker to stash
-            IStash(stash).stashRewards();
+            IStash(stash).claimRewards();
             //process extra rewards
             IStash(stash).processStash();
         }
@@ -442,7 +461,7 @@ contract Booster{
 
     //claim fees from curve distro contract, put in lockers' reward contract
     function earmarkFees() external returns(bool){
-        require(!isShutdown,"shutdown");
+        //require(!isShutdown,"shutdown");
         //claim fee rewards
         IStaker(staker).claimFees(feeDistro, feeToken);
         //send fee rewards to reward contract

@@ -17,9 +17,67 @@ contract RewardFactory {
 
     address public operator;
     mapping (address => bool) private rewardAccess;
+    mapping(address => uint256[]) public rewardActiveList;
 
     constructor(address _operator) public {
         operator = _operator;
+    }
+
+    //Get active count function
+    function activeRewardCount(address _reward) external view returns(uint256){
+        if(_reward == address(0)){
+            return 0;
+        }
+
+        uint256[] storage activeList = rewardActiveList[_reward];
+        //uint256 pid = _pid+1; //offset by 1 so that we can use 0 as empty
+        uint256 count = 0;
+        for(uint256 i = 0; i < activeList.length; i++){
+            if(activeList[i] > 0){
+                count = count + 1;
+            }
+        }
+        return count;
+    }
+
+    function addActiveReward(address _reward, uint256 _pid) external returns(bool){
+        require(rewardAccess[msg.sender] == true,"!auth");
+        if(_reward == address(0)){
+            return true;
+        }
+
+        uint256[] storage activeList = rewardActiveList[_reward];
+        uint256 pid = _pid+1; //offset by 1 so that we can use 0 as empty
+
+        for(uint256 i = 0; i < activeList.length; i++){
+            if(activeList[i] == pid) return true;
+        }
+        for(uint256 i = 0; i < activeList.length; i++){
+            if(activeList[i] == 0){
+                activeList[i] = pid;
+                return true;
+            }
+        }
+        activeList.push(pid);
+        return true;
+    }
+
+    function removeActiveReward(address _reward, uint256 _pid) external returns(bool){
+        require(rewardAccess[msg.sender] == true,"!auth");
+        if(_reward == address(0)){
+            return true;
+        }
+
+        uint256[] storage activeList = rewardActiveList[_reward];
+        uint256 pid = _pid+1; //offset by 1 so that we can use 0 as empty
+
+        for(uint256 i = 0; i < activeList.length; i++){
+            if(activeList[i] == pid){
+                activeList[i] = 0;
+                return true;
+            }
+        }
+        return true;
     }
 
     //stash contracts need access to create new Virtual balance pools for extra gauge incentives(ex. snx)
@@ -34,7 +92,7 @@ contract RewardFactory {
 
         //operator = booster(deposit) contract so that new crv can be added and distributed
         //reward manager = this factory so that extra incentive tokens(ex. snx) can be linked to the main managed reward pool
-        BaseRewardPool rewardPool = new BaseRewardPool(_pid,_depositToken,crv,block.timestamp,operator, address(this));
+        BaseRewardPool rewardPool = new BaseRewardPool(_pid,_depositToken,crv,operator, address(this));
         return address(rewardPool);
     }
 
@@ -44,7 +102,7 @@ contract RewardFactory {
         require(msg.sender == operator || rewardAccess[msg.sender] == true, "!auth");
 
         //create new pool, use main pool for balance lookup
-        VirtualBalanceRewardPool rewardPool = new VirtualBalanceRewardPool(_mainRewards,_token,block.timestamp,_operator);
+        VirtualBalanceRewardPool rewardPool = new VirtualBalanceRewardPool(_mainRewards,_token,_operator);
         address rAddress = address(rewardPool);
         //add the new pool to main pool's list of extra rewards, assuming this factory has "reward manager" role
         IRewards(_mainRewards).addExtraReward(rAddress);

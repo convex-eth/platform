@@ -1,5 +1,6 @@
 const { BN, constants, expectEvent, expectRevert, time } = require('openzeppelin-test-helpers');
-
+var jsonfile = require('jsonfile');
+var contractList = jsonfile.readFileSync('./contracts.json');
 
 const Booster = artifacts.require("Booster");
 const CrvDepositor = artifacts.require("CrvDepositor");

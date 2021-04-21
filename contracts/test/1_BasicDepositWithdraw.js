@@ -1,5 +1,8 @@
 const { BN, constants, expectEvent, expectRevert, time } = require('openzeppelin-test-helpers');
 
+var jsonfile = require('jsonfile');
+var contractList = jsonfile.readFileSync('./contracts.json');
+
 const Booster = artifacts.require("Booster");
 const CrvDepositor = artifacts.require("CrvDepositor");
 const CurveVoterProxy = artifacts.require("CurveVoterProxy");
@@ -47,7 +50,9 @@ contract("BasicDepositWithdraw", async accounts => {
     let cCrvRewards = await booster.lockRewards();
     let cvxRewards = await booster.stakerRewards();
 
-    let poolinfo = await booster.poolInfo(0);
+    var poolId = contractList.pools.find(pool => pool.name == "3pool").id;
+    console.log("pool id: " +poolId);
+    let poolinfo = await booster.poolInfo(poolId);
     let rewardPoolAddress = poolinfo.crvRewards;
     let rewardPool = await BaseRewardPool.at(rewardPoolAddress);
     let depositToken = await IERC20.at(poolinfo.token);
@@ -77,12 +82,12 @@ contract("BasicDepositWithdraw", async accounts => {
     //first try depositing too much
     console.log("try depositing too much");
     await expectRevert(
-        booster.deposit(0,startingThreeCrv+1,false,{from:userA}),
+        booster.deposit(poolId,startingThreeCrv+1,false,{from:userA}),
         "SafeERC20");
     console.log(" ->reverted");
 
     //deposit a small portion
-    await booster.deposit(0,web3.utils.toWei("500.0", "ether"),false,{from:userA});
+    await booster.deposit(poolId,web3.utils.toWei("500.0", "ether"),false,{from:userA});
     console.log("deposited portion");
 
     //check wallet balance and deposit credit
@@ -91,7 +96,7 @@ contract("BasicDepositWithdraw", async accounts => {
    // await booster.userPoolInfo(0,userA).then(a=>console.log("lp balance: " +a));
 
     //deposit reset of funds
-    await booster.depositAll(0,false,{from:userA});
+    await booster.depositAll(poolId,false,{from:userA});
     console.log("deposited all");
 
     //check wallet balance and deposit credit
@@ -103,7 +108,7 @@ contract("BasicDepositWithdraw", async accounts => {
     await rewardPool.balanceOf(userA).then(a=>console.log("reward balance: " +a));
 
     //withdraw a portion
-    await booster.withdraw(0,web3.utils.toWei("500.0", "ether"),{from:userA});
+    await booster.withdraw(poolId,web3.utils.toWei("500.0", "ether"),{from:userA});
     console.log("withdrawn portion");
 
     //check wallet increased and that deposit credit/reward balance decreased
@@ -116,7 +121,7 @@ contract("BasicDepositWithdraw", async accounts => {
     // this will error on the gauge not having enough balance
     console.log("try withdraw too much");
     await expectRevert(
-        booster.withdraw(0,startingThreeCrv+1,{from:userA}),
+        booster.withdraw(poolId,startingThreeCrv+1,{from:userA}),
         "revert");
     console.log(" ->reverted (fail on unstake)");
 
@@ -131,7 +136,7 @@ contract("BasicDepositWithdraw", async accounts => {
     let userBThreeCrv = await threeCrv.balanceOf(userB);
     await threeCrv.approve(booster.address,0,{from:userB});
     await threeCrv.approve(booster.address,userBThreeCrv,{from:userB});
-    await booster.depositAll(0,false,{from:userB});
+    await booster.depositAll(poolId,false,{from:userB});
     await depositToken.balanceOf(userB).then(a=>console.log("lp balance: " +a));
     //await booster.userPoolInfo(0,userB).then(a=>console.log("user b deposits: " +a));
 
@@ -139,13 +144,13 @@ contract("BasicDepositWithdraw", async accounts => {
     // this will error on the deposit balance not being high enough (gauge balance check passes though because of userB)
     console.log("try withdraw too much(2)");
     await expectRevert(
-        booster.withdraw(0,startingThreeCrv+1,{from:userA}),
+        booster.withdraw(poolId,startingThreeCrv+1,{from:userA}),
         "revert");
     console.log(" ->reverted (fail on user funds)");
 
 
     //withdraw all properly
-    await booster.withdrawAll(0,{from:userA});
+    await booster.withdrawAll(poolId,{from:userA});
     console.log("withdrawAll");
 
     //all balance should be back on wallet and equal to starting value
