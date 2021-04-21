@@ -30,6 +30,9 @@ const IERC20 = artifacts.require("IERC20");
 //TODO: pass various roles to multisig
 
 module.exports = function (deployer, network, accounts) {
+	if(network == "deployed"){
+		return true;
+	}
 	//return true;
 	let crv = "0xD533a949740bb3306d119CC777fa900bA034cd52";
 	let vecrvFeeDistro = "0xA464e6DCda8AC41e03616F95f4BC98a13b8922Dc";
@@ -52,7 +55,7 @@ module.exports = function (deployer, network, accounts) {
 
     var contractList = {};
     var systemContracts = {};
-    var poolsContracts = {};
+    var poolsContracts = [];
     var poolNames = [];
     contractList["system"] = systemContracts;
     contractList["pools"] = poolsContracts;
@@ -62,19 +65,23 @@ module.exports = function (deployer, network, accounts) {
   		voter = instance;
   		systemContracts["voteProxy"] = voter.address;
   	}).then(function() {
-		return deployer.deploy(Booster, voter.address, rewardsStart)
-	}).then(function(instance) {
-		booster = instance;
-		systemContracts["booster"] = booster.address;
-	}).then(function() {
-		return voter.setOperator(booster.address)
-	}).then(function() {
 		return deployer.deploy(ConvexToken, voter.address)
 	}).then(function(instance) {
 		cvx = instance;
 		systemContracts["cvx"] = cvx.address;
 		return cvx.mint(accounts[0],distroList.premine)//"5000000000000000000000000")
-	}).then(function() {
+	})
+	.then(function() {
+		return deployer.deploy(Booster, voter.address, cvx.address, rewardsStart)
+	})
+	.then(function(instance) {
+		booster = instance;
+		systemContracts["booster"] = booster.address;
+	})
+	.then(function() {
+		return voter.setOperator(booster.address)
+	})
+	.then(function() {
 		return deployer.deploy(RewardFactory,booster.address)
 	}).then(function(instance) {
 		rFactory = instance;
@@ -120,8 +127,6 @@ module.exports = function (deployer, network, accounts) {
 		return booster.setPoolManager(pools.address)
 	}).then(function() {
 		return booster.setFactories(rFactory.address,sFactory.address,tFactory.address)
-	}).then(function() {
-		return booster.setMinter(cvx.address)
 	}).then(function() {
 		return booster.setFeeInfo(vecrvFeeDistro,threeCrv)
 	})
@@ -235,14 +240,20 @@ module.exports = function (deployer, network, accounts) {
 	// })
 
 	.then(function() {
-		//3pool
 		poolNames.push("3pool");
 		return pools.addPool(threeCrvSwap,threeCrvGauge,0)
 	})
 	.then(function() {
-		//pbtc
 		poolNames.push("pbtc");
 		return pools.addPool("0x7F55DDe206dbAD629C080068923b36fe9D6bDBeF","0xd7d147c6Bb90A718c3De8C0568F9B560C79fa416",2)
+	})
+	.then(function() {
+		poolNames.push("susd");
+		return pools.addPool("0xA5407eAE9Ba41422680e2e00537571bcC53efBfD","0xA90996896660DEcC6E997655E065b23788857849",1)
+	})
+	.then(function() {
+		poolNames.push("eurs");
+		return pools.addPool("0x0Ce6a5fF5217e38315f87032CF90686C96627CAA","0x90Bb609649E0451E5aD952683D64BD2d1f245840",2)
 	})
 	.then(function() {
 		return booster.poolLength()
@@ -270,7 +281,8 @@ module.exports = function (deployer, network, accounts) {
 			rewardList.push({rToken:crv,rAddress:crvrewards})
 			poolInfoList[i].rewards = rewardList;
 			poolInfoList[i].name = poolNames[i];
-			poolsContracts[i] = poolInfoList[i];
+			poolInfoList[i].id = i;
+			poolsContracts.push(poolInfoList[i]);
 		}
 	})
 	.then(function() {
