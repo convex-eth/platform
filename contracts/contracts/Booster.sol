@@ -114,7 +114,7 @@ contract Booster{
     }
 
     function setArbitrator(address _arb) external {
-        require(msg.sender==voteDelegate, "!auth");
+        require(msg.sender==owner, "!auth");
         rewardArbitrator = _arb;
     }
 
@@ -125,8 +125,13 @@ contract Booster{
 
     function setRewardContracts(address _rewards, address _stakerRewards) external {
         require(msg.sender == owner, "!auth");
-        lockRewards = _rewards;
-        stakerRewards = _stakerRewards;
+        
+        //reward contracts are immutable or else the owner
+        //has a means to redeploy and mint cvx via rewardClaimed()
+        if(lockRewards == address(0)){
+            lockRewards = _rewards;
+            stakerRewards = _stakerRewards;
+        }
     }
 
     // Set reward token and claim contract
