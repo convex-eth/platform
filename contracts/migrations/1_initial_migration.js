@@ -30,7 +30,7 @@ const IERC20 = artifacts.require("IERC20");
 //TODO: pass various roles to multisig
 
 module.exports = function (deployer, network, accounts) {
-	if(network == "deployed"){
+	if(network != "ganachecli"){
 		return true;
 	}
 	//return true;

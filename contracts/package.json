@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "deploy": "truffle migrate --network ganachecli --skip-dry-run"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "3.4.0",
+    "big-number": "2.0.0",
+    "jsonfile": "^6.1.0"
+  }
+}
