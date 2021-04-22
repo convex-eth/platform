@@ -1,7 +1,7 @@
 var jsonfile = require('jsonfile');
 var contractList = jsonfile.readFileSync('../contracts.json');
 
-
+const MerkleAirdrop = artifacts.require("MerkleAirdrop");
 const IERC20 = artifacts.require("IERC20");
 const IExchange = artifacts.require("IExchange");
 const ISPool = artifacts.require("ISPool");
@@ -15,7 +15,7 @@ module.exports = function (deployer, network, accounts) {
 	
   var currentTime = Math.floor(Date.now() / 1000);
   var self = accounts[0];
-  var weth, dai, eurs, exchange;
+  var weth, dai, eurs, crv, exchange;
   var susdSwap, eursSwap, threeCrvSwap;
   var daibalance, eursbalance;
 
@@ -38,7 +38,7 @@ module.exports = function (deployer, network, accounts) {
     eurs = instance;
   })
   .then(function() {
-    return weth.sendTransaction({value:web3.utils.toWei("15.0", "ether")})
+    return weth.sendTransaction({value:web3.utils.toWei("20.0", "ether")})
   })
   .then(function() {
     return IExchange.at("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D");
@@ -144,5 +144,19 @@ module.exports = function (deployer, network, accounts) {
   })
   .then(function(bal){
     console.log("3crv lp balance: " +bal);
+  })
+  .then(function(){
+    //crv
+    return IERC20.at("0xD533a949740bb3306d119CC777fa900bA034cd52");
+  })
+  .then(function(_crv){
+    crv = _crv;
+    return  exchange.swapExactTokensForTokens(web3.utils.toWei("5.0", "ether"),0,[weth.address,crv.address],self,currentTime+3000);
+  })
+   .then(function() {
+    return crv.balanceOf(self);
+  })
+  .then(function(cbal){
+    console.log("crv: " +cbal);
   })
 }

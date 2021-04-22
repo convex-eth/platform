@@ -86,20 +86,20 @@ contract("VeCrv Fees Test", async accounts => {
     //deposit crv and stake
     await crv.approve(crvDeposit.address,0,{from:userA});
     await crv.approve(crvDeposit.address,startingcrv,{from:userA});
-    await crvDeposit.deposit(startingcrv,true,{from:userA});
+    await crvDeposit.deposit(startingcrv,true,"0x0000000000000000000000000000000000000000",{from:userA});
     console.log("crv deposited");
-    await cCrv.balanceOf(userA).then(a=>console.log("cCrv on wallet: " +a))
-    await cCrv.totalSupply().then(a=>console.log("cCrv supply: " +a))
+    await cCrv.balanceOf(userA).then(a=>console.log("cvxCrv on wallet: " +a))
+    await cCrv.totalSupply().then(a=>console.log("cvxCrv supply: " +a))
     await crv.balanceOf(crvDeposit.address).then(a=>console.log("depositor crv(>0): " +a));
     await crv.balanceOf(voteproxy.address).then(a=>console.log("proxy crv(==0): " +a));
     await vecrv.balanceOf(voteproxy.address).then(a=>console.log("proxy veCrv(==0): " +a));
-    console.log("crv deposited");
+    console.log("staking crv");
     await cCrv.approve(cCrvRewardsContract.address,0,{from:userA});
     await cCrv.approve(cCrvRewardsContract.address,startingcrv,{from:userA});
     await cCrvRewardsContract.stakeAll({from:userA})
     console.log("staked")
-    await cCrv.balanceOf(userA).then(a=>console.log("cCrv on wallet: " +a))
-    await cCrvRewardsContract.balanceOf(userA).then(a=>console.log("cCrv staked: " +a))
+    await cCrv.balanceOf(userA).then(a=>console.log("cvxCrv on wallet: " +a))
+    await cCrvRewardsContract.balanceOf(userA).then(a=>console.log("cvxCrv staked: " +a))
 
 
     //voting
