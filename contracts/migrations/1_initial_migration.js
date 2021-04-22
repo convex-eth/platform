@@ -1,3 +1,4 @@
+const { time } = require('openzeppelin-test-helpers');
 var fs = require('fs');
 var jsonfile = require('jsonfile');
 var BN = require('big-number');
@@ -141,16 +142,29 @@ module.exports = function (deployer, network, accounts) {
 		systemContracts["aribatratorVault"] = arb.address;
 		return booster.setArbitrator(arb.address)
 	})
-	.then(function() {
+	.then(function(){
+		return time.latestBlock();
+	})
+	.then(function(block) {
 		var chefCvx = new BN(distroList.lpincentives);
 		var numberOfBlocks = new BN(6000*365*4);
 		var rewardPerBlock = new BN(chefCvx).div(numberOfBlocks)
-		console.log("cvx to chef: " +chefCvx.toString())
 		console.log("rewards per block: " +rewardPerBlock.toString());
-		return deployer.deploy(ConvexMasterChef,cvx.address,rewardPerBlock, rewardsStart, rewardsStart+80220 )
+		var startblock = block+6000; //about 1 day
+		var endbonusblock = startblock + (2*7*6000);//about 2 weeks
+		console.log("chef rewards start on: " +startblock);
+		console.log("chef reward bonus end on: " +endbonusblock);
+		return deployer.deploy(ConvexMasterChef,cvx.address,rewardPerBlock, startblock, endbonusblock )
 	}).then(function(instance) {
 		chef = instance;
 		systemContracts["chef"] = chef.address;
+		return cvx.transfer(chef.address, distroList.lpincentives);
+	})
+	.then(function(){
+		return cvx.balanceOf(chef.address);
+	})
+	.then(function(_cvx){
+		console.log("cvx on chef: " +_cvx);
 	})
 	.then(function() {
 		return deployer.deploy(ClaimZap,cvxRewards.address, cvxCrvRewards.address, chef.address)
