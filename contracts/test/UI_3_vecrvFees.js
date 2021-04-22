@@ -50,9 +50,9 @@ contract("Earmark Pools", async accounts => {
     // let crvBal = await crv.balanceOf(self);
     // await crv.approve(crvDeposit.address,0);
     // await crv.approve(crvDeposit.address,crvBal);
-    // await crvDeposit.deposit(crvBal,true,"0x0000000000000000000000000000000000000000");
+    // await crvDeposit.deposit(crvBal,false,"0x0000000000000000000000000000000000000000");
 
-
+    await crvDeposit.lockCurve();
     await cvxCrv.totalSupply().then(a=>console.log("cvxCrv supply: " +a))
     await vecrv.balanceOf(voteproxy.address).then(a=>console.log("proxy veCrv: " +a));
 
