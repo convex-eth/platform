@@ -22,8 +22,8 @@ const MerkleAirdrop = artifacts.require("MerkleAirdrop");
 const MerkleAirdropFactory = artifacts.require("MerkleAirdropFactory");
 
 
-// const IUniswapV2Router01 = artifacts.require("IUniswapV2Router01");
-// const IUniswapV2Factory = artifacts.require("IUniswapV2Factory");
+const IUniswapV2Router01 = artifacts.require("IUniswapV2Router01");
+const IUniswapV2Factory = artifacts.require("IUniswapV2Factory");
 const IERC20 = artifacts.require("IERC20");
 
 //TODO: create reward pools and distribute premine
@@ -46,9 +46,11 @@ module.exports = function (deployer, network, accounts) {
 
     let admin = accounts[0];
 
-	var booster, voter, rFactory, sFactory, tFactory, cvx, ccrv, deposit, arb, pools;
-	var ccrvRewards, cvxRewards, airdrop, vecrvVesting, chef;
+	var booster, voter, rFactory, sFactory, tFactory, cvx, cvxCrv, deposit, arb, pools;
+	var crvToken;
+	var cvxCrvRewards, cvxRewards, airdrop, vecrvVesting, chef;
 	var sushiRouter, sushiFactory, pairToken;
+	var crvdepositAmt, crvbal, cvxCrvBal
 
 	var rewardsStart = Math.floor(Date.now() / 1000)+86400;
     var rewardsEnd = rewardsStart + (1 * 364 * 86400);
@@ -99,28 +101,28 @@ module.exports = function (deployer, network, accounts) {
 		systemContracts["sFactory"] = sFactory.address;
 		return deployer.deploy(cCrvToken)
 	}).then(function(instance) {
-		ccrv = instance;
-		systemContracts["cvxCrv"] = ccrv.address;
-		return deployer.deploy(CrvDepositor,voter.address,ccrv.address)
+		cvxCrv = instance;
+		systemContracts["cvxCrv"] = cvxCrv.address;
+		return deployer.deploy(CrvDepositor,voter.address,cvxCrv.address)
 	}).then(function(instance) {
 		deposit = instance;
 		systemContracts["crvDepositor"] = deposit.address;
-		return ccrv.setOperator(deposit.address)
+		return cvxCrv.setOperator(deposit.address)
 	}).then(function() {
 		return voter.setDepositor(deposit.address)
 	}).then(function() {
 		return booster.setTreasury(deposit.address)
 	}).then(function() {
-		return deployer.deploy(BaseRewardPool,0,ccrv.address,crv,booster.address,rFactory.address)
+		return deployer.deploy(BaseRewardPool,0,cvxCrv.address,crv,booster.address,rFactory.address)
 	}).then(function(instance) {
-		ccrvRewards = instance;
-		systemContracts["cvxCrvRewards"] = ccrvRewards.address;
+		cvxCrvRewards = instance;
+		systemContracts["cvxCrvRewards"] = cvxCrvRewards.address;
 		// reward manager is admin to add any new incentive programs
-		return deployer.deploy(cvxRewardPool,cvx.address,crv,deposit.address,ccrvRewards.address,ccrv.address,booster.address,admin)
+		return deployer.deploy(cvxRewardPool,cvx.address,crv,deposit.address,cvxCrvRewards.address,cvxCrv.address,booster.address,admin)
 	}).then(function(instance) {
 		cvxRewards = instance;
 		systemContracts["cvxRewards"] = cvxRewards.address;
-		return booster.setRewardContracts(ccrvRewards.address,cvxRewards.address)
+		return booster.setRewardContracts(cvxCrvRewards.address,cvxRewards.address)
 	}).then(function() {
 		return deployer.deploy(PoolManager,booster.address)
 	}).then(function(instance) {
@@ -151,7 +153,7 @@ module.exports = function (deployer, network, accounts) {
 		systemContracts["chef"] = chef.address;
 	})
 	.then(function() {
-		return deployer.deploy(ClaimZap,cvxRewards.address, ccrvRewards.address, chef.address)
+		return deployer.deploy(ClaimZap,cvxRewards.address, cvxCrvRewards.address, chef.address)
 	}).then(function(instance) {
 		systemContracts["claimZap"] = instance.address;
 	})
@@ -209,38 +211,114 @@ module.exports = function (deployer, network, accounts) {
 	.then(function(dropBalance) {
 		console.log("airdrop balance: " +dropBalance);
 	})
-	// .then(function() {
-	// 	return deployer.deploy(MerkleAirdrop)
-	// }).then(function(instance) {
-	// 	airdrop = instance;
-	// 	return true;
-	// })
-	// .then(function() {
-	// 	return IUniswapV2Router01.at(sushiswapRouter)
-	// }).then(function(instance) {
-	// 	sushiRouter = instance;
-	// 	return IUniswapV2Factory.at(sushiswapFactory)
-	// }).then(function(instance) {
-	// 	sushiFactory = instance;
-	// 	console.log("sushiRouter: " +sushiRouter.address)
-	// 	console.log("sushiFactory: " +sushiFactory.address)
-	// 	return cvx.approve(sushiRouter.address,web3.utils.toWei("12000", "ether"))
-	// }).then(function() {
-	// 	console.log("approved")
-	// 	return sushiRouter.addLiquidityETH(cvx.address,web3.utils.toWei("12000", "ether"),web3.utils.toWei("12000", "ether"),web3.utils.toWei("1.0", "ether"),admin,Date.now()+3000,{value:web3.utils.toWei("1.0", "ether")})
-	// }).then(function() {
-	// 	return sushiFactory.getPair(cvx.address,weth)
-	// }).then(function(pair) {
-	// 	console.log("pairAddress: " +pair)
-	// 	return IERC20.at(pair)
-	// }).then(function(token) {
-	// 	pairToken = token;
-	// 	return pairToken.balanceOf(admin)
-	// }).then(function(balance) {
-	// 	console.log("pair balance: " +balance)
-	// 	return true;
-	// })
 
+	//Create CVX sushi pool
+	.then(function() {
+		return IUniswapV2Router01.at(sushiswapRouter)
+	}).then(function(instance) {
+		sushiRouter = instance;
+		return IUniswapV2Factory.at(sushiswapFactory)
+	}).then(function(instance) {
+		sushiFactory = instance;
+		console.log("sushiRouter: " +sushiRouter.address)
+		console.log("sushiFactory: " +sushiFactory.address)
+
+		//TODO: pull cvx amount from json
+
+		return cvx.approve(sushiRouter.address,web3.utils.toWei("12000", "ether"))
+	}).then(function() {
+		console.log("approved")
+		return sushiRouter.addLiquidityETH(cvx.address,web3.utils.toWei("12000", "ether"),web3.utils.toWei("12000", "ether"),web3.utils.toWei("1.0", "ether"),admin,Math.floor(Date.now() / 1000)+3000,{value:web3.utils.toWei("1.0", "ether")})
+	}).then(function() {
+		return sushiFactory.getPair(cvx.address,weth)
+	}).then(function(pair) {
+		console.log("cvxEthSLP Address: " +pair)
+		systemContracts["cvxEthSLP"] = pair;
+		return IERC20.at(pair)
+	}).then(function(token) {
+		pairToken = token;
+		return pairToken.balanceOf(admin)
+	}).then(function(balance) {
+		console.log("cvxEth pair balance: " +balance)
+	})
+
+
+	//Create cvxCRV sushi pool
+	.then(function(){
+		return IERC20.at(crv);
+	})
+	.then(function(_crv){
+		crvToken = _crv;
+		console.log("crvToken at " +crvToken.address)
+	})
+	.then(function(){
+		console.log("swap eth for crv");
+		return sushiRouter.swapExactETHForTokens(0,[weth,crv],admin,Math.floor(Date.now() / 1000)+3000,{value:web3.utils.toWei("1.0", "ether")});
+	}).then(function(amounts){
+		return crvToken.balanceOf(admin);
+	})
+	.then(function(_crvbal){
+		console.log("swaped for crv: " +_crvbal.toString())
+		crvdepositAmt = new BN(_crvbal.toString()).div(2);
+		console.log("depositing for cvxcrv: " +crvdepositAmt.toString())
+		return crvToken.approve(deposit.address,crvdepositAmt.toString());
+	})
+	.then(function(){
+		return deposit.deposit(crvdepositAmt.toString(), true, "0x0000000000000000000000000000000000000000");
+	})
+	.then(function(){
+		return crvToken.balanceOf(admin);
+	})
+	.then(function(_crvbal){
+		crvbal = _crvbal;
+		console.log("crv bal: " +crvbal);
+		return cvxCrv.balanceOf(admin);
+	})
+	.then(function(_cvxcrvBal){
+		cvxCrvBal = _cvxcrvBal;
+		console.log("cvxCrv bal: " +cvxCrvBal);
+	})
+	.then(function(){
+		return crvToken.approve(sushiRouter.address,crvbal)
+	})
+	.then(function(){
+		return cvxCrv.approve(sushiRouter.address,cvxCrvBal)
+	})
+	.then(function() {
+		console.log("approved")
+		return sushiRouter.addLiquidity(crv, cvxCrv.address,crvbal,cvxCrvBal,0,0,admin,Math.floor(Date.now() / 1000)+3000)
+	}).then(function() {
+		return sushiFactory.getPair(cvxCrv.address,crv)
+	}).then(function(pair) {
+		console.log("cvxCrvCRV SLP Address: " +pair)
+		systemContracts["cvxCrvCrvSLP"] = pair;
+		return IERC20.at(pair)
+	}).then(function(token) {
+		pairToken = token;
+		return pairToken.balanceOf(admin)
+	}).then(function(balance) {
+		console.log("cvxCrv pair balance: " +balance)
+	})
+	.then(function(){
+		return crvToken.balanceOf(systemContracts["cvxCrvCrvSLP"]);
+	})
+	.then(function(_crv){
+		console.log("crv on sushi: " +_crv)
+		return cvxCrv.balanceOf(systemContracts["cvxCrvCrvSLP"]);
+	})
+	.then(function(_cvxcrv){
+		console.log("cvxCrv on sushi: " +_cvxcrv)
+	})
+
+	//Add sushi pools to chef
+	.then(function(){
+		return chef.add(12000,systemContracts["cvxCrvCrvSLP"],false);
+	})
+	.then(function(){
+		return chef.add(8000,systemContracts["cvxEthSLP"],false);
+	})
+
+	//Create convex pools
 	.then(function() {
 		poolNames.push("3pool");
 		return pools.addPool(threeCrvSwap,threeCrvGauge,0)
