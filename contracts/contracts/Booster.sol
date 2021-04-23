@@ -27,8 +27,8 @@ contract Booster{
     address public owner;
     address public feeManager;
     address public poolManager;
-    address public staker;
-    address public minter;
+    address public immutable staker;
+    address public immutable minter;
     address public rewardFactory;
     address public stashFactory;
     address public tokenFactory;
@@ -40,7 +40,7 @@ contract Booster{
     address public lockFees;
     address public feeDistro;
     address public feeToken;
-    uint256 public mintStart;
+    uint256 public immutable mintStart;
 
     bool public isShutdown;
 
