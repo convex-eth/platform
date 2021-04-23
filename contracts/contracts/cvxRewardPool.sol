@@ -137,7 +137,8 @@ contract cvxRewardPool{
     }
 
     function rewardPerToken() public view returns (uint256) {
-        if (totalSupply() == 0) {
+        uint256 supply = totalSupply();
+        if (supply == 0) {
             return rewardPerTokenStored;
         }
         return
@@ -146,7 +147,7 @@ contract cvxRewardPool{
                     .sub(lastUpdateTime)
                     .mul(rewardRate)
                     .mul(1e18)
-                    .div(totalSupply())
+                    .div(supply)
             );
     }
 
