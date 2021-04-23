@@ -17,11 +17,11 @@ contract ExtraRewardStashV2 {
     uint256 private constant maxRewards = 8;
     uint256 private constant WEEK = 7 * 86400;
 
-    uint256 public pid;
-    address public operator;
-    address public staker;
-    address public gauge;
-    address public rewardFactory;
+    uint256 public immutable pid;
+    address public immutable operator;
+    address public immutable staker;
+    address public immutable gauge;
+    address public immutable rewardFactory;
    
     mapping(address => uint256) public historicalRewards;
 
