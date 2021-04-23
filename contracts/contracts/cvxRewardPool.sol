@@ -176,7 +176,8 @@ contract cvxRewardPool{
         require(_amount > 0, 'RewardPool : Cannot stake 0');
 
         //also stake to linked rewards
-        for(uint i=0; i < extraRewards.length; i++){
+        uint256 length = extraRewards.length;
+        for(uint i=0; i < length; i++){
             IRewards(extraRewards[i]).stake(msg.sender, _amount);
         }
 
@@ -202,7 +203,8 @@ contract cvxRewardPool{
         require(_amount > 0, 'RewardPool : Cannot stake 0');
 
         //also stake to linked rewards
-        for(uint i=0; i < extraRewards.length; i++){
+        uint256 length = extraRewards.length;
+        for(uint i=0; i < length; i++){
             IRewards(extraRewards[i]).stake(_for, _amount);
         }
 
@@ -223,7 +225,8 @@ contract cvxRewardPool{
         require(_amount > 0, 'RewardPool : Cannot withdraw 0');
 
         //also withdraw from linked rewards
-        for(uint i=0; i < extraRewards.length; i++){
+        uint256 length = extraRewards.length;
+        for(uint i=0; i < length; i++){
             IRewards(extraRewards[i]).withdraw(msg.sender, _amount);
         }
 
@@ -258,7 +261,8 @@ contract cvxRewardPool{
 
         //also get rewards from linked rewards
         if(_claimExtras){
-            for(uint i=0; i < extraRewards.length; i++){
+            uint256 length = extraRewards.length;
+            for(uint i=0; i < length; i++){
                 IRewards(extraRewards[i]).getReward(_account);
             }
         }
