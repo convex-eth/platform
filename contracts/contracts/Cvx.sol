@@ -45,7 +45,8 @@ contract ConvexToken is ERC20{
             return;
         }
 
-        if(totalSupply() == 0){
+        uint256 supply = totalSupply();
+        if(supply == 0){
             //premine, one time only
             _mint(_to,_amount);
             //automatically switch operators
@@ -57,7 +58,7 @@ contract ConvexToken is ERC20{
         //this will cause a bit of overflow into the next cliff range
         //but should be within reasonable levels.
         //requires a max supply check though
-        uint256 cliff = totalSupply().div(reductionPerCliff);
+        uint256 cliff = supply.div(reductionPerCliff);
         //mint if below total cliffs
         if(cliff < totalCliffs){
             //for reduction% take inverse of current cliff
@@ -66,7 +67,7 @@ contract ConvexToken is ERC20{
             _amount = _amount.mul(reduction).div(totalCliffs);
 
             //supply cap check
-            uint256 amtTillMax = maxSupply.sub(totalSupply());
+            uint256 amtTillMax = maxSupply.sub(supply);
             if(_amount > amtTillMax){
                 _amount = amtTillMax;
             }
