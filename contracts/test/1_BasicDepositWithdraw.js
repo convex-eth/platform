@@ -9,10 +9,10 @@ const CurveVoterProxy = artifacts.require("CurveVoterProxy");
 const ExtraRewardStashV2 = artifacts.require("ExtraRewardStashV2");
 const BaseRewardPool = artifacts.require("BaseRewardPool");
 const VirtualBalanceRewardPool = artifacts.require("VirtualBalanceRewardPool");
-//const cCrvRewardPool = artifacts.require("cCrvRewardPool");
+//const cvxCrvRewardPool = artifacts.require("cvxCrvRewardPool");
 const cvxRewardPool = artifacts.require("cvxRewardPool");
 const ConvexToken = artifacts.require("ConvexToken");
-const cCrvToken = artifacts.require("cCrvToken");
+const cvxCrvToken = artifacts.require("cvxCrvToken");
 const StashFactory = artifacts.require("StashFactory");
 const RewardFactory = artifacts.require("RewardFactory");
 
@@ -45,9 +45,9 @@ contract("BasicDepositWithdraw", async accounts => {
     let voterewardFactoryproxy = await RewardFactory.deployed();
     let stashFactory = await StashFactory.deployed();
     let cvx = await ConvexToken.deployed();
-    let cCrv = await cCrvToken.deployed();
+    let cvxCrv = await cvxCrvToken.deployed();
     let crvDeposit = await CrvDepositor.deployed();
-    let cCrvRewards = await booster.lockRewards();
+    let cvxCrvRewards = await booster.lockRewards();
     let cvxRewards = await booster.stakerRewards();
 
     var poolId = contractList.pools.find(pool => pool.name == "3pool").id;

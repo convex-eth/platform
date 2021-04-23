@@ -8,10 +8,10 @@ const CurveVoterProxy = artifacts.require("CurveVoterProxy");
 const ExtraRewardStashV2 = artifacts.require("ExtraRewardStashV2");
 const BaseRewardPool = artifacts.require("BaseRewardPool");
 const VirtualBalanceRewardPool = artifacts.require("VirtualBalanceRewardPool");
-//const cCrvRewardPool = artifacts.require("cCrvRewardPool");
+//const cvxCrvRewardPool = artifacts.require("cvxCrvRewardPool");
 const cvxRewardPool = artifacts.require("cvxRewardPool");
 const ConvexToken = artifacts.require("ConvexToken");
-const cCrvToken = artifacts.require("cCrvToken");
+const cvxCrvToken = artifacts.require("cvxCrvToken");
 const StashFactory = artifacts.require("StashFactory");
 const RewardFactory = artifacts.require("RewardFactory");
 
@@ -22,8 +22,8 @@ const IERC20 = artifacts.require("IERC20");
 
 
 
-contract("cCrv Rewards", async accounts => {
-  it("should deposit and gain rewrds with ccrv", async () => {
+contract("cvxCrv Rewards", async accounts => {
+  it("should deposit and gain rewrds with cvxCrv", async () => {
     
     let crv = await IERC20.at("0xD533a949740bb3306d119CC777fa900bA034cd52");
     let weth = await IERC20.at("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
@@ -45,11 +45,11 @@ contract("cCrv Rewards", async accounts => {
     let rewardFactory = await RewardFactory.deployed();
     let stashFactory = await StashFactory.deployed();
     let cvx = await ConvexToken.deployed();
-    let cCrv = await cCrvToken.deployed();
+    let cvxCrv = await cvxCrvToken.deployed();
     let crvDeposit = await CrvDepositor.deployed();
-    let cCrvRewards = await booster.lockRewards();
+    let cvxCrvRewards = await booster.lockRewards();
     let cvxRewards = await booster.stakerRewards();
-    let cCrvRewardsContract = await BaseRewardPool.at(cCrvRewards);
+    let cvxCrvRewardsContract = await BaseRewardPool.at(cvxCrvRewards);
     let cvxRewardsContract = await cvxRewardPool.at(cvxRewards);
 
     var poolId = contractList.pools.find(pool => pool.name == "3pool").id;
@@ -101,20 +101,20 @@ contract("cCrv Rewards", async accounts => {
     await crv.approve(crvDeposit.address,startingcrv,{from:userA});
     await crvDeposit.deposit(startingcrv,true,{from:userA});
     console.log("crv deposited");
-    await cCrv.balanceOf(userA).then(a=>console.log("cCrv on wallet: " +a))
-    //stake ccrv
-    console.log("stake at " +cCrvRewardsContract.address);
-    await cCrv.approve(cCrvRewardsContract.address,0,{from:userA});
-    await cCrv.approve(cCrvRewardsContract.address,startingcrv,{from:userA});
+    await cvxCrv.balanceOf(userA).then(a=>console.log("cvxCrv on wallet: " +a))
+    //stake cvxCrv
+    console.log("stake at " +cvxCrvRewardsContract.address);
+    await cvxCrv.approve(cvxCrvRewardsContract.address,0,{from:userA});
+    await cvxCrv.approve(cvxCrvRewardsContract.address,startingcrv,{from:userA});
     console.log("stake approve");
-    await cCrvRewardsContract.stakeAll({from:userA})
+    await cvxCrvRewardsContract.stakeAll({from:userA})
     console.log("staked")
 
     //check balances, depositor should still have crv since no whitelist
-    await cCrv.balanceOf(userA).then(a=>console.log("cCrv on wallet: " +a))
-    await cCrvRewardsContract.balanceOf(userA).then(a=>console.log("cCrv staked: " +a))
+    await cvxCrv.balanceOf(userA).then(a=>console.log("cvxCrv on wallet: " +a))
+    await cvxCrvRewardsContract.balanceOf(userA).then(a=>console.log("cvxCrv staked: " +a))
     await crv.balanceOf(crvDeposit.address).then(a=>console.log("crv on depositor: " +a))
-    await cCrv.totalSupply().then(a=>console.log("cCrv supply: " +a))
+    await cvxCrv.totalSupply().then(a=>console.log("cvxCrv supply: " +a))
 
     //advance time
     await time.increase(86400);
@@ -131,11 +131,11 @@ contract("cCrv Rewards", async accounts => {
     await crv.balanceOf(crvDeposit.address).then(a=>console.log("depositor crv(>0): " +a));
     await crv.balanceOf(userA).then(a=>console.log("userA crv(==0): " +a));
     await crv.balanceOf(caller).then(a=>console.log("caller crv(>0): " +a));
-    await crv.balanceOf(cCrvRewards).then(a=>console.log("crv at cCrvRewards " +a));
+    await crv.balanceOf(cvxCrvRewards).then(a=>console.log("crv at cvxCrvRewards " +a));
     await crv.balanceOf(cvxRewards).then(a=>console.log("crv at cvxRewards " +a));
     
     //check earned(should be 0)
-    await cCrvRewardsContract.earned(userA).then(a=>console.log("current earned: " +a));
+    await cvxCrvRewardsContract.earned(userA).then(a=>console.log("current earned: " +a));
 
     await time.increase(3*86400);
     await time.advanceBlock();
@@ -146,14 +146,14 @@ contract("cCrv Rewards", async accounts => {
     console.log("advance time....");
 
     //check earned
-    await cCrvRewardsContract.earned(userA).then(a=>console.log("current earned: " +a));
+    await cvxCrvRewardsContract.earned(userA).then(a=>console.log("current earned: " +a));
     //claim
-    await cCrvRewardsContract.getReward({from:userA});
+    await cvxCrvRewardsContract.getReward({from:userA});
     console.log("getReward()");
 
-    await crv.balanceOf(cCrvRewards).then(a=>console.log("crv at cCrvRewards " +a));
-    await cCrvRewardsContract.earned(userA).then(a=>console.log("current earned: " +a));
-    await cCrv.balanceOf(userA).then(a=>console.log("cCrv on wallet: " +a))
+    await crv.balanceOf(cvxCrvRewards).then(a=>console.log("crv at cvxCrvRewards " +a));
+    await cvxCrvRewardsContract.earned(userA).then(a=>console.log("current earned: " +a));
+    await cvxCrv.balanceOf(userA).then(a=>console.log("cvxCrv on wallet: " +a))
     await crv.balanceOf(userA).then(a=>console.log("crv on wallet: " +a))
     await cvx.balanceOf(userA).then(a=>console.log("cvx on wallet: " +a))
     
@@ -165,20 +165,20 @@ contract("cCrv Rewards", async accounts => {
     console.log("advance time....");
 
     //claim rewards again
-    await cCrvRewardsContract.earned(userA).then(a=>console.log("current earned: " +a));
-    await cCrvRewardsContract.getReward({from:userA});
+    await cvxCrvRewardsContract.earned(userA).then(a=>console.log("current earned: " +a));
+    await cvxCrvRewardsContract.getReward({from:userA});
     console.log("getReward()");
 
-    await crv.balanceOf(cCrvRewards).then(a=>console.log("crv at cCrvRewards " +a));
-    await cCrvRewardsContract.earned(userA).then(a=>console.log("current earned: " +a));
-    await cCrv.balanceOf(userA).then(a=>console.log("cCrv on wallet: " +a))
+    await crv.balanceOf(cvxCrvRewards).then(a=>console.log("crv at cvxCrvRewards " +a));
+    await cvxCrvRewardsContract.earned(userA).then(a=>console.log("current earned: " +a));
+    await cvxCrv.balanceOf(userA).then(a=>console.log("cvxCrv on wallet: " +a))
     await crv.balanceOf(userA).then(a=>console.log("crv on wallet: " +a))
     await cvx.balanceOf(userA).then(a=>console.log("cvx on wallet: " +a))
 
     //distribute again
     await booster.earmarkRewards(0);
     console.log("earmark 2")
-    await crv.balanceOf(cCrvRewards).then(a=>console.log("crv at cCrvRewards " +a));
+    await crv.balanceOf(cvxCrvRewards).then(a=>console.log("crv at cvxCrvRewards " +a));
     await crv.balanceOf(cvxRewards).then(a=>console.log("crv at cvxRewards " +a));
 
     await time.increase(3*86400);
@@ -190,13 +190,13 @@ contract("cCrv Rewards", async accounts => {
     console.log("advance time....");
 
     //rewards should be earning again
-    await cCrvRewardsContract.earned(userA).then(a=>console.log("current earned: " +a));
-    await cCrvRewardsContract.getReward({from:userA});
+    await cvxCrvRewardsContract.earned(userA).then(a=>console.log("current earned: " +a));
+    await cvxCrvRewardsContract.getReward({from:userA});
     console.log("getReward()");
 
-    await crv.balanceOf(cCrvRewards).then(a=>console.log("crv at cCrvRewards " +a));
-    await cCrvRewardsContract.earned(userA).then(a=>console.log("current earned: " +a));
-    await cCrv.balanceOf(userA).then(a=>console.log("cCrv on wallet: " +a))
+    await crv.balanceOf(cvxCrvRewards).then(a=>console.log("crv at cvxCrvRewards " +a));
+    await cvxCrvRewardsContract.earned(userA).then(a=>console.log("current earned: " +a));
+    await cvxCrv.balanceOf(userA).then(a=>console.log("cvxCrv on wallet: " +a))
     await crv.balanceOf(userA).then(a=>console.log("crv on wallet: " +a))
     await cvx.balanceOf(userA).then(a=>console.log("cvx on wallet: " +a))
   });

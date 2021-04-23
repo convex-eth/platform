@@ -8,10 +8,10 @@ const CurveVoterProxy = artifacts.require("CurveVoterProxy");
 const ExtraRewardStashV2 = artifacts.require("ExtraRewardStashV2");
 const BaseRewardPool = artifacts.require("BaseRewardPool");
 const VirtualBalanceRewardPool = artifacts.require("VirtualBalanceRewardPool");
-//const cCrvRewardPool = artifacts.require("cCrvRewardPool");
+//const cvxCrvRewardPool = artifacts.require("cvxCrvRewardPool");
 const cvxRewardPool = artifacts.require("cvxRewardPool");
 const ConvexToken = artifacts.require("ConvexToken");
-const cCrvToken = artifacts.require("cCrvToken");
+const cvxCrvToken = artifacts.require("cvxCrvToken");
 const StashFactory = artifacts.require("StashFactory");
 const RewardFactory = artifacts.require("RewardFactory");
 
@@ -56,11 +56,11 @@ contract("Voting Test", async accounts => {
     let rewardFactory = await RewardFactory.deployed();
     let stashFactory = await StashFactory.deployed();
     let cvx = await ConvexToken.deployed();
-    let cCrv = await cCrvToken.deployed();
+    let cvxCrv = await cvxCrvToken.deployed();
     let crvDeposit = await CrvDepositor.deployed();
-    let cCrvRewards = await booster.lockRewards();
+    let cvxCrvRewards = await booster.lockRewards();
     let cvxRewards = await booster.stakerRewards();
-    let cCrvRewardsContract = await BaseRewardPool.at(cCrvRewards);
+    let cvxCrvRewardsContract = await BaseRewardPool.at(cvxCrvRewards);
     let cvxRewardsContract = await cvxRewardPool.at(cvxRewards);
 
     var poolId = contractList.pools.find(pool => pool.name == "3pool").id;
@@ -92,8 +92,8 @@ contract("Voting Test", async accounts => {
     await crv.approve(crvDeposit.address,startingcrv,{from:userA});
     await crvDeposit.deposit(startingcrv,true,{from:userA});
     console.log("crv deposited");
-    await cCrv.balanceOf(userA).then(a=>console.log("cCrv on wallet: " +a))
-    await cCrv.totalSupply().then(a=>console.log("cCrv supply: " +a))
+    await cvxCrv.balanceOf(userA).then(a=>console.log("cvxCrv on wallet: " +a))
+    await cvxCrv.totalSupply().then(a=>console.log("cvxCrv supply: " +a))
     await crv.balanceOf(crvDeposit.address).then(a=>console.log("depositor crv(>0): " +a));
     await crv.balanceOf(voteproxy.address).then(a=>console.log("proxy crv(==0): " +a));
     await vecrv.balanceOf(voteproxy.address).then(a=>console.log("proxy veCrv(==0): " +a));

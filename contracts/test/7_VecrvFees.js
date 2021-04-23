@@ -8,10 +8,10 @@ const CurveVoterProxy = artifacts.require("CurveVoterProxy");
 const ExtraRewardStashV2 = artifacts.require("ExtraRewardStashV2");
 const BaseRewardPool = artifacts.require("BaseRewardPool");
 const VirtualBalanceRewardPool = artifacts.require("VirtualBalanceRewardPool");
-//const cCrvRewardPool = artifacts.require("cCrvRewardPool");
+//const cvxCrvRewardPool = artifacts.require("cvxCrvRewardPool");
 const cvxRewardPool = artifacts.require("cvxRewardPool");
 const ConvexToken = artifacts.require("ConvexToken");
-const cCrvToken = artifacts.require("cCrvToken");
+const cvxCrvToken = artifacts.require("cvxCrvToken");
 const StashFactory = artifacts.require("StashFactory");
 const RewardFactory = artifacts.require("RewardFactory");
 
@@ -55,12 +55,12 @@ contract("VeCrv Fees Test", async accounts => {
     let rewardFactory = await RewardFactory.deployed();
     let stashFactory = await StashFactory.deployed();
     let cvx = await ConvexToken.deployed();
-    let cCrv = await cCrvToken.deployed();
+    let cvxCrv = await cvxCrvToken.deployed();
     let crvDeposit = await CrvDepositor.deployed();
-    let cCrvRewards = await booster.lockRewards();
+    let cvxCrvRewards = await booster.lockRewards();
     let cvxRewards = await booster.stakerRewards();
     let vecrvRewards = await booster.lockFees();
-    let cCrvRewardsContract = await BaseRewardPool.at(cCrvRewards);
+    let cvxCrvRewardsContract = await BaseRewardPool.at(cvxCrvRewards);
     let cvxRewardsContract = await cvxRewardPool.at(cvxRewards);
     let vecrvRewardsContract = await VirtualBalanceRewardPool.at(vecrvRewards);
 
@@ -88,18 +88,18 @@ contract("VeCrv Fees Test", async accounts => {
     await crv.approve(crvDeposit.address,startingcrv,{from:userA});
     await crvDeposit.deposit(startingcrv,true,"0x0000000000000000000000000000000000000000",{from:userA});
     console.log("crv deposited");
-    await cCrv.balanceOf(userA).then(a=>console.log("cvxCrv on wallet: " +a))
-    await cCrv.totalSupply().then(a=>console.log("cvxCrv supply: " +a))
+    await cvxCrv.balanceOf(userA).then(a=>console.log("cvxCrv on wallet: " +a))
+    await cvxCrv.totalSupply().then(a=>console.log("cvxCrv supply: " +a))
     await crv.balanceOf(crvDeposit.address).then(a=>console.log("depositor crv(>0): " +a));
     await crv.balanceOf(voteproxy.address).then(a=>console.log("proxy crv(==0): " +a));
     await vecrv.balanceOf(voteproxy.address).then(a=>console.log("proxy veCrv(==0): " +a));
     console.log("staking crv");
-    await cCrv.approve(cCrvRewardsContract.address,0,{from:userA});
-    await cCrv.approve(cCrvRewardsContract.address,startingcrv,{from:userA});
-    await cCrvRewardsContract.stakeAll({from:userA})
+    await cvxCrv.approve(cvxCrvRewardsContract.address,0,{from:userA});
+    await cvxCrv.approve(cvxCrvRewardsContract.address,startingcrv,{from:userA});
+    await cvxCrvRewardsContract.stakeAll({from:userA})
     console.log("staked")
-    await cCrv.balanceOf(userA).then(a=>console.log("cvxCrv on wallet: " +a))
-    await cCrvRewardsContract.balanceOf(userA).then(a=>console.log("cvxCrv staked: " +a))
+    await cvxCrv.balanceOf(userA).then(a=>console.log("cvxCrv on wallet: " +a))
+    await cvxCrvRewardsContract.balanceOf(userA).then(a=>console.log("cvxCrv staked: " +a))
 
 
     //voting
@@ -182,7 +182,7 @@ contract("VeCrv Fees Test", async accounts => {
     //before balance
     await threecrv.balanceOf(userA).then(a=>console.log("3crv before claim: " +a));
     //get reward from main contract which will also claim from children contracts(crv is main, vecrv fees is child)
-    await cCrvRewardsContract.getReward({from:userA});
+    await cvxCrvRewardsContract.getReward({from:userA});
     await threecrv.balanceOf(userA).then(a=>console.log("3crv after claim: " +a));
 
   });

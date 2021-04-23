@@ -10,7 +10,7 @@ const RewardFactory = artifacts.require("RewardFactory");
 const StashFactory = artifacts.require("StashFactory");
 const TokenFactory = artifacts.require("TokenFactory");
 const ConvexToken = artifacts.require("ConvexToken");
-const cCrvToken = artifacts.require("cCrvToken");
+const cvxCrvToken = artifacts.require("cvxCrvToken");
 const CrvDepositor = artifacts.require("CrvDepositor");
 const PoolManager = artifacts.require("PoolManager");
 const BaseRewardPool = artifacts.require("BaseRewardPool");
@@ -48,9 +48,26 @@ module.exports = function (deployer, network, accounts) {
     let admin = accounts[0];
     console.log("deploying from: " +admin);
 
+    var totaldistro = new BN(0);
+    totaldistro.add(distroList.premine);
+    totaldistro.add(distroList.lpincentives);
+    totaldistro.add(distroList.vecrv);
+    totaldistro.add(distroList.teamcvxLpSeed)
+    var vestedAddresses = distroList.vested.team.addresses.concat(distroList.vested.investor.addresses,distroList.vested.treasury.addresses)
+   // console.log("vested addresses: " +vestedAddresses.toString())
+    var vestedAmounts = distroList.vested.team.amounts.concat(distroList.vested.investor.amounts,distroList.vested.treasury.amounts)
+    //console.log("vested amounts: " +vestedAmounts.toString())
+    var totalVested = new BN(0);
+    for(var i in vestedAmounts){
+    	totalVested.add(vestedAmounts[i]);
+    }
+    console.log("total vested: " +totalVested.toString());
+    totaldistro.add(totalVested);
+    console.log("total cvx premine: " +totaldistro.toString());
+
 	var booster, voter, rFactory, sFactory, tFactory, cvx, cvxCrv, deposit, arb, pools;
 	var crvToken;
-	var cvxCrvRewards, cvxRewards, airdrop, vecrvVesting, chef;
+	var cvxCrvRewards, cvxRewards, airdrop, vesting, chef;
 	var sushiRouter, sushiFactory, pairToken;
 	var crvdepositAmt, crvbal, cvxCrvBal
 
@@ -104,7 +121,7 @@ module.exports = function (deployer, network, accounts) {
 	}).then(function(instance) {
 		sFactory = instance;
 		systemContracts["sFactory"] = sFactory.address;
-		return deployer.deploy(cCrvToken)
+		return deployer.deploy(cvxCrvToken)
 	}).then(function(instance) {
 		cvxCrv = instance;
 		systemContracts["cvxCrv"] = cvxCrv.address;
@@ -153,7 +170,7 @@ module.exports = function (deployer, network, accounts) {
 		var chefCvx = new BN(distroList.lpincentives);
 		var numberOfBlocks = new BN(6000*365*4);
 		var rewardPerBlock = new BN(chefCvx).div(numberOfBlocks)
-		console.log("rewards per block: " +rewardPerBlock.toString());
+		console.log("chef rewards per block: " +rewardPerBlock.toString());
 		var startblock = block+6000; //about 1 day
 		var endbonusblock = startblock + (2*7*6000);//about 2 weeks
 		console.log("chef rewards start on: " +startblock);
@@ -175,31 +192,32 @@ module.exports = function (deployer, network, accounts) {
 	}).then(function(instance) {
 		systemContracts["claimZap"] = instance.address;
 	})
+
+	//Fund vested escrow
 	.then(function() {
-		//vecrv holder rewards changed to instant drop
-		//no need to set a funding contract
+		//vest team, invest, treasury
 		return deployer.deploy(VestedEscrow,cvx.address, rewardsStart, rewardsEnd, cvxRewards.address, admin)
 	})
 	.then(function(instance) {
-		vecrvVesting = instance;
-		systemContracts["vestedEscrow"] = vecrvVesting.address;
-		return cvx.approve(vecrvVesting.address, distroList.vested.total);
+		vesting = instance;
+		systemContracts["vestedEscrow"] = vesting.address;
+		return cvx.approve(vesting.address, distroList.vested.total);
 	})
 	.then(function() {
-		return vecrvVesting.addTokens(distroList.vested.total);
+		return vesting.addTokens(distroList.vested.total);
 	})
 	.then(function() {
-		return vecrvVesting.fund(distroList.vested.team.addresses,distroList.vested.team.amounts);
+		return vesting.fund(distroList.vested.team.addresses,distroList.vested.team.amounts);
 	})
 	.then(function() {
-		return vecrvVesting.fund(distroList.vested.investor.addresses,distroList.vested.investor.amounts);
+		return vesting.fund(distroList.vested.investor.addresses,distroList.vested.investor.amounts);
 	})
 	.then(function() {
-		return vecrvVesting.unallocatedSupply();
+		return vesting.unallocatedSupply();
 	})
 	.then(function(unallocatedSupply) {
 		console.log("vesting unallocatedSupply: " +unallocatedSupply)
-		return vecrvVesting.initialLockedSupply();
+		return vesting.initialLockedSupply();
 	})
 	.then(function(initialLockedSupply) {
 		console.log("vesting initialLockedSupply: " +initialLockedSupply)
@@ -241,12 +259,9 @@ module.exports = function (deployer, network, accounts) {
 		console.log("sushiRouter: " +sushiRouter.address)
 		console.log("sushiFactory: " +sushiFactory.address)
 
-		//TODO: pull cvx amount from json
-
-		return cvx.approve(sushiRouter.address,web3.utils.toWei("12000", "ether"))
+		return cvx.approve(sushiRouter.address,distroList.teamcvxLpSeed)
 	}).then(function() {
-		console.log("approved")
-		return sushiRouter.addLiquidityETH(cvx.address,web3.utils.toWei("12000", "ether"),web3.utils.toWei("12000", "ether"),web3.utils.toWei("1.0", "ether"),admin,Math.floor(Date.now() / 1000)+3000,{value:web3.utils.toWei("1.0", "ether")})
+		return sushiRouter.addLiquidityETH(cvx.address,distroList.teamcvxLpSeed,distroList.teamcvxLpSeed,web3.utils.toWei("1.0", "ether"),admin,Math.floor(Date.now() / 1000)+3000,{value:web3.utils.toWei("1.0", "ether")})
 	}).then(function() {
 		return sushiFactory.getPair(cvx.address,weth)
 	}).then(function(pair) {
@@ -303,7 +318,6 @@ module.exports = function (deployer, network, accounts) {
 		return cvxCrv.approve(sushiRouter.address,cvxCrvBal)
 	})
 	.then(function() {
-		console.log("approved")
 		return sushiRouter.addLiquidity(crv, cvxCrv.address,crvbal,cvxCrvBal,0,0,admin,Math.floor(Date.now() / 1000)+3000)
 	}).then(function() {
 		return sushiFactory.getPair(cvxCrv.address,crv)
@@ -335,6 +349,7 @@ module.exports = function (deployer, network, accounts) {
 	.then(function(){
 		return chef.add(8000,systemContracts["cvxEthSLP"],false);
 	})
+
 
 	//Create convex pools
 	.then(function() {
