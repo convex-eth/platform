@@ -50,16 +50,16 @@ contract cvxRewardPool{
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
-    IERC20 public rewardToken;
-    IERC20 public stakingToken;
+    IERC20 public immutable rewardToken;
+    IERC20 public immutable stakingToken;
     uint256 public constant duration = 7 days;
     uint256 public constant FEE_DENOMINATOR = 10000;
 
-    address public operator;
-    address public crvDeposits;
-    address public cvxCrvRewards;
-    IERC20 public cvxCrvToken;
-    address public rewardManager;
+    address public immutable operator;
+    address public immutable crvDeposits;
+    address public immutable cvxCrvRewards;
+    IERC20 public immutable cvxCrvToken;
+    address public immutable rewardManager;
 
     uint256 public periodFinish = 0;
     uint256 public rewardRate = 0;
