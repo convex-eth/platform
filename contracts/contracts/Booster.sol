@@ -268,15 +268,9 @@ contract Booster{
         PoolInfo storage pool = poolInfo[_pid];
         require(pool.shutdown == false, "pool is closed");
 
-        address lptoken = pool.lptoken;
-        IERC20(lptoken).safeTransferFrom(msg.sender, address(this), _amount);
-        
-        //do not update amount based on balanceOf(this)
-        //if a pool is shutdown and remade it will unstake the old pool's coins
-        //and hold here
-
         //send to proxy to stake
-        IERC20(lptoken).safeTransfer(staker, _amount);
+        address lptoken = pool.lptoken;
+        IERC20(lptoken).safeTransferFrom(msg.sender, staker, _amount);
 
         //stake
         address gauge = pool.gauge;
