@@ -241,14 +241,11 @@ contract Booster{
 
         for(uint i=0; i < poolInfo.length; i++){
             PoolInfo storage pool = poolInfo[i];
+            if (pool.shutdown) continue;
+
             address token = pool.lptoken;
             address gauge = pool.gauge;
             address stash = pool.stash;
-            bool poolShutdown =  pool.shutdown;
-            if(poolShutdown){
-                //already shutdown
-                continue;
-            }
 
             //withdraw from gauge
             try IStaker(staker).withdrawAll(token,gauge){
