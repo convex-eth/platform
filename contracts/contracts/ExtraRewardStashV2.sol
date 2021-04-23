@@ -138,11 +138,18 @@ contract ExtraRewardStashV2 {
 
     //check if gauge rewards have changed
     function checkForNewRewardTokens() internal {
+        uint256 length = tokenInfo.length;
         for(uint256 i = 0; i < maxRewards; i++){
             address token = ICurveGauge(gauge).reward_tokens(i);
+            if (token == address(0)) {
+                for (uint x = i; x < length; x++) {
+                    tokenInfo.pop();
+                }
+                break;
+            }
 
             //replace or grow list
-            if(i < tokenInfo.length){
+            if(i < length){
                 setToken(i,token);
             }else{
                 addToken(token);   
@@ -152,8 +159,6 @@ contract ExtraRewardStashV2 {
 
     //add a new token to token list
     function addToken(address _token) internal {
-    	if(_token == address(0)) return;
-
         //get address of main rewards of pool
          (,,,address mainRewardContract,,) = IDeposit(operator).poolInfo(pid);
 
