@@ -31,7 +31,7 @@ const IERC20 = artifacts.require("IERC20");
 //TODO: pass various roles to multisig
 
 module.exports = function (deployer, network, accounts) {
-	if(network != "ganachecli"){
+	if(network != "ganachecli" && network != "mainnet"){
 		return true;
 	}
 	//return true;
@@ -46,6 +46,7 @@ module.exports = function (deployer, network, accounts) {
     let weth = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 
     let admin = accounts[0];
+    console.log("deploying from: " +admin);
 
 	var booster, voter, rFactory, sFactory, tFactory, cvx, cvxCrv, deposit, arb, pools;
 	var crvToken;
@@ -67,9 +68,12 @@ module.exports = function (deployer, network, accounts) {
   	deployer.deploy(CurveVoterProxy).then(function(instance) {
   		voter = instance;
   		systemContracts["voteProxy"] = voter.address;
-  	}).then(function() {
+  		console.log("voter proxy: " +voter.address);
+  	})
+  	.then(function() {
 		return deployer.deploy(ConvexToken, voter.address)
-	}).then(function(instance) {
+	})
+	.then(function(instance) {
 		cvx = instance;
 		systemContracts["cvx"] = cvx.address;
 	})
