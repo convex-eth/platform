@@ -465,7 +465,7 @@ contract Booster{
     //callback from reward contract when crv is received.
     function rewardClaimed(uint256 _pid, address _address, uint256 _amount) external returns(bool){
         address rewardContract = poolInfo[_pid].crvRewards;
-        require(msg.sender == lockRewards||msg.sender == rewardContract,"!auth");
+        require(msg.sender == rewardContract || msg.sender == lockRewards, "!auth");
 
         if(block.timestamp >= mintStart){
             //mint reward tokens
