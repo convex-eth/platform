@@ -52,10 +52,11 @@ contract ExtraRewardStashV2 {
         //this is updateable in v2 gauges now so must check each time.
         checkForNewRewardTokens();
 
-        if(tokenCount > 0){
+        uint256 length = tokenCount;
+        if(length > 0){
             //get previous balances of all tokens
-            uint256[] memory balances = new uint256[](tokenCount);
-            for(uint256 i=0; i < tokenCount; i++){
+            uint256[] memory balances = new uint256[](length);
+            for(uint256 i=0; i < length; i++){
                 balances[i] = IERC20(tokenInfo[i].token).balanceOf(staker);
             }
             //claim rewards on gauge for staker
@@ -63,7 +64,7 @@ contract ExtraRewardStashV2 {
             //ICurveGauge(gauge).claim_rewards(staker);
             IDeposit(operator).claimRewards(pid,gauge);
 
-            for(uint256 i=0; i < tokenCount; i++){
+            for(uint256 i=0; i < length; i++){
                 address token = tokenInfo[i].token;
                 uint256 newbalance = IERC20(token).balanceOf(staker);
                 //stash if balance increased
