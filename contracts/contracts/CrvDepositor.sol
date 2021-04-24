@@ -47,44 +47,44 @@ contract CrvDepositor{
        }
     }
 
-    //lock curve if whitelisted
-    function _lockCurve() internal {
-        address walletChecker = ICurveVoteEscrow(escrow).smart_wallet_checker();
+    function initialLock() external{
+        require(msg.sender==feeManager, "!auth");
 
-        if(walletChecker != address(0) && IWalletChecker(walletChecker).check(staker) == true){
-            uint256 crvBalance = IERC20(crv).balanceOf(address(this));
-            require(crvBalance > 0,"no crv to lock");
-            IERC20(crv).safeTransfer(staker, crvBalance);
-
+        uint256 vecrv = IERC20(escrow).balanceOf(staker);
+        if(vecrv == 0){
             uint256 unlockAt = block.timestamp + MAXTIME;
             uint256 unlockInWeeks = (unlockAt/WEEK)*WEEK;
 
-            //check if vecrv has expired
-            uint256 vecrv = IERC20(escrow).balanceOf(staker);
-            if(vecrv == 0){
-                //release old lock if exists
-                IStaker(staker).release();
-                //create new lock
-                uint256 crvBalanceStaker = IERC20(crv).balanceOf(staker);
-                IStaker(staker).createLock(crvBalanceStaker, unlockAt);
-                unlockTime = unlockInWeeks;
-            }else{
-                //increase ammount
-                uint256 crvBalanceStaker = IERC20(crv).balanceOf(staker);
-                IStaker(staker).increaseAmount(crvBalanceStaker);
-                
-                //increase time too if over 2 week buffer
-                if(unlockInWeeks.sub(unlockTime) > 2){
-                    IStaker(staker).increaseTime(unlockAt);
-                    unlockTime = unlockInWeeks;
-                }
-            }
-            ITokenMinter(minter).mint(msg.sender,incentiveCrv);
-            incentiveCrv = 0;
-            if(!isActive){
-                isActive = true;
-            }
+            //release old lock if exists
+            IStaker(staker).release();
+            //create new lock
+            uint256 crvBalanceStaker = IERC20(crv).balanceOf(staker);
+            IStaker(staker).createLock(crvBalanceStaker, unlockAt);
+            unlockTime = unlockInWeeks;
         }
+    }
+
+    //lock curve if whitelisted
+    function _lockCurve() internal {
+        uint256 crvBalance = IERC20(crv).balanceOf(address(this));
+        require(crvBalance > 0,"no crv to lock");
+        IERC20(crv).safeTransfer(staker, crvBalance);
+
+        uint256 unlockAt = block.timestamp + MAXTIME;
+        uint256 unlockInWeeks = (unlockAt/WEEK)*WEEK;
+
+        //increase ammount
+        uint256 crvBalanceStaker = IERC20(crv).balanceOf(staker);
+        IStaker(staker).increaseAmount(crvBalanceStaker);
+        
+        //increase time too if over 2 week buffer
+        if(unlockInWeeks.sub(unlockTime) > 2){
+            IStaker(staker).increaseTime(unlockAt);
+            unlockTime = unlockInWeeks;
+        }
+        
+        ITokenMinter(minter).mint(msg.sender,incentiveCrv);
+        incentiveCrv = 0;
     }
 
     function lockCurve() external {
@@ -98,12 +98,6 @@ contract CrvDepositor{
     function deposit(uint256 _amount, bool _lock, address _stakeAddress) public {
         require(_amount > 0,"!>0");
         IERC20(crv).safeTransferFrom(msg.sender, address(this), _amount);
-
-        //if lock hasnt started, dont allow defered locks
-        if(!isActive){
-            _lock = true;
-        }
-
 
         if(_lock){
             //lock immediately

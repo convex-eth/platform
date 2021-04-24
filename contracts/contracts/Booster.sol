@@ -14,6 +14,8 @@ contract Booster{
     using SafeMath for uint256;
 
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
+    address public constant registry = address(0x0000000022D53366457F9d5E68Ec105046FC4383);
+    uint256 public constant distributionAddressId = 4;
     address public constant voteOwnership = address(0xE478de485ad2fe566d49342Cbd03E49ed7DB3356);
     address public constant voteParameter = address(0xBCfF8B0b9419b9A88c44546519b1e909cF330399);
 
@@ -130,20 +132,17 @@ contract Booster{
         }
     }
 
-    // Set reward token and claim contract
-    // this could change via a curve dao vote thus needs an access role to change.
-    // however to stop malicious reward contracts from being deployed,
-    // the fee reward contract is always created via the factory, and not assigned directly.
-    function setFeeInfo(address _feeDistro, address _feeToken) external {
+    // Set reward token and claim contract, get from Curve's registry
+    function setFeeInfo() external {
         require(msg.sender==feeManager, "!auth");
-    
+        
+        feeDistro = IRegistry(registry).get_address(distributionAddressId);
+        address _feeToken = IFeeDistro(feeDistro).token();
         if(feeToken != _feeToken){
             //create a new reward contract for the new token
-           lockFees = IRewardFactory(rewardFactory).CreateTokenRewards(_feeToken,lockRewards,address(this));
+            lockFees = IRewardFactory(rewardFactory).CreateTokenRewards(_feeToken,lockRewards,address(this));
+            feeToken = _feeToken;
         }
-
-        feeToken = _feeToken;
-        feeDistro = _feeDistro;
     }
 
     function setFees(uint256 _lockFees, uint256 _stakerFees, uint256 _callerFees, uint256 _platform) external{

@@ -132,8 +132,7 @@ contract("Shutdown Test", async accounts => {
     console.log("set stake reward contracts");
 
     //set vecrv info
-    let vecrvFeeDistro = "0xA464e6DCda8AC41e03616F95f4BC98a13b8922Dc";
-    await booster2.setFeeInfo(vecrvFeeDistro,threeCrv.address);
+    await booster2.setFeeInfo();
     console.log("vecrv fee info set");
 
     let poolManager2 = await PoolManager.new(booster2.address);

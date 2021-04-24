@@ -154,7 +154,7 @@ module.exports = function (deployer, network, accounts) {
 	}).then(function() {
 		return booster.setFactories(rFactory.address,sFactory.address,tFactory.address)
 	}).then(function() {
-		return booster.setFeeInfo(vecrvFeeDistro,threeCrv)
+		return booster.setFeeInfo()
 	})
 	.then(function() {
 		return deployer.deploy(ArbitratorVault,booster.address)
@@ -297,7 +297,7 @@ module.exports = function (deployer, network, accounts) {
 		return crvToken.approve(deposit.address,crvdepositAmt.toString());
 	})
 	.then(function(){
-		return deposit.deposit(crvdepositAmt.toString(), true, "0x0000000000000000000000000000000000000000");
+		return deposit.deposit(crvdepositAmt.toString(), false, "0x0000000000000000000000000000000000000000");
 	})
 	.then(function(){
 		return crvToken.balanceOf(admin);
