@@ -25,19 +25,7 @@ contract RewardFactory {
 
     //Get active count function
     function activeRewardCount(address _reward) external view returns(uint256){
-        if(_reward == address(0)){
-            return 0;
-        }
-
-        uint256[] storage activeList = rewardActiveList[_reward];
-        //uint256 pid = _pid+1; //offset by 1 so that we can use 0 as empty
-        uint256 count = 0;
-        for(uint256 i = 0; i < activeList.length; i++){
-            if(activeList[i] > 0){
-                count = count + 1;
-            }
-        }
-        return count;
+        rewardActiveList[_reward].length;
     }
 
     function addActiveReward(address _reward, uint256 _pid) external returns(bool){
@@ -49,14 +37,9 @@ contract RewardFactory {
         uint256[] storage activeList = rewardActiveList[_reward];
         uint256 pid = _pid+1; //offset by 1 so that we can use 0 as empty
 
-        for(uint256 i = 0; i < activeList.length; i++){
+        uint256 length = activeList.length;
+        for(uint256 i = 0; i < length; i++){
             if(activeList[i] == pid) return true;
-        }
-        for(uint256 i = 0; i < activeList.length; i++){
-            if(activeList[i] == 0){
-                activeList[i] = pid;
-                return true;
-            }
         }
         activeList.push(pid);
         return true;
@@ -71,10 +54,14 @@ contract RewardFactory {
         uint256[] storage activeList = rewardActiveList[_reward];
         uint256 pid = _pid+1; //offset by 1 so that we can use 0 as empty
 
-        for(uint256 i = 0; i < activeList.length; i++){
+        uint256 length = activeList.length;
+        for(uint256 i = 0; i < length; i++){
             if(activeList[i] == pid){
-                activeList[i] = 0;
-                return true;
+                if (i != length-1) {
+                    activeList[i] = activeList[length-1];
+                }
+                activeList.pop();
+                break;
             }
         }
         return true;

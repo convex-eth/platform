@@ -27,8 +27,8 @@ contract Booster{
     address public owner;
     address public feeManager;
     address public poolManager;
-    address public staker;
-    address public minter;
+    address public immutable staker;
+    address public immutable minter;
     address public rewardFactory;
     address public stashFactory;
     address public tokenFactory;
@@ -40,7 +40,7 @@ contract Booster{
     address public lockFees;
     address public feeDistro;
     address public feeToken;
-    uint256 public mintStart;
+    uint256 public immutable mintStart;
 
     bool public isShutdown;
 
@@ -241,14 +241,11 @@ contract Booster{
 
         for(uint i=0; i < poolInfo.length; i++){
             PoolInfo storage pool = poolInfo[i];
+            if (pool.shutdown) continue;
+
             address token = pool.lptoken;
             address gauge = pool.gauge;
             address stash = pool.stash;
-            bool poolShutdown =  pool.shutdown;
-            if(poolShutdown){
-                //already shutdown
-                continue;
-            }
 
             //withdraw from gauge
             try IStaker(staker).withdrawAll(token,gauge){
@@ -271,15 +268,9 @@ contract Booster{
         PoolInfo storage pool = poolInfo[_pid];
         require(pool.shutdown == false, "pool is closed");
 
-        address lptoken = pool.lptoken;
-        IERC20(lptoken).safeTransferFrom(msg.sender, address(this), _amount);
-        
-        //do not update amount based on balanceOf(this)
-        //if a pool is shutdown and remade it will unstake the old pool's coins
-        //and hold here
-
         //send to proxy to stake
-        IERC20(lptoken).safeTransfer(staker, _amount);
+        address lptoken = pool.lptoken;
+        IERC20(lptoken).safeTransferFrom(msg.sender, staker, _amount);
 
         //stake
         address gauge = pool.gauge;
@@ -474,7 +465,7 @@ contract Booster{
     //callback from reward contract when crv is received.
     function rewardClaimed(uint256 _pid, address _address, uint256 _amount) external returns(bool){
         address rewardContract = poolInfo[_pid].crvRewards;
-        require(msg.sender == lockRewards||msg.sender == rewardContract,"!auth");
+        require(msg.sender == rewardContract || msg.sender == lockRewards, "!auth");
 
         if(block.timestamp >= mintStart){
             //mint reward tokens

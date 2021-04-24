@@ -17,11 +17,11 @@ contract ExtraRewardStashV2 {
     uint256 private constant maxRewards = 8;
     uint256 private constant WEEK = 7 * 86400;
 
-    uint256 public pid;
-    address public operator;
-    address public staker;
-    address public gauge;
-    address public rewardFactory;
+    uint256 public immutable pid;
+    address public immutable operator;
+    address public immutable staker;
+    address public immutable gauge;
+    address public immutable rewardFactory;
    
     mapping(address => uint256) public historicalRewards;
 
@@ -30,7 +30,8 @@ contract ExtraRewardStashV2 {
         address rewardAddress;
         uint256 lastActiveTime;
     }
-    TokenInfo[] public tokenInfo;
+    uint256 public tokenCount;
+    TokenInfo[maxRewards] public tokenInfo;
 
     constructor(uint256 _pid, address _operator, address _staker, address _gauge, address _rFactory) public {
         pid = _pid;
@@ -44,15 +45,6 @@ contract ExtraRewardStashV2 {
         return "ExtraRewardStashV2";
     }
 
-    //v2 gauges can have multiple incentive tokens
-    function tokenCount() public view returns (uint256) {
-        uint256 length = tokenInfo.length;
-        if(length > 0 && tokenInfo[0].token != address(0)){
-            return length;
-        }
-        return 0;
-    }
-
     //try claiming if there are reward tokens registered
     function claimRewards() external returns (bool) {
         require(msg.sender == operator, "!authorized");
@@ -60,15 +52,11 @@ contract ExtraRewardStashV2 {
         //this is updateable in v2 gauges now so must check each time.
         checkForNewRewardTokens();
 
-
-        uint256 count = tokenCount();
-        if(count > 0){
+        uint256 length = tokenCount;
+        if(length > 0){
             //get previous balances of all tokens
-            uint256[] memory balances = new uint256[](count);
-            for(uint256 i=0; i < tokenInfo.length; i++){
-                 address token = tokenInfo[i].token;
-                if(token == address(0)) continue;
-
+            uint256[] memory balances = new uint256[](length);
+            for(uint256 i=0; i < length; i++){
                 balances[i] = IERC20(tokenInfo[i].token).balanceOf(staker);
             }
             //claim rewards on gauge for staker
@@ -76,11 +64,9 @@ contract ExtraRewardStashV2 {
             //ICurveGauge(gauge).claim_rewards(staker);
             IDeposit(operator).claimRewards(pid,gauge);
 
-            for(uint256 i=0; i < tokenInfo.length; i++){
+            for(uint256 i=0; i < length; i++){
                 address token = tokenInfo[i].token;
-                if(token == address(0)) continue;
-
-                uint256 newbalance = IERC20(tokenInfo[i].token).balanceOf(staker);
+                uint256 newbalance = IERC20(token).balanceOf(staker);
                 //stash if balance increased
                 if(newbalance > balances[i]){
                     IStaker(staker).withdraw(token);
@@ -140,63 +126,39 @@ contract ExtraRewardStashV2 {
     function checkForNewRewardTokens() internal {
         for(uint256 i = 0; i < maxRewards; i++){
             address token = ICurveGauge(gauge).reward_tokens(i);
-
-            //replace or grow list
-            if(i < tokenInfo.length){
-                setToken(i,token);
-            }else{
-                addToken(token);   
+            if (token == address(0)) {
+                for (uint256 x = i; x < tokenCount; x++) {
+                    IRewardFactory(rewardFactory).removeActiveReward(tokenInfo[x].token,pid);
+                }
+                if (i != tokenCount) {
+                    tokenCount = i;
+                }
+                break;
             }
+            setToken(i, token);
         }
-    }
-
-    //add a new token to token list
-    function addToken(address _token) internal {
-    	if(_token == address(0)) return;
-
-        //get address of main rewards of pool
-         (,,,address mainRewardContract,,) = IDeposit(operator).poolInfo(pid);
-
-         //create a new reward contract for this extra reward token
-        address rewardContract = IRewardFactory(rewardFactory).CreateTokenRewards(
-        	_token,
-        	mainRewardContract,
-        	address(this));
-
-        //add to token list
-        tokenInfo.push(
-            TokenInfo({
-                token: _token,
-                rewardAddress: rewardContract,
-                lastActiveTime: 0 //do not set as active yet, wait for first earmark
-            })
-        );
     }
 
     //replace a token on token list
     function setToken(uint256 _tid, address _token) internal {
-        if(tokenInfo[_tid].token != _token){
+        TokenInfo storage t = tokenInfo[_tid];
+        address currentToken = t.token;
+        if(currentToken != _token){
             //set old as inactive
-            IRewardFactory(rewardFactory).removeActiveReward(tokenInfo[_tid].token,pid);
+            IRewardFactory(rewardFactory).removeActiveReward(currentToken,pid);
 
             //set token address
-            tokenInfo[_tid].token = _token;
+            t.token = _token;
 
-            if(_token == address(0)){
-                //nullify reward address
-            	tokenInfo[_tid].rewardAddress = address(0);
-                tokenInfo[_tid].lastActiveTime = 0;
-            }else{
-	            //create new reward contract
-	             (,,,address mainRewardContract,,) = IDeposit(operator).poolInfo(pid);
-	        	address rewardContract = IRewardFactory(rewardFactory).CreateTokenRewards(
-		        	_token,
-		        	mainRewardContract,
-		        	address(this));
-	            tokenInfo[_tid].rewardAddress = rewardContract;
-                tokenInfo[_tid].lastActiveTime = 0;
-                //do not set as active yet, wait for first earmark
-        	}
+            //create new reward contract
+                (,,,address mainRewardContract,,) = IDeposit(operator).poolInfo(pid);
+            address rewardContract = IRewardFactory(rewardFactory).CreateTokenRewards(
+                _token,
+                mainRewardContract,
+                address(this));
+            t.rewardAddress = rewardContract;
+            t.lastActiveTime = 0;
+            //do not set as active yet, wait for first earmark
         }
     }
 
@@ -206,12 +168,13 @@ contract ExtraRewardStashV2 {
 
         //after depositing/withdrawing, extra incentive tokens are transfered to the staking contract
         //need to pull them off and stash here.
-        for(uint i=0; i < tokenInfo.length; i++){
-            address token = tokenInfo[i].token;
+        for(uint i=0; i < tokenCount; i++){
+            TokenInfo storage t = tokenInfo[i];
+            address token = t.token;
             if(token == address(0)) continue;
             
             //only stash if rewards are active
-            if(block.timestamp <= tokenInfo[i].lastActiveTime + WEEK){
+            if(block.timestamp <= t.lastActiveTime + WEEK){
                 uint256 before = IERC20(token).balanceOf(address(this));
                 IStaker(staker).withdraw(token);
                
@@ -238,8 +201,9 @@ contract ExtraRewardStashV2 {
     function processStash() external returns(bool){
         require(msg.sender == operator, "!authorized");
 
-        for(uint i=0; i < tokenInfo.length; i++){
-            address token = tokenInfo[i].token;
+        for(uint i=0; i < tokenCount; i++){
+            TokenInfo storage t = tokenInfo[i];
+            address token = t.token;
             if(token == address(0)) continue;
             
             uint256 amount = IERC20(token).balanceOf(address(this));
@@ -251,7 +215,7 @@ contract ExtraRewardStashV2 {
                     continue;
                 }
             	//add to reward contract
-            	address rewards = tokenInfo[i].rewardAddress;
+            	address rewards = t.rewardAddress;
             	if(rewards == address(0)) continue;
             	IERC20(token).safeTransfer(rewards, amount);
             	IRewards(rewards).queueNewRewards(amount);

@@ -22,8 +22,8 @@ contract CrvDepositor{
     uint256 public constant FEE_DENOMINATOR = 10000;
 
     address public feeManager;
-    address public staker;
-    address public minter;
+    address public immutable staker;
+    address public immutable minter;
     uint256 public incentiveCrv = 0;
     uint256 public unlockTime;
     bool public isActive = false;
