@@ -12,7 +12,7 @@ interface ICvxRewards{
 }
 
 interface IChefRewards{
-    function claim(address _account, uint256 _pid) external;
+    function claim(uint256 _pid, address _account) external;
 }
 
 contract ClaimZap{
@@ -51,7 +51,7 @@ contract ClaimZap{
             IBasicRewards(rewardContracts[i]).getReward(msg.sender,true);
         }
         for(uint256 i = 0; i < chefIds.length; i++){
-            IChefRewards(chefRewards).claim(msg.sender,chefIds[i]);
+            IChefRewards(chefRewards).claim(chefIds[i],msg.sender);
         }
         if(claimCvxStake){
             ICvxRewards(cvxRewards).getReward(msg.sender,true,true);

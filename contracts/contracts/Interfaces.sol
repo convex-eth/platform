@@ -62,6 +62,7 @@ interface IMinter{
 
 interface IRegistry{
     function get_registry() external view returns(address);
+    function get_address(uint256 _id) external view returns(address);
     function gauge_controller() external view returns(address);
     function get_lp_token(address) external view returns(address);
     function get_gauges(address) external view returns(address[10] memory,uint128[10] memory);
@@ -106,6 +107,7 @@ interface IStash{
 
 interface IFeeDistro{
     function claim() external;
+    function token() external returns(address);
 }
 
 interface ITokenMinter{

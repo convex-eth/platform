@@ -8,10 +8,10 @@ const CurveVoterProxy = artifacts.require("CurveVoterProxy");
 const ExtraRewardStashV2 = artifacts.require("ExtraRewardStashV2");
 const BaseRewardPool = artifacts.require("BaseRewardPool");
 const VirtualBalanceRewardPool = artifacts.require("VirtualBalanceRewardPool");
-//const cCrvRewardPool = artifacts.require("cCrvRewardPool");
+//const cvxCrvRewardPool = artifacts.require("cvxCrvRewardPool");
 const cvxRewardPool = artifacts.require("cvxRewardPool");
 const ConvexToken = artifacts.require("ConvexToken");
-const cCrvToken = artifacts.require("cCrvToken");
+const cvxCrvToken = artifacts.require("cvxCrvToken");
 const StashFactory = artifacts.require("StashFactory");
 const RewardFactory = artifacts.require("RewardFactory");
 
@@ -51,11 +51,11 @@ contract("Whitelist Test", async accounts => {
     let rewardFactory = await RewardFactory.deployed();
     let stashFactory = await StashFactory.deployed();
     let cvx = await ConvexToken.deployed();
-    let cCrv = await cCrvToken.deployed();
+    let cvxCrv = await cvxCrvToken.deployed();
     let crvDeposit = await CrvDepositor.deployed();
-    let cCrvRewards = await booster.lockRewards();
+    let cvxCrvRewards = await booster.lockRewards();
     let cvxRewards = await booster.stakerRewards();
-    let cCrvRewardsContract = await BaseRewardPool.at(cCrvRewards);
+    let cvxCrvRewardsContract = await BaseRewardPool.at(cvxCrvRewards);
     let cvxRewardsContract = await cvxRewardPool.at(cvxRewards);
 
     var poolId = contractList.pools.find(pool => pool.name == "3pool").id;
@@ -79,23 +79,23 @@ contract("Whitelist Test", async accounts => {
     //deposit crv
     await crv.approve(crvDeposit.address,0,{from:userA});
     await crv.approve(crvDeposit.address,startingcrv,{from:userA});
-    await crvDeposit.deposit(startingcrv,true,{from:userA});
+    await crvDeposit.deposit(startingcrv,true,"0x0000000000000000000000000000000000000000",{from:userA});
     console.log("crv deposited");
 
     //check balances, crv should still be on depositor
     await crv.balanceOf(userA).then(a=>console.log("crv on wallet: " +a))
-    await cCrv.balanceOf(userA).then(a=>console.log("cCrv on wallet: " +a))
-    await cCrv.totalSupply().then(a=>console.log("cCrv supply: " +a))
+    await cvxCrv.balanceOf(userA).then(a=>console.log("cvxCrv on wallet: " +a))
+    await cvxCrv.totalSupply().then(a=>console.log("cvxCrv supply: " +a))
     await crv.balanceOf(crvDeposit.address).then(a=>console.log("depositor crv(>0): " +a));
     await crv.balanceOf(voteproxy.address).then(a=>console.log("proxy crv(==0): " +a));
     await vecrv.balanceOf(voteproxy.address).then(a=>console.log("proxy veCrv(==0): " +a));
 
-    //try burning from ccrv to reclaim crv (only doable before lock made)
-    console.log("try burn 100 cCrv");
+    //try burning from cvxCrv to reclaim crv (only doable before lock made)
+    console.log("try burn 100 cvxCrv");
     await crvDeposit.burn(100,{from:userA});
     await crv.balanceOf(userA).then(a=>console.log("crv on wallet: " +a))
-    await cCrv.balanceOf(userA).then(a=>console.log("cCrv on wallet: " +a))
-    await cCrv.totalSupply().then(a=>console.log("cCrv supply: " +a))
+    await cvxCrv.balanceOf(userA).then(a=>console.log("cvxCrv on wallet: " +a))
+    await cvxCrv.totalSupply().then(a=>console.log("cvxCrv supply: " +a))
 
     //add to whitelist
     await walletChecker.approveWallet(voteproxy.address,{from:checkerAdmin,gasPrice:0});
@@ -121,12 +121,12 @@ contract("Whitelist Test", async accounts => {
     //deposit crv (after whitelist)
     await crv.approve(crvDeposit.address,0,{from:userA});
     await crv.approve(crvDeposit.address,crvBal,{from:userA});
-    await crvDeposit.deposit(1,true,{from:userA});
+    await crvDeposit.deposit(1,true,"0x0000000000000000000000000000000000000000",{from:userA});
     console.log("crv deposited (initial lock)");
 
     //check balances, crv should have moved to proxy and vecrv should be >0
-    await cCrv.balanceOf(userA).then(a=>console.log("cCrv on wallet: " +a))
-    await cCrv.totalSupply().then(a=>console.log("cCrv supply: " +a))
+    await cvxCrv.balanceOf(userA).then(a=>console.log("cvxCrv on wallet: " +a))
+    await cvxCrv.totalSupply().then(a=>console.log("cvxCrv supply: " +a))
     await crv.balanceOf(crvDeposit.address).then(a=>console.log("depositor crv(==0): " +a));
     await crv.balanceOf(voteproxy.address).then(a=>console.log("proxy crv(==0): " +a));
     await vecrv.balanceOf(voteproxy.address).then(a=>console.log("proxy veCrv(>0): " +a));
@@ -134,14 +134,14 @@ contract("Whitelist Test", async accounts => {
 
     //try burning again after lock, which will fail
     await crv.balanceOf(userA).then(a=>console.log("crv on wallet: " +a))
-    await cCrv.balanceOf(userA).then(a=>console.log("cCrv on wallet: " +a))
-    await cCrv.totalSupply().then(a=>console.log("cCrv supply: " +a))
-    console.log("try burn 100 cCrv after whitelist(should catch error)");
+    await cvxCrv.balanceOf(userA).then(a=>console.log("cvxCrv on wallet: " +a))
+    await cvxCrv.totalSupply().then(a=>console.log("cvxCrv supply: " +a))
+    console.log("try burn 100 cvxCrv after whitelist(should catch error)");
     await crvDeposit.burn(100,{from:userA}).catch(a=>console.log("--> burn reverted"));
 
     await crv.balanceOf(userA).then(a=>console.log("crv on wallet: " +a))
-    await cCrv.balanceOf(userA).then(a=>console.log("cCrv on wallet: " +a))
-    await cCrv.totalSupply().then(a=>console.log("cCrv supply: " +a))
+    await cvxCrv.balanceOf(userA).then(a=>console.log("cvxCrv on wallet: " +a))
+    await cvxCrv.totalSupply().then(a=>console.log("cvxCrv supply: " +a))
 
     //increase time a bit
     await time.increase(86400);
@@ -151,10 +151,10 @@ contract("Whitelist Test", async accounts => {
     //deposit more crv, this should trigger a amount increase only
     // vecrv should go up, unlock date should stay the same
     await vecrv.balanceOf(voteproxy.address).then(a=>console.log("proxy veCrv(>0): " +a));
-    await crvDeposit.deposit(12345678900,true,{from:userA});
+    await crvDeposit.deposit(12345678900,true,"0x0000000000000000000000000000000000000000",{from:userA});
     console.log("crv deposited (amount increase only)");
-    await cCrv.balanceOf(userA).then(a=>console.log("cCrv on wallet: " +a))
-    await cCrv.totalSupply().then(a=>console.log("cCrv supply: " +a))
+    await cvxCrv.balanceOf(userA).then(a=>console.log("cvxCrv on wallet: " +a))
+    await cvxCrv.totalSupply().then(a=>console.log("cvxCrv supply: " +a))
     await crv.balanceOf(crvDeposit.address).then(a=>console.log("depositor crv(==0): " +a));
     await crv.balanceOf(voteproxy.address).then(a=>console.log("proxy crv(==0): " +a));
     await vecrv.balanceOf(voteproxy.address).then(a=>console.log("proxy veCrv(>0): " +a));
@@ -168,10 +168,10 @@ contract("Whitelist Test", async accounts => {
     //deposit rest of crv
     //vecrv AND unlock date should increase
     crvBal = await crv.balanceOf(userA);
-    await crvDeposit.deposit(crvBal,true,{from:userA});
+    await crvDeposit.deposit(crvBal,true,"0x0000000000000000000000000000000000000000",{from:userA});
     console.log("crv deposited (amount+time increase)");
-    await cCrv.balanceOf(userA).then(a=>console.log("cCrv on wallet: " +a))
-    await cCrv.totalSupply().then(a=>console.log("cCrv supply: " +a))
+    await cvxCrv.balanceOf(userA).then(a=>console.log("cvxCrv on wallet: " +a))
+    await cvxCrv.totalSupply().then(a=>console.log("cvxCrv supply: " +a))
     await crv.balanceOf(crvDeposit.address).then(a=>console.log("depositor crv(==0): " +a));
     await crv.balanceOf(voteproxy.address).then(a=>console.log("proxy crv(==0): " +a));
     await vecrv.balanceOf(voteproxy.address).then(a=>console.log("proxy veCrv(>0): " +a));
@@ -201,10 +201,10 @@ contract("Whitelist Test", async accounts => {
     //deposit crv (after whitelist) without locking immediately
     await crv.approve(crvDeposit.address,0,{from:userA});
     await crv.approve(crvDeposit.address,crvBal,{from:userA});
-    await crvDeposit.deposit(crvBal,false,{from:userA});
+    await crvDeposit.deposit(crvBal,false,"0x0000000000000000000000000000000000000000",{from:userA});
     console.log("crv deposited but not locked");
-    await cCrv.balanceOf(userA).then(a=>console.log("cCrv on wallet: " +a))
-    await cCrv.totalSupply().then(a=>console.log("cCrv supply: " +a))
+    await cvxCrv.balanceOf(userA).then(a=>console.log("cvxCrv on wallet: " +a))
+    await cvxCrv.totalSupply().then(a=>console.log("cvxCrv supply: " +a))
     await crv.balanceOf(crvDeposit.address).then(a=>console.log("depositor crv(==0): " +a));
     await crv.balanceOf(voteproxy.address).then(a=>console.log("proxy crv(==0): " +a));
     await vecrv.balanceOf(voteproxy.address).then(a=>console.log("proxy veCrv: " +a));
@@ -214,12 +214,12 @@ contract("Whitelist Test", async accounts => {
     //this function timeouts in infura when trying to process 4 years.
     //to test release/createlock, the contract needs to be modified to only lock a month or so
 
-    //lock deposited crv, caller should get a bit of ccrv for compensation
+    //lock deposited crv, caller should get a bit of cvxCrv for compensation
     await crvDeposit.lockCurve({from:caller});
     console.log("crv locked")
-    await cCrv.balanceOf(userA).then(a=>console.log("cCrv on wallet: " +a))
-    await cCrv.balanceOf(caller).then(a=>console.log("cCrv on caller: " +a))
-    await cCrv.totalSupply().then(a=>console.log("cCrv supply: " +a))
+    await cvxCrv.balanceOf(userA).then(a=>console.log("cvxCrv on wallet: " +a))
+    await cvxCrv.balanceOf(caller).then(a=>console.log("cvxCrv on caller: " +a))
+    await cvxCrv.totalSupply().then(a=>console.log("cvxCrv supply: " +a))
     await crv.balanceOf(crvDeposit.address).then(a=>console.log("depositor crv(==0): " +a));
     await crv.balanceOf(voteproxy.address).then(a=>console.log("proxy crv(==0): " +a));
     await vecrv.balanceOf(voteproxy.address).then(a=>console.log("proxy veCrv(>0): " +a));

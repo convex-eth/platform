@@ -8,10 +8,10 @@ const CurveVoterProxy = artifacts.require("CurveVoterProxy");
 const ExtraRewardStashV2 = artifacts.require("ExtraRewardStashV2");
 const BaseRewardPool = artifacts.require("BaseRewardPool");
 const VirtualBalanceRewardPool = artifacts.require("VirtualBalanceRewardPool");
-//const cCrvRewardPool = artifacts.require("cCrvRewardPool");
+//const cvxCrvRewardPool = artifacts.require("cvxCrvRewardPool");
 const cvxRewardPool = artifacts.require("cvxRewardPool");
 const ConvexToken = artifacts.require("ConvexToken");
-const cCrvToken = artifacts.require("cCrvToken");
+const cvxCrvToken = artifacts.require("cvxCrvToken");
 const StashFactory = artifacts.require("StashFactory");
 const RewardFactory = artifacts.require("RewardFactory");
 const DepositToken = artifacts.require("DepositToken");
@@ -45,11 +45,11 @@ contract("RewardsTest", async accounts => {
     let rewardFactory = await RewardFactory.deployed();
     let stashFactory = await StashFactory.deployed();
     let cvx = await ConvexToken.deployed();
-    let cCrv = await cCrvToken.deployed();
+    let cvxCrv = await cvxCrvToken.deployed();
     let crvDeposit = await CrvDepositor.deployed();
-    let cCrvRewards = await booster.lockRewards();
+    let cvxCrvRewards = await booster.lockRewards();
     let cvxRewards = await booster.stakerRewards();
-    let cCrvRewardsContract = await BaseRewardPool.at(cCrvRewards);
+    let cvxCrvRewardsContract = await BaseRewardPool.at(cvxCrvRewards);
     let cvxRewardsContract = await cvxRewardPool.at(cvxRewards);
 
     var poolId = contractList.pools.find(pool => pool.name == "3pool").id;
@@ -136,7 +136,7 @@ contract("RewardsTest", async accounts => {
     await crv.balanceOf(booster.address).then(a=>console.log("crv at booster " +a));
     await crv.balanceOf(caller).then(a=>console.log("crv at caller " +a));
     await crv.balanceOf(rewardPool.address).then(a=>console.log("crv at reward pool " +a));
-    await crv.balanceOf(cCrvRewards).then(a=>console.log("crv at cCrvRewards " +a));
+    await crv.balanceOf(cvxCrvRewards).then(a=>console.log("crv at cvxCrvRewards " +a));
     await crv.balanceOf(cvxRewards).then(a=>console.log("crv at cvxRewards " +a));
     await crv.balanceOf(userA).then(a=>console.log("userA crv: " +a))
     await cvx.balanceOf(userA).then(a=>console.log("userA cvx: " +a))
@@ -228,22 +228,22 @@ contract("RewardsTest", async accounts => {
 
     await threeCrv.balanceOf(userA).then(a=>console.log("userA 3crv final: " +a));
     await depositToken.balanceOf(userA).then(a=>console.log("final lp balance: " +a));
-    await crv.balanceOf(cCrvRewards).then(a=>console.log("crv at cCrvRewards " +a));
+    await crv.balanceOf(cvxCrvRewards).then(a=>console.log("crv at cvxCrvRewards " +a));
     await crv.balanceOf(cvxRewards).then(a=>console.log("crv at cvxRewards " +a));
     await rewardPool.balanceOf(userA).then(a=>console.log("reward pool balance of user(==0): " +a));
     await crv.balanceOf(userA).then(a=>console.log("userA crv: " +a))
     await cvx.balanceOf(userA).then(a=>console.log("userA cvx: " +a))
 
-    //meanwhile user B should be receiving ccrv rewards via cvx staking
+    //meanwhile user B should be receiving cvxCrv rewards via cvx staking
     await crv.balanceOf(userB).then(a=>console.log("userB crv(before claim): " +a))
-    await cCrv.balanceOf(userB).then(a=>console.log("userB cCrv(before claim): " +a))
-    await cCrvRewardsContract.balanceOf(userB).then(a=>console.log("userB staked cCrv(before claim): " +a))
+    await cvxCrv.balanceOf(userB).then(a=>console.log("userB cvxCrv(before claim): " +a))
+    await cvxCrvRewardsContract.balanceOf(userB).then(a=>console.log("userB staked cvxCrv(before claim): " +a))
     await cvxRewardsContract.earned(userB).then(a=>console.log("userB earned: " +a));
     //await cvxRewardsContract.getReward(false,{from:userB});
     await cvxRewardsContract.getReward(true,{from:userB});
     await crv.balanceOf(userB).then(a=>console.log("userB crv(after claim): " +a))
-    await cCrv.balanceOf(userB).then(a=>console.log("userB cCrv(after claim): " +a))
-    await cCrvRewardsContract.balanceOf(userB).then(a=>console.log("userB staked cCrv(after claim): " +a))
+    await cvxCrv.balanceOf(userB).then(a=>console.log("userB cvxCrv(after claim): " +a))
+    await cvxCrvRewardsContract.balanceOf(userB).then(a=>console.log("userB staked cvxCrv(after claim): " +a))
   });
 });
 

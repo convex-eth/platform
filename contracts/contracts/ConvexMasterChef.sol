@@ -302,7 +302,7 @@ contract ConvexMasterChef is Ownable {
         emit Withdraw(msg.sender, _pid, _amount);
     }
 
-    function claim(address _account, uint256 _pid) external{
+    function claim(uint256 _pid, address _account) external{
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][_account];
 
