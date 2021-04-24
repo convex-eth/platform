@@ -62,17 +62,8 @@ contract PoolManager{
         }
         require(found, "!registry");
 
-        //now make sure this pool/gauge hasnt been added before
-        uint256 poolCount = IPools(pools).poolLength();
-        found = false;
-        for(uint256 i = 0; i < poolCount; i++){
-            (,,address gauge,,,bool shutdown) = IPools(pools).poolInfo(i);
-            if(gauge == _gauge && shutdown == false){
-                found = true;
-                break;
-            }
-        }
-        require(!found, "already registered");
+        bool gaugeExists = IPools(pools).gaugeMap(_gauge);
+        require(!gaugeExists, "already registered");
         
         IPools(pools).addPool(lptoken,_gauge,_stashVersion);
 

@@ -57,7 +57,7 @@ contract Booster{
 
     //index(pid) -> pool
     PoolInfo[] public poolInfo;
-    
+    mapping(address => bool) public gaugeMap;
 
     event Deposited(address indexed user, uint256 indexed poolid, uint256 amount);
     event Withdrawn(address indexed user, uint256 indexed poolid, uint256 amount);
@@ -201,7 +201,7 @@ contract Booster{
                 shutdown: false
             })
         );
-
+        gaugeMap[_gauge] = true;
         //give stashes access to rewardfactory and voteproxy
         //   voteproxy so it can grab the incentive tokens off the contract after claiming rewards
         //   reward factory so that stashes can make new extra reward contracts if a new incentive is added to the gauge
@@ -226,6 +226,7 @@ contract Booster{
         IStaker(staker).setStashAccess(pool.stash,false);
 
         pool.shutdown = true;
+        gaugeMap[pool.gauge] = false;
         return true;
     }
 
