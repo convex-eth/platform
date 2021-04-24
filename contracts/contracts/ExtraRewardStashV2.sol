@@ -141,12 +141,14 @@ contract ExtraRewardStashV2 {
 
     //replace a token on token list
     function setToken(uint256 _tid, address _token) internal {
-        if(tokenInfo[_tid].token != _token){
+        TokenInfo storage t = tokenInfo[_tid];
+        address currentToken = t.token;
+        if(currentToken != _token){
             //set old as inactive
-            IRewardFactory(rewardFactory).removeActiveReward(tokenInfo[_tid].token,pid);
+            IRewardFactory(rewardFactory).removeActiveReward(currentToken,pid);
 
             //set token address
-            tokenInfo[_tid].token = _token;
+            t.token = _token;
 
             //create new reward contract
                 (,,,address mainRewardContract,,) = IDeposit(operator).poolInfo(pid);
@@ -154,8 +156,8 @@ contract ExtraRewardStashV2 {
                 _token,
                 mainRewardContract,
                 address(this));
-            tokenInfo[_tid].rewardAddress = rewardContract;
-            tokenInfo[_tid].lastActiveTime = 0;
+            t.rewardAddress = rewardContract;
+            t.lastActiveTime = 0;
             //do not set as active yet, wait for first earmark
         }
     }
@@ -167,11 +169,12 @@ contract ExtraRewardStashV2 {
         //after depositing/withdrawing, extra incentive tokens are transfered to the staking contract
         //need to pull them off and stash here.
         for(uint i=0; i < tokenCount; i++){
-            address token = tokenInfo[i].token;
+            TokenInfo storage t = tokenInfo[i];
+            address token = t.token;
             if(token == address(0)) continue;
             
             //only stash if rewards are active
-            if(block.timestamp <= tokenInfo[i].lastActiveTime + WEEK){
+            if(block.timestamp <= t.lastActiveTime + WEEK){
                 uint256 before = IERC20(token).balanceOf(address(this));
                 IStaker(staker).withdraw(token);
                
@@ -199,7 +202,8 @@ contract ExtraRewardStashV2 {
         require(msg.sender == operator, "!authorized");
 
         for(uint i=0; i < tokenCount; i++){
-            address token = tokenInfo[i].token;
+            TokenInfo storage t = tokenInfo[i];
+            address token = t.token;
             if(token == address(0)) continue;
             
             uint256 amount = IERC20(token).balanceOf(address(this));
@@ -211,7 +215,7 @@ contract ExtraRewardStashV2 {
                     continue;
                 }
             	//add to reward contract
-            	address rewards = tokenInfo[i].rewardAddress;
+            	address rewards = t.rewardAddress;
             	if(rewards == address(0)) continue;
             	IERC20(token).safeTransfer(rewards, amount);
             	IRewards(rewards).queueNewRewards(amount);
