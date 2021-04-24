@@ -127,6 +127,9 @@ contract ExtraRewardStashV2 {
         for(uint256 i = 0; i < maxRewards; i++){
             address token = ICurveGauge(gauge).reward_tokens(i);
             if (token == address(0)) {
+                for (uint256 x = i; x < tokenCount; x++) {
+                    IRewardFactory(rewardFactory).removeActiveReward(tokenInfo[x].token,pid);
+                }
                 if (i != tokenCount) {
                     tokenCount = i;
                 }
