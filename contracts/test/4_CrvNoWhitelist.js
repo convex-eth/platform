@@ -99,7 +99,7 @@ contract("cvxCrv Rewards", async accounts => {
     //deposit crv
     await crv.approve(crvDeposit.address,0,{from:userA});
     await crv.approve(crvDeposit.address,startingcrv,{from:userA});
-    await crvDeposit.deposit(startingcrv,true,{from:userA});
+    await crvDeposit.deposit(startingcrv,true,"0x0000000000000000000000000000000000000000",{from:userA});
     console.log("crv deposited");
     await cvxCrv.balanceOf(userA).then(a=>console.log("cvxCrv on wallet: " +a))
     //stake cvxCrv

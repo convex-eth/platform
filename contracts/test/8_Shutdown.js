@@ -84,7 +84,7 @@ contract("Shutdown Test", async accounts => {
     await voteproxy.balanceOfPool(threeCrvGauge).then(a=>console.log("3crv on gauge " +a));
 
     //shutdown, funds move back to booster(depositor)
-    await booster.shutdownSystem(true,{from:admin});
+    await booster.shutdownSystem(false,{from:admin});
     console.log("system shutdown");
     await threeCrv.balanceOf(userA).then(a=>console.log("3crv on wallet: " +a));
     await rewardPool.balanceOf(userA).then(a=>console.log("deposited lp: " +a));

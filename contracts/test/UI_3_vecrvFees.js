@@ -11,8 +11,8 @@ const IWalletCheckerDebug = artifacts.require("IWalletCheckerDebug");
 const IBurner = artifacts.require("IBurner");
 const VirtualBalanceRewardPool = artifacts.require("VirtualBalanceRewardPool");
 
-contract("Earmark Pools", async accounts => {
-  it("should earmark all pools", async () => {
+contract("Claim vecrv fees", async accounts => {
+  it("should pull admin fees and claim to convex", async () => {
 
   	let crv = await IERC20.at("0xD533a949740bb3306d119CC777fa900bA034cd52");
   	

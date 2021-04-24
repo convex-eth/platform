@@ -207,11 +207,11 @@ module.exports = function (deployer, network, accounts) {
 		return vesting.addTokens(distroList.vested.total);
 	})
 	.then(function() {
-		return vesting.fund(distroList.vested.team.addresses,distroList.vested.team.amounts);
+		return vesting.fund(vestedAddresses,vestedAmounts);
 	})
-	.then(function() {
-		return vesting.fund(distroList.vested.investor.addresses,distroList.vested.investor.amounts);
-	})
+	// .then(function() {
+	// 	return vesting.fund(distroList.vested.investor.addresses,distroList.vested.investor.amounts);
+	// })
 	.then(function() {
 		return vesting.unallocatedSupply();
 	})
