@@ -222,9 +222,6 @@ contract Booster{
         try IStaker(staker).withdrawAll(pool.lptoken,pool.gauge){
         }catch{}
 
-        //remove stash rights
-        IStaker(staker).setStashAccess(pool.stash,false);
-
         pool.shutdown = true;
         gaugeMap[pool.gauge] = false;
         return true;
@@ -235,7 +232,7 @@ contract Booster{
     //  only allow withdrawals
     //  claim final rewards because stashes could have tokens on them
     //  remove stash access after final claim
-    function shutdownSystem(bool _claimRewards) external{
+    function shutdownSystem() external{
         require(msg.sender == owner, "!auth");
         isShutdown = true;
 
@@ -245,19 +242,11 @@ contract Booster{
 
             address token = pool.lptoken;
             address gauge = pool.gauge;
-            address stash = pool.stash;
+           // address stash = pool.stash;
 
             //withdraw from gauge
             try IStaker(staker).withdrawAll(token,gauge){
             }catch{}
-            
-            if(_claimRewards){
-                //earmark remaining rewards
-                _earmarkRewards(i);
-            }
-
-            //remove stash rights
-            IStaker(staker).setStashAccess(stash,false);
         }
     }
 
