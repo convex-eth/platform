@@ -29,8 +29,8 @@ const ISnxRewards = artifacts.require("ISnxRewards");
 
 //3. extra rewards, but with v1 gauges
 
-contract("ExtraRewardsTest v1", async accounts => {
-  it("should deposit and claim crv/cvx as well as extra incentives", async () => {
+contract("Arbitrator Test", async accounts => {
+  it("should move snx to arbitration when two pools try to claim", async () => {
 
     let crv = await IERC20.at("0xD533a949740bb3306d119CC777fa900bA034cd52");
     let threeCrv = await IERC20.at("0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490");
@@ -125,6 +125,7 @@ contract("ExtraRewardsTest v1", async accounts => {
     //collect and distribute rewards off gauge
     await booster.earmarkRewards(poolId,{from:caller});
     console.log("earmark 1")
+    await rewardFactory.activeRewardCount(snx.address).then(a=>console.log("active snx rewards: " +a))
 
     //get new snx reward contract
     //await rewardPool.extraRewardsLength().then(a=>console.log("reward pool extra rewards: " +a));
@@ -169,8 +170,8 @@ contract("ExtraRewardsTest v1", async accounts => {
     let eursrewardPoolAddress = eurspoolinfo.crvRewards;
     let eursrewardPool = await BaseRewardPool.at(eursrewardPoolAddress);
     console.log("reward contract at " +eursrewardPool.address);
-    let eursStash = eurspoolinfo.stash;
-    console.log("stash contract at " +eursStash);
+    let eursStash = await ExtraRewardStashV2.at(eurspoolinfo.stash);
+    console.log("stash contract at " +eursStash.address);
 
     await eurslp.approve(booster.address,0,{from:userB});
     await eurslp.approve(booster.address,startinglp,{from:userB});
@@ -178,6 +179,7 @@ contract("ExtraRewardsTest v1", async accounts => {
     console.log("user B, eurs deposit complete");
     await booster.earmarkRewards(eurspoolId,{from:caller});
     console.log("earmark eurs to get started");
+    await rewardFactory.activeRewardCount(snx.address).then(a=>console.log("active snx rewards: " +a))
 
     let snxRewardsAddress2 = await eursrewardPool.extraRewards(0);
     let eursSnxRewards = await VirtualBalanceRewardPool.at(snxRewardsAddress2);
@@ -195,6 +197,7 @@ contract("ExtraRewardsTest v1", async accounts => {
     //collect and distribute rewards off gauge
     await booster.earmarkRewards(eurspoolId,{from:caller});
     console.log("earmark 2")
+    await rewardFactory.activeRewardCount(snx.address).then(a=>console.log("active snx rewards: " +a))
 
     await snx.balanceOf(rewardStash.address).then(a=>console.log("snx on stash (==0): " +a));
     await snx.balanceOf(voteproxy.address).then(a=>console.log("snx on voter (==0): " +a));
@@ -204,6 +207,7 @@ contract("ExtraRewardsTest v1", async accounts => {
     console.log("snx on eurs is done so should not be any on eurs");
     await booster.earmarkRewards(poolId,{from:caller});
     console.log("earmark 1")
+    await rewardFactory.activeRewardCount(snx.address).then(a=>console.log("active snx rewards: " +a))
     await snx.balanceOf(snxRewards.address).then(a=>console.log("snx on spool rewards: " +a));
     await snx.balanceOf(eursSnxRewards.address).then(a=>console.log("snx on eurs rewards: " +a));
 
@@ -235,12 +239,18 @@ contract("ExtraRewardsTest v1", async accounts => {
     await time.advanceBlock();
     await booster.earmarkRewards(poolId,{from:caller});
     console.log("----update----");
+    await rewardFactory.activeRewardCount(snx.address).then(a=>console.log("active snx rewards: " +a))
+    await rewardStash.tokenInfo().then(a=>console.log("susd token info: " +JSON.stringify(a) ))
+    await eursStash.tokenInfo(0).then(a=>console.log("eurs token info: " +JSON.stringify(a) ))
     await snx.balanceOf(snxRewards.address).then(a=>console.log("snx on spool rewards: " +a));
     await snx.balanceOf(eursSnxRewards.address).then(a=>console.log("snx on eurs rewards: " +a));
     await snx.balanceOf(arbitrator.address).then(a=>console.log("snx arbitrator: " +a));
     //claim from eurs, should go to arb
     await booster.earmarkRewards(eurspoolId,{from:caller});
     console.log("----update----");
+    await rewardFactory.activeRewardCount(snx.address).then(a=>console.log("active snx rewards: " +a))
+    await rewardStash.tokenInfo().then(a=>console.log("susd token info: " +JSON.stringify(a) ))
+    await eursStash.tokenInfo(0).then(a=>console.log("eurs token info: " +JSON.stringify(a) ))
     await snx.balanceOf(snxRewards.address).then(a=>console.log("snx on spool rewards: " +a));
     await snx.balanceOf(eursSnxRewards.address).then(a=>console.log("snx on eurs rewards: " +a));
     await snx.balanceOf(arbitrator.address).then(a=>console.log("snx arbitrator: " +a));
@@ -249,6 +259,9 @@ contract("ExtraRewardsTest v1", async accounts => {
     await time.advanceBlock();
     await booster.earmarkRewards(poolId,{from:caller});
     console.log("----update----");
+    await rewardFactory.activeRewardCount(snx.address).then(a=>console.log("active snx rewards: " +a))
+    await rewardStash.tokenInfo().then(a=>console.log("susd token info: " +JSON.stringify(a) ))
+    await eursStash.tokenInfo(0).then(a=>console.log("eurs token info: " +JSON.stringify(a) ))
     await snx.balanceOf(snxRewards.address).then(a=>console.log("snx on spool rewards: " +a));
     await snx.balanceOf(eursSnxRewards.address).then(a=>console.log("snx on eurs rewards: " +a));
     await snx.balanceOf(arbitrator.address).then(a=>console.log("snx arbitrator: " +a));
@@ -259,6 +272,9 @@ contract("ExtraRewardsTest v1", async accounts => {
     await booster.earmarkRewards(poolId,{from:caller});
     await booster.earmarkRewards(eurspoolId,{from:caller});
     console.log("----update----");
+    await rewardFactory.activeRewardCount(snx.address).then(a=>console.log("active snx rewards: " +a))
+    await rewardStash.tokenInfo().then(a=>console.log("susd token info: " +JSON.stringify(a) ))
+    await eursStash.tokenInfo(0).then(a=>console.log("eurs token info: " +JSON.stringify(a) ))
     await snx.balanceOf(snxRewards.address).then(a=>console.log("snx on spool rewards: " +a));
     await snx.balanceOf(eursSnxRewards.address).then(a=>console.log("snx on eurs rewards: " +a));
     await snx.balanceOf(arbitrator.address).then(a=>console.log("snx arbitrator: " +a));
@@ -269,6 +285,9 @@ contract("ExtraRewardsTest v1", async accounts => {
     await booster.earmarkRewards(poolId,{from:caller});
     await booster.earmarkRewards(eurspoolId,{from:caller});
     console.log("----update----");
+    await rewardFactory.activeRewardCount(snx.address).then(a=>console.log("active snx rewards: " +a))
+    await rewardStash.tokenInfo().then(a=>console.log("susd token info: " +JSON.stringify(a) ))
+    await eursStash.tokenInfo(0).then(a=>console.log("eurs token info: " +JSON.stringify(a) ))
     await snx.balanceOf(snxRewards.address).then(a=>console.log("snx on spool rewards: " +a));
     await snx.balanceOf(eursSnxRewards.address).then(a=>console.log("snx on eurs rewards: " +a));
     await snx.balanceOf(arbitrator.address).then(a=>console.log("snx arbitrator: " +a));
@@ -277,20 +296,26 @@ contract("ExtraRewardsTest v1", async accounts => {
     await booster.earmarkRewards(poolId,{from:caller});
     await booster.earmarkRewards(eurspoolId,{from:caller});
     console.log("----update----");
+    await rewardFactory.activeRewardCount(snx.address).then(a=>console.log("active snx rewards: " +a))
+    await rewardStash.tokenInfo().then(a=>console.log("susd token info: " +JSON.stringify(a) ))
+    await eursStash.tokenInfo(0).then(a=>console.log("eurs token info: " +JSON.stringify(a) ))
     await snx.balanceOf(snxRewards.address).then(a=>console.log("snx on spool rewards: " +a));
     await snx.balanceOf(eursSnxRewards.address).then(a=>console.log("snx on eurs rewards: " +a));
     await snx.balanceOf(arbitrator.address).then(a=>console.log("snx arbitrator: " +a));
 
     console.log("----redistribute----");
+    await rewardFactory.activeRewardCount(snx.address).then(a=>console.log("active snx rewards: " +a))
+    await rewardStash.tokenInfo().then(a=>console.log("susd token info: " +JSON.stringify(a) ))
+    await eursStash.tokenInfo(0).then(a=>console.log("eurs token info: " +JSON.stringify(a) ))
     //let arbSnx = await snx.balanceOf(arbitrator.address);
     await snx.balanceOf(rewardStash.address).then(a=>console.log("snx on susd stash: " +a));
-    await snx.balanceOf(eursStash).then(a=>console.log("snx on eurs stash: " +a));
+    await snx.balanceOf(eursStash.address).then(a=>console.log("snx on eurs stash: " +a));
     await arbitrator.distribute(snx.address,[poolId,eurspoolId],[1111,2222]);
     console.log("distribute complete")
     // await booster.earmarkRewards(1,{from:caller});
     // await booster.earmarkRewards(eurspoolId,{from:caller});
     await snx.balanceOf(rewardStash.address).then(a=>console.log("snx on susd stash: " +a));
-    await snx.balanceOf(eursStash).then(a=>console.log("snx on eurs stash: " +a));
+    await snx.balanceOf(eursStash.address).then(a=>console.log("snx on eurs stash: " +a));
     await snx.balanceOf(arbitrator.address).then(a=>console.log("snx arbitrator: " +a));
   });
 });

@@ -25,7 +25,7 @@ contract RewardFactory {
 
     //Get active count function
     function activeRewardCount(address _reward) external view returns(uint256){
-        rewardActiveList[_reward].length;
+        return rewardActiveList[_reward].length;
     }
 
     function addActiveReward(address _reward, uint256 _pid) external returns(bool){
