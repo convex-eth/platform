@@ -5,17 +5,8 @@ pragma solidity 0.6.12;
 import '@openzeppelin/contracts/math/SafeMath.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
+import '@openzeppelin/contracts/utils/Context.sol';
 
-abstract contract Context {
-    function _msgSender() internal virtual view returns (address payable) {
-        return msg.sender;
-    }
-
-    function _msgData() internal virtual view returns (bytes memory) {
-        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
-        return msg.data;
-    }
-}
 
 contract Ownable is Context {
     address private _owner;
