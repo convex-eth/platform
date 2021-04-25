@@ -185,10 +185,12 @@ module.exports = function (deployer, network, accounts) {
 		console.log("cvx on chef: " +_cvx);
 	})
 	.then(function() {
-		return deployer.deploy(ClaimZap,cvxRewards.address, cvxCrvRewards.address, chef.address, cvxCrv.address, deposit.address)
+		return deployer.deploy(ClaimZap,cvxRewards.address, cvxCrvRewards.address, chef.address, cvx.address, cvxCrv.address, deposit.address)
 	}).then(function(instance) {
 		systemContracts["claimZap"] = instance.address;
+		return instance.setApprovals();
 	})
+
 
 	//Fund vested escrow
 	.then(function() {

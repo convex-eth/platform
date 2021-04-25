@@ -40,17 +40,19 @@ contract ClaimZap{
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
 
     address public owner;
+    address public cvx;
     address public cvxRewards;
     address public cvxCrvRewards;
     address public chefRewards;
     address public crvDeposit;
     address public cvxCrv;
 
-    constructor(address _cvxRewards, address _cvxCrvRewards, address _chefRewards, address _cvxCrv, address _crvDeposit) public {
+    constructor(address _cvxRewards, address _cvxCrvRewards, address _chefRewards, address _cvx, address _cvxCrv, address _crvDeposit) public {
         owner = msg.sender;
         cvxRewards = _cvxRewards;
         cvxCrvRewards = _cvxCrvRewards;
         chefRewards = _chefRewards;
+        cvx = _cvx;
         cvxCrv = _cvxCrv;
         crvDeposit = _crvDeposit;
     }
@@ -58,16 +60,28 @@ contract ClaimZap{
     function setCvxRewards(address _rewards) external {
         require(msg.sender == owner, "!auth");
         cvxRewards = _rewards;
+        IERC20(cvx).safeApprove(cvxRewards, 0);
+        IERC20(cvx).safeApprove(cvxRewards, uint256(-1));
     }
 
     function setCvxCrvRewards(address _rewards) external {
         require(msg.sender == owner, "!auth");
         cvxCrvRewards = _rewards;
+        IERC20(cvxCrv).safeApprove(cvxCrvRewards, 0);
+        IERC20(cvxCrv).safeApprove(cvxCrvRewards, uint256(-1));
     }
 
     function setChefRewards(address _rewards) external {
         require(msg.sender == owner, "!auth");
         chefRewards = _rewards;
+    }
+
+    function setApprovals() external {
+        require(msg.sender == owner, "!auth");
+        IERC20(cvx).safeApprove(cvxRewards, 0);
+        IERC20(cvx).safeApprove(cvxRewards, uint256(-1));
+        IERC20(cvxCrv).safeApprove(cvxCrvRewards, 0);
+        IERC20(cvxCrv).safeApprove(cvxCrvRewards, uint256(-1));
     }
 
     function claimRewards(
@@ -76,7 +90,8 @@ contract ClaimZap{
         bool claimCvx,
         bool claimCvxStake,
         bool claimcvxCrv,
-        uint256 depositCrvMaxAmount
+        uint256 depositCrvMaxAmount,
+        uint256 depositCvxMaxAmount
         ) external{
 
         //claim from main curve LP pools
@@ -115,6 +130,18 @@ contract ClaimZap{
                 uint256 cvxCrvBalance = IERC20(cvxCrv).balanceOf(address(this));
                 //stake for msg.sender
                 IBasicRewards(cvxCrvRewards).stakeFor(msg.sender, cvxCrvBalance);
+            }
+        }
+
+        //stake upto given amount of cvx
+        if(depositCvxMaxAmount > 0){
+            uint256 cvxBalance = IERC20(cvx).balanceOf(msg.sender);
+            cvxBalance = Math.min(cvxBalance, depositCvxMaxAmount);
+            if(cvxBalance > 0){
+                //pull cvx
+                IERC20(cvx).safeTransferFrom(msg.sender, address(this), cvxBalance);
+                //stake for msg.sender
+                IBasicRewards(cvxRewards).stakeFor(msg.sender, cvxBalance);
             }
         }
     }
