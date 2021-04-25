@@ -29,10 +29,6 @@ contract StashFactory {
     function CreateStash(uint256 _pid, address _gauge, address _staker, uint256 _stashVersion) external returns(address){
         require(msg.sender == operator, "!authorized");
 
-        //This logic should be easily doable without an input parameter
-        // ..but ganache-cli and/or truffle is giving a weird invalid opcode error
-        // TODO: try different environment or deploy and test
-       
         if(_stashVersion == uint256(1) && IsV1(_gauge)){
             //v1
             ExtraRewardStashV1 stash = new ExtraRewardStashV1(_pid,operator,_staker,_gauge,rewardFactory);

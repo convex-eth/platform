@@ -26,7 +26,6 @@ contract CrvDepositor{
     address public immutable minter;
     uint256 public incentiveCrv = 0;
     uint256 public unlockTime;
-    bool public isActive = false;
 
     constructor(address _staker, address _minter) public {
         staker = _staker;
@@ -64,7 +63,7 @@ contract CrvDepositor{
         }
     }
 
-    //lock curve if whitelisted
+    //lock curve
     function _lockCurve() internal {
         uint256 crvBalance = IERC20(crv).balanceOf(address(this));
         require(crvBalance > 0,"no crv to lock");
@@ -126,17 +125,6 @@ contract CrvDepositor{
 
     function deposit(uint256 _amount, bool _lock) external {
         deposit(_amount,_lock,address(0));
-    }
-
-    //allow retrival of crv before whitelisting and first lock
-    function burn(uint256 _amount) external{
-        require(!isActive,"locked");
-
-        uint256 crvBalance = IERC20(crv).balanceOf(address(this));
-        if(_amount <= crvBalance){
-            ITokenMinter(minter).burn(msg.sender, _amount);
-            IERC20(crv).safeTransfer(msg.sender, _amount);
-        }
     }
 
 }

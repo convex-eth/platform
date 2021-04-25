@@ -106,8 +106,7 @@ contract Booster{
         }
 
         //stash factory should be considered more safe to change
-        //at worst a "bad" stash could take extra rewards like snx etc.
-        //but updating may be required to handle new types of gauges
+        //updating may be required to handle new types of gauges
         stashFactory = _sfactory;
     }
 
@@ -151,10 +150,10 @@ contract Booster{
         uint256 total = _lockFees.add(_stakerFees).add(_callerFees).add(_platform);
         require(total <= MaxFees, ">MaxFees");
 
-        //if statements to reduce contract size        
+        //values must be within certain ranges     
         if(_lockFees >= 1000 && _lockFees <= 1500
             && _stakerFees >= 300 && _stakerFees <= 600
-            && _callerFees >= 25 && _callerFees <= 100
+            && _callerFees >= 10 && _callerFees <= 100
             && _platform <= 200){
             lockIncentive = _lockFees;
             stakerIncentive = _stakerFees;
@@ -230,8 +229,6 @@ contract Booster{
     //shutdown this contract.
     //  unstake and pull all lp tokens to this address
     //  only allow withdrawals
-    //  claim final rewards because stashes could have tokens on them
-    //  remove stash access after final claim
     function shutdownSystem() external{
         require(msg.sender == owner, "!auth");
         isShutdown = true;
@@ -242,7 +239,6 @@ contract Booster{
 
             address token = pool.lptoken;
             address gauge = pool.gauge;
-           // address stash = pool.stash;
 
             //withdraw from gauge
             try IStaker(staker).withdrawAll(token,gauge){
@@ -441,7 +437,6 @@ contract Booster{
 
     //claim fees from curve distro contract, put in lockers' reward contract
     function earmarkFees() external returns(bool){
-        //require(!isShutdown,"shutdown");
         //claim fee rewards
         IStaker(staker).claimFees(feeDistro, feeToken);
         //send fee rewards to reward contract
