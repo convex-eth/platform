@@ -27,8 +27,6 @@ const IUniswapV2Router01 = artifacts.require("IUniswapV2Router01");
 const IUniswapV2Factory = artifacts.require("IUniswapV2Factory");
 const IERC20 = artifacts.require("IERC20");
 
-//TODO: create reward pools and distribute premine
-//TODO: pass various roles to multisig
 
 module.exports = function (deployer, network, accounts) {
 	if(network != "ganachecli" && network != "mainnet"){
@@ -80,7 +78,6 @@ module.exports = function (deployer, network, accounts) {
     var poolNames = [];
     contractList["system"] = systemContracts;
     contractList["pools"] = poolsContracts;
-    //todo: pass rewards start to booster constructor
 
   	deployer.deploy(CurveVoterProxy).then(function(instance) {
   		voter = instance;
@@ -188,7 +185,7 @@ module.exports = function (deployer, network, accounts) {
 		console.log("cvx on chef: " +_cvx);
 	})
 	.then(function() {
-		return deployer.deploy(ClaimZap,cvxRewards.address, cvxCrvRewards.address, chef.address)
+		return deployer.deploy(ClaimZap,cvxRewards.address, cvxCrvRewards.address, chef.address, cvxCrv.address, deposit.address)
 	}).then(function(instance) {
 		systemContracts["claimZap"] = instance.address;
 	})
