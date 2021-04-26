@@ -30,6 +30,7 @@ contract("RewardsTest", async accounts => {
     let weth = await IERC20.at("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
     let dai = await IERC20.at("0x6b175474e89094c44da98b954eedeac495271d0f");
     let exchange = await IExchange.at("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D");
+    let sushiexchange = await IExchange.at("0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F");
     let threecrvswap = await ICurveFi.at("0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7");
     let threeCrv = await IERC20.at("0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490");
     let threeCrvGauge = "0xbFcF63294aD7105dEa65aA58F8AE5BE2D9d0952A";
@@ -74,23 +75,27 @@ contract("RewardsTest", async accounts => {
     console.log("current block time: " +starttime)
     await time.latestBlock().then(a=>console.log("current block: " +a));
 
-    //send cvx to user b to stake
-    await cvx.transfer(userB,1000);
-    await cvx.approve(cvxRewardsContract.address,0,{from:userB});
-    await cvx.approve(cvxRewardsContract.address,1000,{from:userB});
-    await cvxRewardsContract.stakeAll({from:userB});
-    await cvxRewardsContract.balanceOf(userB).then(a=>console.log("user b staked cvx: " +a));
 
     //exchange for dai and deposit for 3crv
     await weth.sendTransaction({value:web3.utils.toWei("2.0", "ether"),from:userA});
     let startingWeth = await weth.balanceOf(userA);
     await weth.approve(exchange.address,startingWeth,{from:userA});
-    await exchange.swapExactTokensForTokens(startingWeth,0,[weth.address,dai.address],userA,starttime+3000,{from:userA});
+    await exchange.swapExactTokensForTokens(web3.utils.toWei("1.0", "ether"),0,[weth.address,dai.address],userA,starttime+3000,{from:userA});
     let startingDai = await dai.balanceOf(userA);
     await dai.approve(threecrvswap.address,startingDai,{from:userA});
     await threecrvswap.add_liquidity([startingDai,0,0],0,{from:userA});
     let startingThreeCrv = await threeCrv.balanceOf(userA);
     console.log("3crv: " +startingThreeCrv);
+
+    //send cvx to user b to stake
+    await weth.approve(sushiexchange.address,startingWeth,{from:userA});
+    await sushiexchange.swapExactTokensForTokens(web3.utils.toWei("1.0", "ether"),0,[weth.address,cvx.address],userB,starttime+3000,{from:userA});
+    let cvxBal = await cvx.balanceOf(userB);
+    console.log("exchanged for cvx: " +cvxBal);
+    await cvx.approve(cvxRewardsContract.address,cvxBal,{from:userB});
+    await cvxRewardsContract.stakeAll({from:userB});
+    await cvxRewardsContract.balanceOf(userB).then(a=>console.log("user b staked cvx: " +a));
+
  
     //approve
     await threeCrv.approve(booster.address,0,{from:userA});

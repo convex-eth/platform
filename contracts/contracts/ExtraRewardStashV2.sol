@@ -60,8 +60,7 @@ contract ExtraRewardStashV2 {
                 balances[i] = IERC20(tokenInfo[i].token).balanceOf(staker);
             }
             //claim rewards on gauge for staker
-            //lets have booster call for future proofing (cant assume anyone will always be able to call)
-            //ICurveGauge(gauge).claim_rewards(staker);
+            //booster will call for future proofing (cant assume anyone will always be able to call)
             IDeposit(operator).claimRewards(pid,gauge);
 
             for(uint256 i=0; i < length; i++){
