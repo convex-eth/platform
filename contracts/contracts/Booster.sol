@@ -37,9 +37,9 @@ contract Booster{
     address public rewardArbitrator;
     address public voteDelegate;
     address public treasury;
-    address public stakerRewards;
-    address public lockRewards;
-    address public lockFees;
+    address public stakerRewards; //cvx rewards
+    address public lockRewards; //cvxCrv rewards(crv)
+    address public lockFees; //cvxCrv vecrv fees
     address public feeDistro;
     address public feeToken;
     uint256 public immutable mintStart;
@@ -373,7 +373,7 @@ contract Booster{
         return true;
     }
 
-    //claim crv and extra rewards, convert extra to crv, disperse to reward contracts
+    //claim crv and extra rewards and disperse to reward contracts
     function _earmarkRewards(uint256 _pid) internal {
         PoolInfo storage pool = poolInfo[_pid];
         require(pool.shutdown == false, "pool is closed");
