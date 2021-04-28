@@ -32,7 +32,11 @@ module.exports = function (deployer, network, accounts) {
 	if(network != "ganachecli" && network != "mainnet"){
 		return true;
 	}
-	//return true;
+	
+	let convexDeployer = "0x947B7742C403f20e5FaCcDAc5E092C943E7D0277";
+	let convexMultisig = "0xa3C5A1e09150B75ff251c1a7815A07182c3de2FB";
+	let convexVoterProxy = "0x989AEb4d175e16225E39E87d0D97A3360524AD80";
+
 	let crv = "0xD533a949740bb3306d119CC777fa900bA034cd52";
 	let vecrvFeeDistro = "0xA464e6DCda8AC41e03616F95f4BC98a13b8922Dc";
 	let threeCrv = "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490";
