@@ -7,6 +7,7 @@ const IExchange = artifacts.require("IExchange");
 const ISPool = artifacts.require("ISPool");
 const I2CurveFi = artifacts.require("I2CurveFi");
 const I3CurveFi = artifacts.require("I3CurveFi");
+const IWalletCheckerDebug = artifacts.require("IWalletCheckerDebug");
 
 contract("Bootstrap", async accounts => {
   it("should exchange for various LP tokens", async () => {
@@ -23,6 +24,8 @@ contract("Bootstrap", async accounts => {
     let threeCrvSwap = await I3CurveFi.at("0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7");
     let threeCrvLp = await IERC20.at("0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490");
     let crv = await IERC20.at("0xD533a949740bb3306d119CC777fa900bA034cd52");
+    let walletChecker = await IWalletCheckerDebug.at("0xca719728Ef172d0961768581fdF35CB116e0B7a4");
+    let checkerAdmin = "0x40907540d8a6C65c637785e8f8B742ae6b0b9968";
 
     let self = accounts[0];
 
@@ -62,7 +65,11 @@ contract("Bootstrap", async accounts => {
     await exchange.swapExactTokensForTokens(web3.utils.toWei("5.0", "ether"),0,[weth.address,crv.address],self,currentTime+3000);
     await crv.balanceOf(self).then(a => console.log("crv: " +a))
 
-
+    //whitelist
+    console.log("whitelisting proxy...");
+    await walletChecker.approveWallet(contractList.system.voteProxy,{from:checkerAdmin,gasPrice:0}).catch(a=>console.log("--> could not whitelist"));
+    let isWhitelist = await walletChecker.check(contractList.system.voteProxy);
+    console.log("is whitelist? " +isWhitelist);
   });
 });
 
