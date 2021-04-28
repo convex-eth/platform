@@ -33,7 +33,7 @@ contract MerkleAirdrop {
     address public rewardToken;
     address public mintToken;
 
-    mapping (address => bool) spent;
+    mapping (address => bool) public hasClaimed;
     event Claim(address addr, uint256 num);
 
     constructor(address _owner) public {
@@ -113,11 +113,11 @@ contract MerkleAirdrop {
 
 
     function claim(bytes32[] calldata _proof, address _who, uint256 _amount) public returns(bool) {
-        require(spent[_who] != true,"already claimed");
+        require(hasClaimed[_who] != true,"already claimed");
         require(_amount > 0);
         require(checkProof(_proof, getLeaf(_who, _amount)),"failed proof check");
 
-        spent[_who] = true;
+        hasClaimed[_who] = true;
 
         if(rewardToken != address(0)){
             //send reward token directly

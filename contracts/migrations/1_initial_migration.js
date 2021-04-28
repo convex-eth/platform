@@ -37,6 +37,8 @@ module.exports = function (deployer, network, accounts) {
 	let convexMultisig = "0xa3C5A1e09150B75ff251c1a7815A07182c3de2FB";
 	let convexVoterProxy = "0x989AEb4d175e16225E39E87d0D97A3360524AD80";
 
+	let merkleRoot = "0xb28bc11190214e137fc59e1857e8ffb749934c8363229795895226926386e2b2";
+
 	let crv = "0xD533a949740bb3306d119CC777fa900bA034cd52";
 	let vecrvFeeDistro = "0xA464e6DCda8AC41e03616F95f4BC98a13b8922Dc";
 	let threeCrv = "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490";
@@ -249,6 +251,7 @@ module.exports = function (deployer, network, accounts) {
 	})
 	.then(function(dropBalance) {
 		console.log("airdrop balance: " +dropBalance);
+		return airdrop.setRoot(merkleRoot);
 	})
 
 	//Create CVX sushi pool

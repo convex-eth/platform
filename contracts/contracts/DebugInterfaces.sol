@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.6.12;
+pragma experimental ABIEncoderV2;
 
 import '@openzeppelin/contracts/math/SafeMath.sol';
 
@@ -117,4 +118,24 @@ interface IUniswapV2Router01 {
 
 interface IUniswapV2Factory {
     function getPair(address tokenA, address tokenB) external view returns (address pair);
+}
+
+
+interface Multicaller{
+    struct Call {
+        address target;
+        bytes callData;
+    }
+
+    function aggregate(Call[] memory calls) external returns (uint256 blockNumber, bytes[] memory returnData);
+}
+
+
+
+interface MulticallerView{
+    struct Call {
+        address target;
+        bytes callData;
+    }
+    function aggregate(Call[] memory calls) external view returns (uint256 blockNumber, bytes[] memory returnData);
 }
