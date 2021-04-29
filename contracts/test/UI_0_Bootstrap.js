@@ -2,6 +2,7 @@ const { BN, constants, expectEvent, expectRevert, time } = require('openzeppelin
 var jsonfile = require('jsonfile');
 var contractList = jsonfile.readFileSync('./contracts.json');
 
+const CrvDepositor = artifacts.require("CrvDepositor");
 const IERC20 = artifacts.require("IERC20");
 const IExchange = artifacts.require("IExchange");
 const ISPool = artifacts.require("ISPool");
@@ -70,6 +71,11 @@ contract("Bootstrap", async accounts => {
     await walletChecker.approveWallet(contractList.system.voteProxy,{from:checkerAdmin,gasPrice:0}).catch(a=>console.log("--> could not whitelist"));
     let isWhitelist = await walletChecker.check(contractList.system.voteProxy);
     console.log("is whitelist? " +isWhitelist);
+
+    let crvDeposit = await CrvDepositor.at(contractList.system.crvDepositor);
+    await crv.transfer(contractList.system.voteProxy,10000);
+    console.log("transfered crv to deposit");
+    await crvDeposit.initialLock();
   });
 });
 
