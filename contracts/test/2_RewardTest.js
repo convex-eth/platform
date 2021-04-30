@@ -220,13 +220,7 @@ contract("RewardsTest", async accounts => {
     await crv.balanceOf(userA).then(a=>console.log("userA crv: " +a))
     await cvx.balanceOf(userA).then(a=>console.log("userA cvx: " +a))
 
-    //manual unstake + withdraw
-    // await rewardPool.earned(userA).then(a=>console.log("rewards earned(unclaimed): " +a));
-    // await rewardPool.exit({from:userA});
-    // await booster.withdrawAll(poolId,{from:userA});
-    // console.log("withdrawAll()");
-
-    //auto unstake + unwrap + claim
+    //unstake + unwrap + claim
     let rbal = await rewardPool.balanceOf(userA);
     await rewardPool.withdrawAndUnwrap(rbal,true,{from:userA});
     console.log("withdrawAll()");
@@ -249,6 +243,15 @@ contract("RewardsTest", async accounts => {
     await crv.balanceOf(userB).then(a=>console.log("userB crv(after claim): " +a))
     await cvxCrv.balanceOf(userB).then(a=>console.log("userB cvxCrv(after claim): " +a))
     await cvxCrvRewardsContract.balanceOf(userB).then(a=>console.log("userB staked cvxCrv(after claim): " +a))
+  
+    //withdraw from cvx
+    await cvx.balanceOf(userB).then(a=>console.log("userB cvx on wallet: " +a))
+    var stakedCvx = await cvxRewardsContract.balanceOf(userB);
+    console.log("staked cvx: " +stakedCvx);
+    await cvxRewardsContract.withdraw(stakedCvx,true,{from:userB});
+    console.log("withdraw()");
+    await cvx.balanceOf(userB).then(a=>console.log("userB cvx on wallet: " +a))
+    await cvxRewardsContract.balanceOf(userB).then(a=>console.log("userB staked cvx: " +a))
   });
 });
 

@@ -66,6 +66,7 @@ contract("ExtraRewardsTest v2", async accounts => {
     let poolinfo = await booster.poolInfo(poolId);
     let rewardPoolAddress = poolinfo.crvRewards;
     let rewardPool = await BaseRewardPool.at(rewardPoolAddress);
+    let depositToken = await IERC20.at(poolinfo.token);
     console.log("pool lp token " +poolinfo.lptoken);
     console.log("pool gauge " +poolinfo.gauge);
     console.log("pool reward contract at " +rewardPool.address);
@@ -94,7 +95,7 @@ contract("ExtraRewardsTest v2", async accounts => {
     let startingobtc = await obtc.balanceOf(userA);
     console.log("obtc lp: " +startingobtc);
  
-    //approve and partial deposit
+    //approve and partial deposit+stake
     await obtc.approve(booster.address,0,{from:userA});
     await obtc.approve(booster.address,startingobtc,{from:userA});
     await booster.deposit(poolId,web3.utils.toWei("0.1", "ether"),true,{from:userA});
@@ -118,13 +119,25 @@ contract("ExtraRewardsTest v2", async accounts => {
     await time.latest().then(a=>console.log("current block time: " +a));
     await time.latestBlock().then(a=>console.log("current block: " +a));
 
+    await rewardPool.historicalRewards().then(a=>console.log("cumulative total rewards: " +a))
+    await rewardPool.queuedRewards().then(a=>console.log("queuedRewards: " +a))
+    await obtcGaugeDebug.claimable_tokens(voteproxy.address).then(a=>console.log("claimableTokens: " +a));
+    await obtcGaugeDebug.claimable_reward(voteproxy.address, bor.address).then(a=>console.log("claimableRewards: " +a));
+    
     //collect and distribute rewards off gauge
     await booster.earmarkRewards(poolId,{from:caller});
-    console.log("earmark 1")
+    console.log("----earmark 1----")
+    
+    await rewardPool.historicalRewards().then(a=>console.log("cumulative total rewards: " +a))
+    await rewardPool.queuedRewards().then(a=>console.log("queuedRewards: " +a))
+    await obtcGaugeDebug.claimable_tokens(voteproxy.address).then(a=>console.log("claimableTokens: " +a));
+    await obtcGaugeDebug.claimable_reward(voteproxy.address, bor.address).then(a=>console.log("claimableRewards: " +a));
 
     //make sure stash added bor token and reward pool added bor rewards to its child list
     await rewardPool.extraRewardsLength().then(a=>console.log("reward pool extra rewards: " +a));
     await rewardStash.tokenCount().then(a=>console.log("stash token count: " +a));
+
+    //double check both stash and main rewards have the extra rewards address registered
     let tokenInfo = await rewardStash.tokenInfo(0);
     console.log("bor token rewards (from stash): " +tokenInfo.rewardAddress);
     let borRewardsAddress = await rewardPool.extraRewards(0);
@@ -164,7 +177,8 @@ contract("ExtraRewardsTest v2", async accounts => {
     await obtcGaugeDebug.claimable_tokens(voteproxy.address).then(a=>console.log("claimableTokens: " +a));
     await obtcGaugeDebug.claimable_reward(voteproxy.address, bor.address).then(a=>console.log("claimableRewards: " +a));
 
-    //deposit remaining funds,  should trigger bor rewards to be claimed
+    //deposit remaining funds,  should trigger bor rewards to be claimed automatically
+    //and moved to stash
     await booster.depositAll(poolId,true,{from:userA});
     console.log("Deposit All")
 
@@ -185,14 +199,21 @@ contract("ExtraRewardsTest v2", async accounts => {
     await time.latestBlock().then(a=>console.log("current block: " +a));
 
     //check gauge claimables
+    await rewardPool.historicalRewards().then(a=>console.log("cumulative total rewards: " +a))
+    await rewardPool.queuedRewards().then(a=>console.log("queuedRewards: " +a))
     await obtcGaugeDebug.claimable_tokens(voteproxy.address).then(a=>console.log("claimableTokens: " +a));
     await obtcGaugeDebug.claimable_reward(voteproxy.address, bor.address).then(a=>console.log("claimableRewards: " +a));
     
     //claim crv and bor rewards, move all from stash to reward contract
     await booster.earmarkRewards(poolId,{from:caller});
-    console.log("earmark 2")
+    console.log("----earmark 2----")
+    await rewardPool.historicalRewards().then(a=>console.log("cumulative total rewards: " +a))
+    await rewardPool.queuedRewards().then(a=>console.log("queuedRewards: " +a))
+    await obtcGaugeDebug.claimable_tokens(voteproxy.address).then(a=>console.log("claimableTokens: " +a));
+    await obtcGaugeDebug.claimable_reward(voteproxy.address, bor.address).then(a=>console.log("claimableRewards: " +a));
 
     //check balances, stashed bor should now be on rewards
+    //crv should be in all proper reward addresses
     await crv.balanceOf(voteproxy.address).then(a=>console.log("crv at voteproxy " +a));
     await crv.balanceOf(booster.address).then(a=>console.log("crv at booster " +a));
     await crv.balanceOf(caller).then(a=>console.log("crv at caller " +a));
@@ -201,7 +222,7 @@ contract("ExtraRewardsTest v2", async accounts => {
     await crv.balanceOf(cvxRewards).then(a=>console.log("crv at cvxRewards " +a));
     await crv.balanceOf(userA).then(a=>console.log("userA crv: " +a))
     await rewardPool.earned(userA).then(a=>console.log("rewards earned(unclaimed): " +a));
-
+    //bor should have been moved from stash to rewards
     await bor.balanceOf(rewardStash.address).then(a=>console.log("bor on stash (==0): " +a));
     await bor.balanceOf(voteproxy.address).then(a=>console.log("bor on voter (==0): " +a));
     await bor.balanceOf(booster.address).then(a=>console.log("bor on deposit (==0): " +a));
@@ -214,6 +235,21 @@ contract("ExtraRewardsTest v2", async accounts => {
     await bor.balanceOf(userA).then(a=>console.log("userA bor: " +a))
     await cvx.balanceOf(userA).then(a=>console.log("userA cvx: " +a))
 
+
+    //unstake
+    var stakedBal = await rewardPool.balanceOf(userA);
+    console.log("staked lp: " +stakedBal);
+    await rewardPool.withdraw(stakedBal, false, {from:userA});
+    console.log("withdrawn");
+    stakedBal = await rewardPool.balanceOf(userA);
+    console.log("staked lp: " +stakedBal);
+    var deposTokenBal = await depositToken.balanceOf(userA);
+    console.log("convex deposit token: " +deposTokenBal);
+    await booster.withdraw(poolId,deposTokenBal,{from:userA});
+    console.log("withdraw from booster")
+    await rewardPool.balanceOf(userA).then(a => console.log("staked balance: " +a));
+    await depositToken.balanceOf(userA).then(a => console.log("obtc on convex: " +a));
+    await obtc.balanceOf(userA).then(a => console.log("obtc lp on wallet: " +a));
   });
 });
 

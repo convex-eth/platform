@@ -9,7 +9,6 @@ const CurveVoterProxy = artifacts.require("CurveVoterProxy");
 const ExtraRewardStashV2 = artifacts.require("ExtraRewardStashV2");
 const BaseRewardPool = artifacts.require("BaseRewardPool");
 const VirtualBalanceRewardPool = artifacts.require("VirtualBalanceRewardPool");
-//const cvxCrvRewardPool = artifacts.require("cvxCrvRewardPool");
 const cvxRewardPool = artifacts.require("cvxRewardPool");
 const ConvexToken = artifacts.require("ConvexToken");
 const cvxCrvToken = artifacts.require("cvxCrvToken");
@@ -93,7 +92,10 @@ contract("BasicDepositWithdraw", async accounts => {
     //check wallet balance and deposit credit
     await threeCrv.balanceOf(userA).then(a=>console.log("wallet balance: " +a));
     await depositToken.balanceOf(userA).then(a=>console.log("lp balance: " +a));
-   // await booster.userPoolInfo(0,userA).then(a=>console.log("lp balance: " +a));
+    //should not be staked
+    await rewardPool.balanceOf(userA).then(a=>console.log("staked balance: " +a));
+    //should be staked on curve even if not staked in rewards
+    await voteproxy.balanceOfPool(threeCrvGauge).then(a=>console.log("gauge balance: " +a));
 
     //deposit reset of funds
     await booster.depositAll(poolId,false,{from:userA});
@@ -102,20 +104,19 @@ contract("BasicDepositWithdraw", async accounts => {
     //check wallet balance and deposit credit
     await threeCrv.balanceOf(userA).then(a=>console.log("wallet balance: " +a));
     await depositToken.balanceOf(userA).then(a=>console.log("lp balance: " +a));
-    //await booster.userPoolInfo(0,userA).then(a=>console.log("lp balance: " +a));
 
-    //check that deposit is also reflected on reward contract
-    await rewardPool.balanceOf(userA).then(a=>console.log("reward balance: " +a));
+    //should not be staked
+    await rewardPool.balanceOf(userA).then(a=>console.log("staked balance: " +a));
+    //check if staked on curve
+    await voteproxy.balanceOfPool(threeCrvGauge).then(a=>console.log("gauge balance: " +a));
 
     //withdraw a portion
     await booster.withdraw(poolId,web3.utils.toWei("500.0", "ether"),{from:userA});
     console.log("withdrawn portion");
 
-    //check wallet increased and that deposit credit/reward balance decreased
+    //check wallet increased and that deposit credit decreased
     await threeCrv.balanceOf(userA).then(a=>console.log("wallet balance: " +a));
     await depositToken.balanceOf(userA).then(a=>console.log("lp balance: " +a));
-    //await booster.userPoolInfo(0,userA).then(a=>console.log("lp balance: " +a));
-    await rewardPool.balanceOf(userA).then(a=>console.log("reward balance: " +a));
 
     //withdraw too much error check
     // this will error on the gauge not having enough balance
@@ -138,26 +139,35 @@ contract("BasicDepositWithdraw", async accounts => {
     await threeCrv.approve(booster.address,userBThreeCrv,{from:userB});
     await booster.depositAll(poolId,false,{from:userB});
     await depositToken.balanceOf(userB).then(a=>console.log("lp balance: " +a));
-    //await booster.userPoolInfo(0,userB).then(a=>console.log("user b deposits: " +a));
 
     //withdraw too much error check again
     // this will error on the deposit balance not being high enough (gauge balance check passes though because of userB)
+    //update: ordering of unstake and burn changed so burn is always first.
     console.log("try withdraw too much(2)");
     await expectRevert(
         booster.withdraw(poolId,startingThreeCrv+1,{from:userA}),
         "revert");
     console.log(" ->reverted (fail on user funds)");
 
-
+    await voteproxy.balanceOfPool(threeCrvGauge).then(a=>console.log("gauge balance: " +a));
+    
     //withdraw all properly
     await booster.withdrawAll(poolId,{from:userA});
-    console.log("withdrawAll");
+    console.log("withdrawAll A");
 
     //all balance should be back on wallet and equal to starting value
-    await threeCrv.balanceOf(userA).then(a=>console.log("wallet balance: " +a));
-    await depositToken.balanceOf(userA).then(a=>console.log("lp balance: " +a));
-    //await booster.userPoolInfo(0,userA).then(a=>console.log("lp balance: " +a));
-    await rewardPool.balanceOf(userA).then(a=>console.log("reward balance: " +a));
+    await threeCrv.balanceOf(userA).then(a=>console.log("userA wallet balance: " +a));
+    await depositToken.balanceOf(userA).then(a=>console.log("userA lp balance: " +a));
+    await rewardPool.balanceOf(userA).then(a=>console.log("userA staked balance: " +a));
+    await voteproxy.balanceOfPool(threeCrvGauge).then(a=>console.log("gauge balance: " +a));
+  
+    //withdraw all properly
+    await booster.withdrawAll(poolId,{from:userB});
+    console.log("withdrawAll B");
+    await threeCrv.balanceOf(userB).then(a=>console.log("userB wallet balance: " +a));
+    await depositToken.balanceOf(userB).then(a=>console.log("userB lp balance: " +a));
+    await rewardPool.balanceOf(userB).then(a=>console.log("userB staked balance: " +a));
+    await voteproxy.balanceOfPool(threeCrvGauge).then(a=>console.log("gauge balance: " +a));
   });
 });
 
