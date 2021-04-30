@@ -342,7 +342,7 @@ contract Booster{
         address rewardContract = poolInfo[_pid].crvRewards;
         require(msg.sender == rewardContract,"!auth");
 
-        _withdraw(_pid,_amount,address(this),_to);
+        _withdraw(_pid,_amount,msg.sender,_to);
         return true;
     }
 

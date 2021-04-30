@@ -240,8 +240,7 @@ contract BaseRewardPool {
         _totalSupply = _totalSupply.sub(amount);
         _balances[msg.sender] = _balances[msg.sender].sub(amount);
 
-        //send to operator instead
-        stakingToken.safeTransfer(operator, amount);
+        //tell operator to withdraw from here directly to user
         IDeposit(operator).withdrawTo(pid,amount,msg.sender);
         emit Withdrawn(msg.sender, amount);
 
