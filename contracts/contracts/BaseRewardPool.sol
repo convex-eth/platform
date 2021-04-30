@@ -230,7 +230,11 @@ contract BaseRewardPool {
         return true;
     }
 
-    function withdrawAndUnwrap(uint256 amount, bool claim) external updateReward(msg.sender) returns(bool){
+    function withdrawAll(bool claim) external{
+        withdraw(_balances[msg.sender],claim);
+    }
+
+    function withdrawAndUnwrap(uint256 amount, bool claim) public updateReward(msg.sender) returns(bool){
 
         //also withdraw from linked rewards
         for(uint i=0; i < extraRewards.length; i++){
@@ -249,6 +253,10 @@ contract BaseRewardPool {
             getReward(msg.sender,true);
         }
         return true;
+    }
+
+    function withdrawAllAndUnwrap(bool claim) external{
+        withdrawAndUnwrap(_balances[msg.sender],claim);
     }
 
     function getReward(address _account, bool _claimExtras) public updateReward(_account) returns(bool){

@@ -146,4 +146,8 @@ contract CrvDepositor{
         deposit(_amount,_lock,address(0));
     }
 
+    function depositAll(bool _lock, address _stakeAddress) external{
+        uint256 crvBal = IERC20(crv).balanceOf(msg.sender);
+        deposit(crvBal,_lock,_stakeAddress);
+    }
 }

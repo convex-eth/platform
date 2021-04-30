@@ -241,6 +241,10 @@ contract cvxRewardPool{
         }
     }
 
+    function withdrawAll(bool claim) external{
+        withdraw(_balances[msg.sender],claim);
+    }
+
     function getReward(address _account, bool _claimExtras, bool _stake) public updateReward(_account){
         uint256 reward = earnedReward(_account);
         if (reward > 0) {
