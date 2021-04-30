@@ -64,30 +64,41 @@ contract CrvDepositor{
     }
 
     //lock curve
-    function _lockCurve() internal {
+    function _lockCurve(bool mintIncentives) internal {
         uint256 crvBalance = IERC20(crv).balanceOf(address(this));
-        require(crvBalance > 0,"no crv to lock");
-        IERC20(crv).safeTransfer(staker, crvBalance);
+        if(crvBalance > 0){
+            IERC20(crv).safeTransfer(staker, crvBalance);
+        }
+        
+        //increase ammount
+        uint256 crvBalanceStaker = IERC20(crv).balanceOf(staker);
+        if(crvBalanceStaker == 0){
+            return;
+        }
+
+        
+        //increase amount
+        IStaker(staker).increaseAmount(crvBalanceStaker);
+        
 
         uint256 unlockAt = block.timestamp + MAXTIME;
         uint256 unlockInWeeks = (unlockAt/WEEK)*WEEK;
 
-        //increase ammount
-        uint256 crvBalanceStaker = IERC20(crv).balanceOf(staker);
-        IStaker(staker).increaseAmount(crvBalanceStaker);
-        
         //increase time too if over 2 week buffer
         if(unlockInWeeks.sub(unlockTime) > 2){
             IStaker(staker).increaseTime(unlockAt);
             unlockTime = unlockInWeeks;
         }
         
-        ITokenMinter(minter).mint(msg.sender,incentiveCrv);
-        incentiveCrv = 0;
+        //mint incentives here if not staking immediately
+        if(mintIncentives){
+            ITokenMinter(minter).mint(msg.sender,incentiveCrv);
+            incentiveCrv = 0;
+        }
     }
 
     function lockCurve() external {
-        _lockCurve();
+        _lockCurve(true);
     }
 
     //deposit crv for cvxCrv
@@ -96,12 +107,15 @@ contract CrvDepositor{
     //the cvx reward contract isnt costly to claim rewards
     function deposit(uint256 _amount, bool _lock, address _stakeAddress) public {
         require(_amount > 0,"!>0");
-        IERC20(crv).safeTransferFrom(msg.sender, address(this), _amount);
-
+        
+        bool depositOnly = _stakeAddress == address(0);
         if(_lock){
-            //lock immediately
-            _lockCurve();
+            //lock immediately, transfer directly to staker to skip an erc20 transfer
+            IERC20(crv).safeTransferFrom(msg.sender, staker, _amount);
+            _lockCurve(depositOnly);
         }else{
+            //move tokens here
+            IERC20(crv).safeTransferFrom(msg.sender, address(this), _amount);
             //defer lock cost to another user
             uint256 callIncentive = _amount.mul(lockIncentive).div(FEE_DENOMINATOR);
             _amount = _amount.sub(callIncentive);
@@ -110,10 +124,15 @@ contract CrvDepositor{
             incentiveCrv = incentiveCrv.add(callIncentive);
         }
 
-        if(_stakeAddress == address(0)){
+        if(depositOnly){
             //mint for msg.sender
             ITokenMinter(minter).mint(msg.sender,_amount);
         }else{
+            if(_lock && incentiveCrv > 0){
+                //add the incentive tokens here so they can be staked together
+                _amount = _amount.add(incentiveCrv);
+                incentiveCrv = 0;
+            }
             //mint here 
             ITokenMinter(minter).mint(address(this),_amount);
             //stake for msg.sender
