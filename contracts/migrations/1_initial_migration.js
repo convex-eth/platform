@@ -67,7 +67,8 @@ module.exports = function (deployer, network, accounts) {
     }
     console.log("total vested: " +totalVested.toString());
     totaldistro.add(totalVested);
-    console.log("total cvx premine: " +totaldistro.toString());
+    console.log("total cvx premine: " +distroList.premine);
+    console.log("total cvx: " +totaldistro.toString());
 
 	var booster, voter, rFactory, sFactory, tFactory, cvx, cvxCrv, deposit, arb, pools;
 	var crvToken;

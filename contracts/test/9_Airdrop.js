@@ -39,7 +39,7 @@ contract("Airdrop Test", async accounts => {
         var calldata = airdrop.contract.methods.claim(proof,dropAddresses[i],amount).encodeABI();
         callDataList.push([airdrop.address,calldata]);
 
-        if(callDataList.length == 60){
+        if(callDataList.length == 30){
             console.log("call multi claim");
             await multicaller.aggregate(callDataList);
             callDataList = [];
