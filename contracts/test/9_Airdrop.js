@@ -2,7 +2,7 @@ const { BN, constants, expectEvent, expectRevert, time } = require('openzeppelin
 
 const MerkleTree = require('./helpers/merkleTree');
 var jsonfile = require('jsonfile');
-var droplist = jsonfile.readFileSync('./test/compiledDropData.json');
+var droplist = jsonfile.readFileSync('../airdrop/drop_proofs.json');
 var contractList = jsonfile.readFileSync('./contracts.json');
 
 const ConvexToken = artifacts.require("ConvexToken");
@@ -39,7 +39,7 @@ contract("Airdrop Test", async accounts => {
         var calldata = airdrop.contract.methods.claim(proof,dropAddresses[i],amount).encodeABI();
         callDataList.push([airdrop.address,calldata]);
 
-        if(callDataList.length == 30){
+        if(callDataList.length == 60){
             console.log("call multi claim");
             await multicaller.aggregate(callDataList);
             callDataList = [];

@@ -84,25 +84,28 @@ module.exports = function (deployer, network, accounts) {
     var poolNames = [];
     contractList["system"] = systemContracts;
     contractList["pools"] = poolsContracts;
+    systemContracts["voteProxy"] = convexVoterProxy;
 
-  	deployer.deploy(CurveVoterProxy).then(function(instance) {
-  		voter = instance;
-  		systemContracts["voteProxy"] = voter.address;
-  		console.log("voter proxy: " +voter.address);
-  	})
-  	.then(function() {
-		return deployer.deploy(ConvexToken, voter.address)
-	})
-	.then(function(instance) {
+
+	deployer.deploy(ConvexToken, convexVoterProxy).then(function(instance) {
 		cvx = instance;
 		systemContracts["cvx"] = cvx.address;
+		return CurveVoterProxy.at(convexVoterProxy);
 	})
-	.then(function() {
+	.then(function(voterinstance) {
+		voter = voterinstance;
 		return deployer.deploy(Booster, voter.address, cvx.address, rewardsStart)
 	})
 	.then(function(instance) {
 		booster = instance;
 		systemContracts["booster"] = booster.address;
+		return voter.owner();
+	})
+	.then(function(currentOwner){
+		//if develop, change current owner to current deployer
+		if(currentOwner != admin){
+			return voter.setOwner(admin,{from:currentOwner});
+		}
 	})
 	.then(function() {
 		return voter.setOperator(booster.address)
@@ -135,7 +138,11 @@ module.exports = function (deployer, network, accounts) {
 		return cvxCrv.setOperator(deposit.address)
 	}).then(function() {
 		return voter.setDepositor(deposit.address)
-	}).then(function() {
+	})
+	.then(function(){
+		return deposit.initialLock();
+	})
+	.then(function() {
 		return booster.setTreasury(deposit.address)
 	}).then(function() {
 		return deployer.deploy(BaseRewardPool,0,cvxCrv.address,crv,booster.address,rFactory.address)
