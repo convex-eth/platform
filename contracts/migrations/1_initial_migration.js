@@ -76,7 +76,7 @@ module.exports = function (deployer, network, accounts) {
 	var sushiRouter, sushiFactory, pairToken;
 	var crvdepositAmt, crvbal, cvxCrvBal
 
-	var rewardsStart = Math.floor(Date.now() / 1000)+86400;
+	var rewardsStart = Math.floor(Date.now() / 1000)+3600;
     var rewardsEnd = rewardsStart + (1 * 364 * 86400);
 
     var contractList = {};
@@ -95,7 +95,7 @@ module.exports = function (deployer, network, accounts) {
 	})
 	.then(function(voterinstance) {
 		voter = voterinstance;
-		return deployer.deploy(Booster, voter.address, cvx.address, rewardsStart)
+		return deployer.deploy(Booster, voter.address, cvx.address)
 	})
 	.then(function(instance) {
 		booster = instance;
@@ -182,7 +182,7 @@ module.exports = function (deployer, network, accounts) {
 		var numberOfBlocks = new BN(6000*365*4);
 		var rewardPerBlock = new BN(chefCvx).div(numberOfBlocks)
 		console.log("chef rewards per block: " +rewardPerBlock.toString());
-		var startblock = block+6000; //about 1 day
+		var startblock = block;//start immediately
 		var endbonusblock = startblock + (2*7*6000);//about 2 weeks
 		console.log("chef rewards start on: " +startblock);
 		console.log("chef reward bonus end on: " +endbonusblock);
@@ -412,6 +412,7 @@ module.exports = function (deployer, network, accounts) {
 			poolsContracts.push(poolInfoList[i]);
 		}
 	})
+
 	.then(function() {
 		var contractListOutput = JSON.stringify(contractList,null,4);
 		console.log(contractListOutput);

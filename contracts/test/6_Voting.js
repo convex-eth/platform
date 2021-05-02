@@ -51,7 +51,7 @@ contract("Voting Test", async accounts => {
     let caller = accounts[3];
 
     //system
-    let voteproxy = await CurveVoterProxy.deployed();
+    let voteproxy = await CurveVoterProxy.at(contractList.system.voteProxy);
     let booster = await Booster.deployed();
     let rewardFactory = await RewardFactory.deployed();
     let stashFactory = await StashFactory.deployed();

@@ -39,7 +39,7 @@ contract("BasicDepositWithdraw", async accounts => {
     let caller = accounts[3];
 
     //system setup
-    let voteproxy = await CurveVoterProxy.deployed();
+    let voteproxy = await CurveVoterProxy.at(contractList.system.voteProxy);
     let booster = await Booster.deployed();
     let voterewardFactoryproxy = await RewardFactory.deployed();
     let stashFactory = await StashFactory.deployed();
