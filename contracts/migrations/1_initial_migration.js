@@ -52,11 +52,10 @@ module.exports = function (deployer, network, accounts) {
     let admin = accounts[0];
     console.log("deploying from: " +admin);
 
-    var totaldistro = new BN(0);
-    totaldistro.add(distroList.premine);
-    totaldistro.add(distroList.lpincentives);
-    totaldistro.add(distroList.vecrv);
-    totaldistro.add(distroList.teamcvxLpSeed)
+    var premine = new BN(0);
+    premine.add(distroList.lpincentives);
+    premine.add(distroList.vecrv);
+    premine.add(distroList.teamcvxLpSeed)
     var vestedAddresses = distroList.vested.team.addresses.concat(distroList.vested.investor.addresses,distroList.vested.treasury.addresses)
    // console.log("vested addresses: " +vestedAddresses.toString())
     var vestedAmounts = distroList.vested.team.amounts.concat(distroList.vested.investor.amounts,distroList.vested.treasury.amounts)
@@ -66,8 +65,9 @@ module.exports = function (deployer, network, accounts) {
     	totalVested.add(vestedAmounts[i]);
     }
     console.log("total vested: " +totalVested.toString());
-    totaldistro.add(totalVested);
-    console.log("total cvx premine: " +distroList.premine);
+    premine.add(totalVested);
+    console.log("total cvx premine: " +premine.toString());
+    var totaldistro = new BN(premine).add(distroList.miningRewards);
     console.log("total cvx: " +totaldistro.toString());
 
 	var booster, voter, rFactory, sFactory, tFactory, cvx, cvxCrv, deposit, arb, pools;
@@ -112,7 +112,7 @@ module.exports = function (deployer, network, accounts) {
 		return voter.setOperator(booster.address)
 	})
 	.then(function(){
-		return cvx.mint(accounts[0],distroList.premine)//"5000000000000000000000000")
+		return cvx.mint(accounts[0],premine.toString())
 	})
 	.then(function() {
 		return deployer.deploy(RewardFactory,booster.address)
