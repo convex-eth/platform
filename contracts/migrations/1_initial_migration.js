@@ -37,7 +37,7 @@ module.exports = function (deployer, network, accounts) {
 	let convexMultisig = "0xa3C5A1e09150B75ff251c1a7815A07182c3de2FB";
 	let convexVoterProxy = "0x989AEb4d175e16225E39E87d0D97A3360524AD80";
 
-	let merkleRoot = "0xc7f5dc6b31b58b2a79564a84260a0bb5d34eb726dfbcfd1d7116a99622eb4ffd";
+	let merkleRoot = "0xeffaaa7c07b95982b4a6831a02a8cde1ec9d00ca8c00b47bebe757cc0a98640a";
 
 	let crv = "0xD533a949740bb3306d119CC777fa900bA034cd52";
 
