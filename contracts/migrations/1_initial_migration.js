@@ -171,7 +171,7 @@ module.exports = function (deployer, network, accounts) {
 		return deployer.deploy(ArbitratorVault,booster.address)
 	}).then(function(instance) {
 		arb = instance
-		systemContracts["aribatratorVault"] = arb.address;
+		systemContracts["arbitratorVault"] = arb.address;
 		return booster.setArbitrator(arb.address)
 	})
 	.then(function(){
