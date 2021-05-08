@@ -151,7 +151,7 @@ contract VestedEscrow is ReentrancyGuard{
         claim(msg.sender);
     }
 
-    function claimAndStake(address _recipient) public nonReentrant{
+    function claimAndStake(address _recipient) internal nonReentrant{
         require(stakeContract != address(0),"no staking contract");
         require(IRewards(stakeContract).stakingToken() == address(rewardToken),"stake token mismatch");
         
@@ -160,12 +160,14 @@ contract VestedEscrow is ReentrancyGuard{
 
         totalClaimed[_recipient] = totalClaimed[_recipient].add(claimable);
         
+        rewardToken.safeApprove(stakeContract,0);
+        rewardToken.safeApprove(stakeContract,claimable);
         IRewards(stakeContract).stakeFor(_recipient, claimable);
 
-        emit Claim(msg.sender, claimable);
+        emit Claim(_recipient, claimable);
     }
 
     function claimAndStake() external{
-        claim(msg.sender);
+        claimAndStake(msg.sender);
     }
 }
