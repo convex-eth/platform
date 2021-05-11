@@ -44,6 +44,7 @@ module.exports = function (deployer, network, accounts) {
     let sushiswapRouter = "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F";
     let sushiswapFactory = "0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac";
     let weth = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
+    let addressZero = "0x0000000000000000000000000000000000000000";
 
     let admin = accounts[0];
     console.log("deploying from: " +admin);
@@ -354,10 +355,10 @@ module.exports = function (deployer, network, accounts) {
 
 	//Add sushi pools to chef
 	.then(function(){
-		return chef.add(12000,systemContracts["cvxCrvCrvSLP"],false);
+		return chef.add(12000,systemContracts["cvxCrvCrvSLP"],addressZero,false);
 	})
 	.then(function(){
-		return chef.add(8000,systemContracts["cvxEthSLP"],false);
+		return chef.add(8000,systemContracts["cvxEthSLP"],addressZero,false);
 	})
 
 

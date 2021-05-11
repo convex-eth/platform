@@ -6,7 +6,7 @@ import '@openzeppelin/contracts/math/SafeMath.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import '@openzeppelin/contracts/utils/Context.sol';
-
+import "./interfaces/IRewarder.sol";
 
 contract Ownable is Context {
     address private _owner;
@@ -93,6 +93,7 @@ contract ConvexMasterChef is Ownable {
         uint256 allocPoint; // How many allocation points assigned to this pool. CVX to distribute per block.
         uint256 lastRewardBlock; // Last block number that CVXs distribution occurs.
         uint256 accCvxPerShare; // Accumulated CVXs per share, times 1e12. See below.
+        IRewarder rewarder;
     }
 
     //cvx
@@ -144,6 +145,7 @@ contract ConvexMasterChef is Ownable {
     function add(
         uint256 _allocPoint,
         IERC20 _lpToken,
+        IRewarder _rewarder,
         bool _withUpdate
     ) public onlyOwner {
         if (_withUpdate) {
@@ -158,7 +160,8 @@ contract ConvexMasterChef is Ownable {
                 lpToken: _lpToken,
                 allocPoint: _allocPoint,
                 lastRewardBlock: lastRewardBlock,
-                accCvxPerShare: 0
+                accCvxPerShare: 0,
+                rewarder: _rewarder
             })
         );
     }
@@ -167,7 +170,9 @@ contract ConvexMasterChef is Ownable {
     function set(
         uint256 _pid,
         uint256 _allocPoint,
-        bool _withUpdate
+        IRewarder _rewarder,
+        bool _withUpdate,
+        bool _updateRewarder
     ) public onlyOwner {
         if (_withUpdate) {
             massUpdatePools();
@@ -176,6 +181,9 @@ contract ConvexMasterChef is Ownable {
             _allocPoint
         );
         poolInfo[_pid].allocPoint = _allocPoint;
+        if(_updateRewarder){
+            poolInfo[_pid].rewarder = _rewarder;
+        }
     }
 
     // Return reward multiplier over the given _from to _to block.
@@ -273,6 +281,13 @@ contract ConvexMasterChef is Ownable {
         );
         user.amount = user.amount.add(_amount);
         user.rewardDebt = user.amount.mul(pool.accCvxPerShare).div(1e12);
+
+        //extra rewards
+        IRewarder _rewarder = pool.rewarder;
+        if (address(_rewarder) != address(0)) {
+            _rewarder.onReward(_pid, msg.sender, msg.sender, 0, user.amount);
+        }
+
         emit Deposit(msg.sender, _pid, _amount);
     }
 
@@ -289,6 +304,13 @@ contract ConvexMasterChef is Ownable {
         user.amount = user.amount.sub(_amount);
         user.rewardDebt = user.amount.mul(pool.accCvxPerShare).div(1e12);
         pool.lpToken.safeTransfer(address(msg.sender), _amount);
+
+        //extra rewards
+        IRewarder _rewarder = pool.rewarder;
+        if (address(_rewarder) != address(0)) {
+            _rewarder.onReward(_pid, msg.sender, msg.sender, pending, user.amount);
+        }
+
         emit RewardPaid(msg.sender, _pid, pending);
         emit Withdraw(msg.sender, _pid, _amount);
     }
@@ -303,6 +325,13 @@ contract ConvexMasterChef is Ownable {
         );
         safeRewardTransfer(_account, pending);
         user.rewardDebt = user.amount.mul(pool.accCvxPerShare).div(1e12);
+
+        //extra rewards
+        IRewarder _rewarder = pool.rewarder;
+        if (address(_rewarder) != address(0)) {
+            _rewarder.onReward(_pid, _account, _account, pending, user.amount);
+        }
+
         emit RewardPaid(_account, _pid, pending);
     }
 
@@ -314,6 +343,12 @@ contract ConvexMasterChef is Ownable {
         emit EmergencyWithdraw(msg.sender, _pid, user.amount);
         user.amount = 0;
         user.rewardDebt = 0;
+
+        //extra rewards
+        IRewarder _rewarder = pool.rewarder;
+        if (address(_rewarder) != address(0)) {
+            _rewarder.onReward(_pid, msg.sender, msg.sender, 0, 0);
+        }
     }
 
     // Safe cvx transfer function, just in case if rounding error causes pool to not have enough CVXs.

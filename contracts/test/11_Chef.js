@@ -18,6 +18,7 @@ const RewardFactory = artifacts.require("RewardFactory");
 const ArbitratorVault = artifacts.require("ArbitratorVault");
 const PoolManager = artifacts.require("PoolManager");
 const ConvexMasterChef = artifacts.require("ConvexMasterChef");
+const ChefExtraRewards = artifacts.require("ChefExtraRewards");
 
 const IERC20 = artifacts.require("IERC20");
 
@@ -27,7 +28,7 @@ const IERC20 = artifacts.require("IERC20");
 contract("Test masterchef rewards", async accounts => {
   it("should deposit lp tokens and earn cvx", async () => {
 
-    //let crv = await IERC20.at("0xD533a949740bb3306d119CC777fa900bA034cd52");
+    let weth = await IERC20.at("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
 
     let admin = accounts[0];
     let userA = accounts[1];
@@ -57,6 +58,13 @@ contract("Test masterchef rewards", async accounts => {
     await cvxLP.transfer(userA,cvxlpBal);
     var cvxCrvlpBal = await cvxCrvLP.balanceOf(admin);
     await cvxCrvLP.transfer(userB,cvxCrvlpBal);
+
+    //add extra rewards
+    await weth.sendTransaction({value:web3.utils.toWei("5.0", "ether")});
+
+    let extraRewards = await ChefExtraRewards.new(chef.address,weth.address);
+    await weth.transfer(extraRewards.address,web3.utils.toWei("5.0", "ether"));
+    await chef.set(0,10000,extraRewards.address,true,true);
 
     await cvxLP.approve(chef.address,cvxlpBal,{from:userA});
     await cvxCrvLP.approve(chef.address,cvxCrvlpBal,{from:userB});
@@ -112,6 +120,8 @@ contract("Test masterchef rewards", async accounts => {
     await cvxCrvLP.balanceOf(userB).then(a=>console.log("user b lp on wallet: " +a));
     await cvx.balanceOf(userA).then(a=>console.log("user a cvx on wallet: " +a));
     await cvx.balanceOf(userB).then(a=>console.log("user b cvx on wallet: " +a));
+    await weth.balanceOf(userA).then(a=>console.log("user a weth on wallet: " +a));
+    await weth.balanceOf(userB).then(a=>console.log("user b weth on wallet: " +a));
   });
 });
 
