@@ -36,6 +36,7 @@ module.exports = function (deployer, network, accounts) {
 	let convexDeployer = "0x947B7742C403f20e5FaCcDAc5E092C943E7D0277";
 	let convexMultisig = "0xa3C5A1e09150B75ff251c1a7815A07182c3de2FB";
 	let convexVoterProxy = "0x989AEb4d175e16225E39E87d0D97A3360524AD80";
+	let convexTreasury = "0x1389388d01708118b497f59521f6943Be2541bb7";
 
 	let merkleRoot = "0x632a2ad201c5b95d3f75c1332afdcf489d4e6b4b7480cf878d8eba2aa87d5f73";
 
@@ -83,6 +84,7 @@ module.exports = function (deployer, network, accounts) {
     contractList["system"] = systemContracts;
     contractList["pools"] = poolsContracts;
     systemContracts["voteProxy"] = convexVoterProxy;
+    systemContracts["treasury"] = convexTreasury;
 
 
 	deployer.deploy(ConvexToken, convexVoterProxy).then(function(instance) {
