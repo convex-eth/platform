@@ -7,6 +7,7 @@ import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 
 //receive treasury funds. operator can withdraw
 //allow execute so that certain funds could be staked etc
+//allow treasury ownership to be transfered during the vesting stage
 contract TreasuryFunds{
     using SafeERC20 for IERC20;
     using Address for address;
@@ -14,8 +15,8 @@ contract TreasuryFunds{
     address public operator;
     event WithdrawTo(address indexed user, uint256 amount);
 
-    constructor() public {
-        operator = msg.sender;
+    constructor(address _operator) public {
+        operator = _operator;
     }
 
     function setOperator(address _op) external {
