@@ -240,6 +240,7 @@ contract Booster{
 
             //withdraw from gauge
             try IStaker(staker).withdrawAll(token,gauge){
+                pool.shutdown = true;
             }catch{}
         }
     }
