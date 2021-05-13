@@ -28,6 +28,7 @@ const IUniswapV2Factory = artifacts.require("IUniswapV2Factory");
 const IERC20 = artifacts.require("IERC20");
 
 
+
 module.exports = function (deployer, network, accounts) {
 	if(network != "ganachecli" && network != "mainnet"){
 		return true;
@@ -83,13 +84,23 @@ module.exports = function (deployer, network, accounts) {
     var poolNames = [];
     contractList["system"] = systemContracts;
     contractList["pools"] = poolsContracts;
-    systemContracts["voteProxy"] = convexVoterProxy;
-    systemContracts["treasury"] = convexTreasury;
 
+    var addContract = function(group, name, value){
+		contractList[group][name] = value;
+		var contractListOutput = JSON.stringify(contractList,null,4);
+		fs.writeFileSync("contracts.json",contractListOutput, function(err) {
+			if (err) {
+				return console.log("Error writing file: " + err);
+			}
+		});
+	}
+
+	addContract("system","voteProxy",convexVoterProxy);
+	addContract("system","treasury",convexTreasury);
 
 	deployer.deploy(ConvexToken, convexVoterProxy).then(function(instance) {
 		cvx = instance;
-		systemContracts["cvx"] = cvx.address;
+		addContract("system","cvx",cvx.address)
 		return CurveVoterProxy.at(convexVoterProxy);
 	})
 	.then(function(voterinstance) {
@@ -98,7 +109,7 @@ module.exports = function (deployer, network, accounts) {
 	})
 	.then(function(instance) {
 		booster = instance;
-		systemContracts["booster"] = booster.address;
+		addContract("system","booster",booster.address);
 		return voter.owner();
 	})
 	.then(function(currentOwner){
@@ -117,24 +128,24 @@ module.exports = function (deployer, network, accounts) {
 		return deployer.deploy(RewardFactory,booster.address)
 	}).then(function(instance) {
 		rFactory = instance;
-		systemContracts["rFactory"] = rFactory.address;
+		addContract("system","rFactory",rFactory.address);
 	}).then(function() {
 		return deployer.deploy(TokenFactory,booster.address)
 	}).then(function(instance) {
 		tFactory = instance;
-		systemContracts["tFactory"] = tFactory.address;
+		addContract("system","tFactory",tFactory.address);
 		return deployer.deploy(StashFactory,booster.address,rFactory.address)
 	}).then(function(instance) {
 		sFactory = instance;
-		systemContracts["sFactory"] = sFactory.address;
+		addContract("system","sFactory",sFactory.address);
 		return deployer.deploy(cvxCrvToken)
 	}).then(function(instance) {
 		cvxCrv = instance;
-		systemContracts["cvxCrv"] = cvxCrv.address;
+		addContract("system","cvxCrv",cvxCrv.address);
 		return deployer.deploy(CrvDepositor,voter.address,cvxCrv.address)
 	}).then(function(instance) {
 		deposit = instance;
-		systemContracts["crvDepositor"] = deposit.address;
+		addContract("system","crvDepositor",deposit.address);
 		return cvxCrv.setOperator(deposit.address)
 	}).then(function() {
 		return voter.setDepositor(deposit.address)
@@ -148,18 +159,18 @@ module.exports = function (deployer, network, accounts) {
 		return deployer.deploy(BaseRewardPool,0,cvxCrv.address,crv,booster.address,rFactory.address)
 	}).then(function(instance) {
 		cvxCrvRewards = instance;
-		systemContracts["cvxCrvRewards"] = cvxCrvRewards.address;
+		addContract("system","cvxCrvRewards",cvxCrvRewards.address);
 		// reward manager is admin to add any new incentive programs
 		return deployer.deploy(cvxRewardPool,cvx.address,crv,deposit.address,cvxCrvRewards.address,cvxCrv.address,booster.address,admin)
 	}).then(function(instance) {
 		cvxRewards = instance;
-		systemContracts["cvxRewards"] = cvxRewards.address;
+		addContract("system","cvxRewards",cvxRewards.address);
 		return booster.setRewardContracts(cvxCrvRewards.address,cvxRewards.address)
 	}).then(function() {
 		return deployer.deploy(PoolManager,booster.address)
 	}).then(function(instance) {
 		pools = instance;
-		systemContracts["poolManager"] = pools.address;
+		addContract("system","poolManager",pools.address);
 		return booster.setPoolManager(pools.address)
 	}).then(function() {
 		return booster.setFactories(rFactory.address,sFactory.address,tFactory.address)
@@ -170,7 +181,7 @@ module.exports = function (deployer, network, accounts) {
 		return deployer.deploy(ArbitratorVault,booster.address)
 	}).then(function(instance) {
 		arb = instance
-		systemContracts["arbitratorVault"] = arb.address;
+		addContract("system","arbitratorVault",arb.address);
 		return booster.setArbitrator(arb.address)
 	})
 	.then(function(){
@@ -182,13 +193,13 @@ module.exports = function (deployer, network, accounts) {
 		var rewardPerBlock = new BN(chefCvx).div(numberOfBlocks)
 		console.log("chef rewards per block: " +rewardPerBlock.toString());
 		var startblock = block;//start immediately
-		var endbonusblock = startblock + (2*7*6000);//about 2 weeks
+		var endbonusblock = Number(startblock) + (2*7*6400);//about 2 weeks
 		console.log("chef rewards start on: " +startblock);
 		console.log("chef reward bonus end on: " +endbonusblock);
 		return deployer.deploy(ConvexMasterChef,cvx.address,rewardPerBlock, startblock, endbonusblock )
 	}).then(function(instance) {
 		chef = instance;
-		systemContracts["chef"] = chef.address;
+		addContract("system","chef",chef.address);
 		return cvx.transfer(chef.address, distroList.lpincentives);
 	})
 	.then(function(){
@@ -200,7 +211,7 @@ module.exports = function (deployer, network, accounts) {
 	.then(function() {
 		return deployer.deploy(ClaimZap,cvxRewards.address, cvxCrvRewards.address, chef.address, cvx.address, cvxCrv.address, deposit.address)
 	}).then(function(instance) {
-		systemContracts["claimZap"] = instance.address;
+		addContract("system","claimZap",instance.address);
 		return instance.setApprovals();
 	})
 
@@ -212,7 +223,7 @@ module.exports = function (deployer, network, accounts) {
 	})
 	.then(function(instance) {
 		vesting = instance;
-		systemContracts["vestedEscrow"] = vesting.address;
+		addContract("system","vestedEscrow",vesting.address);
 		return cvx.approve(vesting.address, distroList.vested.total);
 	})
 	.then(function() {
@@ -238,7 +249,7 @@ module.exports = function (deployer, network, accounts) {
 		return deployer.deploy(MerkleAirdropFactory)
 	})
 	.then(function(dropFactory) {
-		systemContracts["dropFactory"] = dropFactory.address;
+		addContract("system","dropFactory",dropFactory.address);
 		return dropFactory.CreateMerkleAirdrop()
 	})
 	.then(function(tx) {
@@ -247,7 +258,7 @@ module.exports = function (deployer, network, accounts) {
   	})
   	.then(function(instance) {
   		airdrop = instance;
-  		systemContracts["airdrop"] = airdrop.address;
+  		addContract("system","airdrop",airdrop.address);
   		return airdrop.setRewardToken(cvx.address)
   	})
   	.then(function() {
@@ -279,7 +290,7 @@ module.exports = function (deployer, network, accounts) {
 		return sushiFactory.getPair(cvx.address,weth)
 	}).then(function(pair) {
 		console.log("cvxEthSLP Address: " +pair)
-		systemContracts["cvxEthSLP"] = pair;
+		addContract("system","cvxEthSLP",pair);
 		return IERC20.at(pair)
 	}).then(function(token) {
 		pairToken = token;
@@ -336,7 +347,7 @@ module.exports = function (deployer, network, accounts) {
 		return sushiFactory.getPair(cvxCrv.address,crv)
 	}).then(function(pair) {
 		console.log("cvxCrvCRV SLP Address: " +pair)
-		systemContracts["cvxCrvCrvSLP"] = pair;
+		addContract("system","cvxCrvCrvSLP",pair);
 		return IERC20.at(pair)
 	}).then(function(token) {
 		pairToken = token;
