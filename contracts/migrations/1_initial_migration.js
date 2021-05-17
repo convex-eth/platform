@@ -192,8 +192,9 @@ module.exports = function (deployer, network, accounts) {
 		var numberOfBlocks = new BN(6000*365*4);
 		var rewardPerBlock = new BN(chefCvx).div(numberOfBlocks)
 		console.log("chef rewards per block: " +rewardPerBlock.toString());
-		var startblock = block;//start immediately
+		var startblock = Number(block) + 500;//start with small delay
 		var endbonusblock = Number(startblock) + (2*7*6400);//about 2 weeks
+		console.log("current block: " +block);
 		console.log("chef rewards start on: " +startblock);
 		console.log("chef reward bonus end on: " +endbonusblock);
 		return deployer.deploy(ConvexMasterChef,cvx.address,rewardPerBlock, startblock, endbonusblock )
