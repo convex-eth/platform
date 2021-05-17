@@ -372,6 +372,15 @@ contract Booster{
         return true;
     }
 
+    function setGaugeRedirect(uint256 _pid) external returns(bool){
+        address stash = poolInfo[_pid].stash;
+        require(msg.sender == stash,"!auth");
+        address gauge = poolInfo[_pid].gauge;
+        bytes memory data = abi.encodeWithSelector(bytes4(keccak256("set_rewards_receiver(address)")), stash);
+        IStaker(staker).execute(gauge,uint256(0),data);
+        return true;
+    }
+
     //claim crv and extra rewards and disperse to reward contracts
     function _earmarkRewards(uint256 _pid) internal {
         PoolInfo storage pool = poolInfo[_pid];

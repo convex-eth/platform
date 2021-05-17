@@ -85,6 +85,7 @@ interface IStaker{
     function voteGaugeWeight(address,uint256) external;
     function balanceOfPool(address) external view returns (uint256);
     function operator() external view returns (address);
+    function execute(address _to, uint256 _value, bytes calldata _data) external returns (bool, bytes memory);
 }
 
 interface IRewards{

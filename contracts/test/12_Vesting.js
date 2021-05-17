@@ -4,6 +4,7 @@ const MerkleTree = require('./helpers/merkleTree');
 var jsonfile = require('jsonfile');
 var droplist = jsonfile.readFileSync('../airdrop/drop_proofs.json');
 var contractList = jsonfile.readFileSync('./contracts.json');
+var distroList = jsonfile.readFileSync('./migrations/distro.json');
 
 const VestedEscrow = artifacts.require("VestedEscrow");
 const cvxRewardPool = artifacts.require("cvxRewardPool");
@@ -17,6 +18,25 @@ contract("VestedEscrow Test", async accounts => {
     let vested = await VestedEscrow.at(contractList.system.vestedEscrow)
     let cvxRewards = await cvxRewardPool.at(contractList.system.cvxRewards)
     let cvx = await ConvexToken.at(contractList.system.cvx)
+
+    var team = distroList.vested.team.addresses;
+    var investor = distroList.vested.investor.addresses;
+    var treasury = distroList.vested.treasury.addresses;
+    for(var i = 0; i < team.length; i++){
+    	await vested.lockedOf(team[i]).then(a=>console.log(team[i] + " locked: " +a))
+        await vested.balanceOf(team[i]).then(a=>console.log(team[i] + " balance: " +a))
+        await vested.vestedOf(team[i]).then(a=>console.log(team[i] + " vested: " +a))
+    }
+    for(var i = 0; i < investor.length; i++){
+    	await vested.lockedOf(investor[i]).then(a=>console.log(investor[i] + " locked: " +a))
+        await vested.balanceOf(investor[i]).then(a=>console.log(investor[i] + " balance: " +a))
+        await vested.vestedOf(investor[i]).then(a=>console.log(investor[i] + " vested: " +a))
+    }
+    for(var i = 0; i < treasury.length; i++){
+    	await vested.lockedOf(treasury[i]).then(a=>console.log(treasury[i] + " locked: " +a))
+        await vested.balanceOf(treasury[i]).then(a=>console.log(treasury[i] + " balance: " +a))
+        await vested.vestedOf(treasury[i]).then(a=>console.log(treasury[i] + " vested: " +a))
+    }
 
     let accountA = "0xAAc0aa431c237C2C0B5f041c8e59B3f1a43aC78F";
     let accountB = "0xb3DF5271b92e9fD2fed137253BB4611285923f16";
