@@ -39,14 +39,15 @@ contract StashFactory {
             //v1
             ExtraRewardStashV1 stash = new ExtraRewardStashV1(_pid,operator,_staker,_gauge,rewardFactory);
             return address(stash);
-        }else if(_stashVersion == uint256(2) && IsV2(_gauge)){
+        }else if(_stashVersion == uint256(2) && !IsV3(_gauge) && IsV2(_gauge)){
             //v2
             ExtraRewardStashV2 stash = new ExtraRewardStashV2(_pid,operator,_staker,_gauge,rewardFactory);
             return address(stash);
         }
         bool isV1 = IsV1(_gauge);
         bool isV2 = IsV2(_gauge);
-        require(!isV1 && !isV2,"stash version mismatch");
+        bool isV3 = IsV3(_gauge);
+        require(!isV1 && !isV2 && !isV3,"stash version mismatch");
         return address(0);
     }
 

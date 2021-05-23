@@ -55,7 +55,7 @@ contract ExtraRewardStashV3 {
         uint256 length = tokenCount;
         if(length > 0){
             //claim rewards on gauge for staker
-            //booster will call for future proofing (cant assume anyone will always be able to call)
+            //using reward_receiver so all rewards will be moved to this stash
             IDeposit(operator).claimRewards(pid,gauge);
         }
         return true;
@@ -104,7 +104,7 @@ contract ExtraRewardStashV3 {
     function stashRewards() external pure returns(bool){
 
         //after depositing/withdrawing, extra incentive tokens are claimed
-        //but we use rewards receiver to automatically send here.
+        //but from v3 this is default to off, and this stash is the reward receiver too.
 
         return true;
     }
