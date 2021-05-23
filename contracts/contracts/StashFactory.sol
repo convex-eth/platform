@@ -4,6 +4,7 @@ pragma solidity 0.6.12;
 import "./Interfaces.sol";
 import "./ExtraRewardStashV1.sol";
 import "./ExtraRewardStashV2.sol";
+import "./ExtraRewardStashV3.sol";
 import '@openzeppelin/contracts/math/SafeMath.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/utils/Address.sol';
@@ -15,6 +16,7 @@ contract StashFactory {
 
     bytes4 private constant rewarded_token = 0x16fa50b1; //rewarded_token()
     bytes4 private constant reward_tokens = 0x54c49fe9; //reward_tokens(uint256)
+    bytes4 private constant rewards_receiver = 0x01ddabf1; //rewards_receiver(address)
 
     address public operator;
     address public rewardFactory;
@@ -29,7 +31,11 @@ contract StashFactory {
     function CreateStash(uint256 _pid, address _gauge, address _staker, uint256 _stashVersion) external returns(address){
         require(msg.sender == operator, "!authorized");
 
-        if(_stashVersion == uint256(1) && IsV1(_gauge)){
+        if(_stashVersion == uint256(3) && IsV3(_gauge)){
+            //v3
+            ExtraRewardStashV3 stash = new ExtraRewardStashV3(_pid,operator,_staker,_gauge,rewardFactory);
+            return address(stash);
+        }else if(_stashVersion == uint256(1) && IsV1(_gauge)){
             //v1
             ExtraRewardStashV1 stash = new ExtraRewardStashV1(_pid,operator,_staker,_gauge,rewardFactory);
             return address(stash);
@@ -52,6 +58,12 @@ contract StashFactory {
 
     function IsV2(address _gauge) private returns(bool){
         bytes memory data = abi.encodeWithSelector(reward_tokens,uint256(0));
+        (bool success,) = _gauge.call(data);
+        return success;
+    }
+
+    function IsV3(address _gauge) private returns(bool){
+        bytes memory data = abi.encodeWithSelector(rewards_receiver,address(0));
         (bool success,) = _gauge.call(data);
         return success;
     }
