@@ -52,6 +52,12 @@ contract ExtraRewardStashV3 {
         //this is updateable from v2 gauges now so must check each time.
         checkForNewRewardTokens();
 
+        //make sure we're redirected
+        if(!hasRedirected){
+            IDeposit(operator).setGaugeRedirect(pid);
+            hasRedirected = true;
+        }
+
         uint256 length = tokenCount;
         if(length > 0){
             //claim rewards on gauge for staker
@@ -81,12 +87,6 @@ contract ExtraRewardStashV3 {
         TokenInfo storage t = tokenInfo[_tid];
         address currentToken = t.token;
         if(currentToken != _token){
-            //make sure we're redirected
-            if(!hasRedirected){
-                IDeposit(operator).setGaugeRedirect(pid);
-                hasRedirected = true;
-            }
-
             //set token address
             t.token = _token;
 

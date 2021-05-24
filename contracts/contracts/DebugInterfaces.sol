@@ -57,6 +57,7 @@ interface ICurveGaugeDebug {
     function claim_rewards(address) external;
     function claimable_tokens(address) external view returns (uint256);    
     function claimable_reward(address,address) external view returns (uint256);   
+    function rewards_receiver(address) external view returns(address);
 }
 
 interface IWalletCheckerDebug{
