@@ -334,7 +334,8 @@ contract ConvexRewarder is IRewarder{
         (,uint256 rewardDebt) = IConvexChef(convexMasterChef).userInfo(address(this));
         uint256 reward = rewardDebt.sub(previousRewardDebt);
         previousRewardDebt = rewardDebt;
-
+        if(reward == 0) return;
+        
         if (block.timestamp >= periodFinish) {
             rewardRate = reward.div(duration);
         } else {
