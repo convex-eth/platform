@@ -253,7 +253,6 @@ contract ConvexRewarder is IRewarder{
         updateReward(msg.sender)
     {
         require(_amount > 0, 'RewardPool : Cannot withdraw 0');
-        checkHarvest();
 
         //also withdraw from linked rewards
         uint256 length = extraRewards.length;
@@ -276,7 +275,6 @@ contract ConvexRewarder is IRewarder{
     }
 
     function getReward(address _account, bool _claimExtras) public updateReward(_account){
-        checkHarvest();
 
         uint256 reward = earned(_account);
         if (reward > 0) {
@@ -292,6 +290,8 @@ contract ConvexRewarder is IRewarder{
                 IRewards(extraRewards[i]).getReward(_account);
             }
         }
+
+        checkHarvest();
     }
 
     function getReward() external{
@@ -299,7 +299,9 @@ contract ConvexRewarder is IRewarder{
     }
 
     function checkHarvest() internal{
-        if (block.timestamp >= periodFinish) {
+        //if getting close to the end of the period
+        //claim and extend
+        if (block.timestamp >= periodFinish.sub(1 days)  ) {
             harvestFromMasterChef();
         }
     }
