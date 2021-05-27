@@ -201,6 +201,7 @@ contract ConvexRewarder is IRewarder{
         public
         updateReward(msg.sender)
     {
+        require(isInit,"!init");
         require(_amount > 0, 'RewardPool : Cannot stake 0');
         checkHarvest();
 
@@ -229,7 +230,10 @@ contract ConvexRewarder is IRewarder{
         public
         updateReward(_for)
     {
+        require(isInit,"!init");
         require(_amount > 0, 'RewardPool : Cannot stake 0');
+
+        //check if new rewards should be pulled from convex chef
         checkHarvest();
 
         //also stake to linked rewards
@@ -291,6 +295,7 @@ contract ConvexRewarder is IRewarder{
             }
         }
 
+        //check if new rewards should be pulled from convex chef
         checkHarvest();
     }
 
@@ -306,7 +311,7 @@ contract ConvexRewarder is IRewarder{
         }
     }
 
-    //initialize the first week of rewards
+    //initialize the period of rewards
     //since the reward rate should be same as speed as rewards coming in from the chef
     // it will never catch up unless there is a seed
     // (or if it mines for a week with 0 distribution)
@@ -364,7 +369,11 @@ contract ConvexRewarder is IRewarder{
         updateReward(user)
     {
         require(msg.sender == sushiMasterChef);
-
+        if(!isInit){
+            //return smoothly, user will have to add to stake or withdraw
+            //to update balances if event is received before initialization
+            return;
+        }
         // On the first call, validate that the pid correctly maps to our stakingToken
         // Sushi MasterChef does not allow modifying a pid after it has been set, so we can trust
         // this to be safe in the future. If we did not validate the pid going forward, there
