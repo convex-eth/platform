@@ -307,7 +307,8 @@ contract ConvexRewarder is IRewarder{
         //if getting close to the end of the period
         //claim and extend
         if (block.timestamp >= periodFinish.sub(1 days)  ) {
-            harvestFromMasterChef();
+            try harvestFromMasterChef(){
+            }catch{}
         }
     }
 
@@ -390,7 +391,8 @@ contract ConvexRewarder is IRewarder{
             // if sushiAmount > 0 the call is claiming sushi and should also claim other rewards
 
             // TODO sushi allows claiming for user and transferring to recipient, do we care?
-            getReward(user,true);
+            try getReward(user,true){
+            }catch{}
         }
 
         uint256 userBalance = _sushiBalances[user];
