@@ -11,8 +11,6 @@ pragma solidity 0.6.12;
 /___/ \_, //_//_/\__//_//_/\__/ \__//_/ /_\_\
      /___/
 
-* Synthetix: cvxRewardPool.sol
-*
 * Docs: https://docs.synthetix.io/
 *
 *
@@ -64,7 +62,7 @@ contract ConvexRewarder is IRewarder{
 
     IERC20 public immutable rewardToken;
     IERC20 public immutable stakingToken;
-    uint256 public constant duration = 7 days;
+    uint256 public constant duration = 5 days;
     uint256 public constant FEE_DENOMINATOR = 10000;
 
     address public immutable operator;
@@ -138,6 +136,10 @@ contract ConvexRewarder is IRewarder{
     }
 
     function balanceOf(address account) public view returns (uint256) {
+        return _balances[account].add(_sushiBalances[account]);
+    }
+
+    function localBalanceOf(address account) public view returns (uint256) {
         return _balances[account];
     }
 
@@ -201,8 +203,9 @@ contract ConvexRewarder is IRewarder{
         public
         updateReward(msg.sender)
     {
-        require(isInit,"!init");
         require(_amount > 0, 'RewardPool : Cannot stake 0');
+
+        //check if new rewards should be pulled from convex chef
         checkHarvest();
 
         //also stake to linked rewards
@@ -230,7 +233,6 @@ contract ConvexRewarder is IRewarder{
         public
         updateReward(_for)
     {
-        require(isInit,"!init");
         require(_amount > 0, 'RewardPool : Cannot stake 0');
 
         //check if new rewards should be pulled from convex chef
@@ -307,8 +309,7 @@ contract ConvexRewarder is IRewarder{
         //if getting close to the end of the period
         //claim and extend
         if (block.timestamp >= periodFinish.sub(1 days)  ) {
-            try harvestFromMasterChef(){
-            }catch{}
+            harvestFromMasterChef();
         }
     }
 
@@ -337,6 +338,11 @@ contract ConvexRewarder is IRewarder{
         internal
         updateReward(address(0))
     {
+        if(!isInit){
+            //return smoothly if not init yet.
+            //allow stakers to join but dont start distribution
+            return;
+        }
         //convex chef allows anyone to claim, so we have to look at reward debt difference
         //so that we know how much we have claimed since previous notifyRewardAmount()
         (,uint256 rewardDebt) = IConvexChef(convexMasterChef).userInfo(address(this));
@@ -370,11 +376,7 @@ contract ConvexRewarder is IRewarder{
         updateReward(user)
     {
         require(msg.sender == sushiMasterChef);
-        if(!isInit){
-            //return smoothly, user will have to add to stake or withdraw
-            //to update balances if event is received before initialization
-            return;
-        }
+      
         // On the first call, validate that the pid correctly maps to our stakingToken
         // Sushi MasterChef does not allow modifying a pid after it has been set, so we can trust
         // this to be safe in the future. If we did not validate the pid going forward, there
@@ -390,9 +392,9 @@ contract ConvexRewarder is IRewarder{
         if (sushiAmount > 0) {
             // if sushiAmount > 0 the call is claiming sushi and should also claim other rewards
 
-            // TODO sushi allows claiming for user and transferring to recipient, do we care?
-            try getReward(user,true){
-            }catch{}
+            //sushi allows claiming for user and transferring to recipient, but we do not.
+            //just claim to original account
+            getReward(user,true);
         }
 
         uint256 userBalance = _sushiBalances[user];
