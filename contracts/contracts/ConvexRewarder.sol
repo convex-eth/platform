@@ -38,7 +38,7 @@ pragma solidity 0.6.12;
 */
 
 import "./Interfaces.sol";
-import "./interfaces/IRewarder.sol";
+import "./interfaces/ISushiRewarder.sol";
 import '@openzeppelin/contracts/math/SafeMath.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/utils/Address.sol';
@@ -56,16 +56,14 @@ interface IConvexChef{
 }
 
 
-contract ConvexRewarder is IRewarder{
+contract ConvexRewarder is ISushiRewarder{
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
     IERC20 public immutable rewardToken;
     IERC20 public immutable stakingToken;
     uint256 public constant duration = 5 days;
-    uint256 public constant FEE_DENOMINATOR = 10000;
 
-    address public immutable operator;
     address public immutable rewardManager;
     address public immutable sushiMasterChef;
     address public immutable convexMasterChef;
@@ -75,7 +73,6 @@ contract ConvexRewarder is IRewarder{
     uint256 public rewardRate = 0;
     uint256 public lastUpdateTime;
     uint256 public rewardPerTokenStored;
-    uint256 public queuedRewards = 0;
     uint256 public currentRewards = 0;
     uint256 private _totalSupply;
     uint256 public sushiPid;
@@ -97,7 +94,6 @@ contract ConvexRewarder is IRewarder{
     constructor(
         address stakingToken_,
         address rewardToken_,
-        address operator_,
         address rewardManager_,
         address sushiMasterChef_,
         address convexMasterChef_,
@@ -105,7 +101,6 @@ contract ConvexRewarder is IRewarder{
     ) public {
         stakingToken = IERC20(stakingToken_);
         rewardToken = IERC20(rewardToken_);
-        operator = operator_;
         rewardManager = rewardManager_;
         sushiMasterChef = sushiMasterChef_;
         convexMasterChef = convexMasterChef_;
@@ -191,7 +186,7 @@ contract ConvexRewarder is IRewarder{
             );
     }
 
-    function earned(address account) internal view returns (uint256) {
+    function earned(address account) public view returns (uint256) {
         return
             _balances[account].add(_sushiBalances[account])
                 .mul(rewardPerToken().sub(userRewardPerTokenPaid[account]))

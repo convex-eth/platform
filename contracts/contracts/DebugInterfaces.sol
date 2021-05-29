@@ -58,6 +58,8 @@ interface ICurveGaugeDebug {
     function claimable_tokens(address) external view returns (uint256);    
     function claimable_reward(address,address) external view returns (uint256);   
     function rewards_receiver(address) external view returns(address);
+    function working_balances(address) external view returns(uint256);
+    function working_supply() external view returns(uint256);
 }
 
 interface IWalletCheckerDebug{
@@ -74,6 +76,10 @@ interface IBurner{
     function withdraw_admin_fees(address) external;
     function burn(address) external;
     function execute() external;
+}
+
+interface IClaim{
+    function claim(address) external;
 }
 
 interface IEscro{
@@ -139,4 +145,21 @@ interface MulticallerView{
         bytes callData;
     }
     function aggregate(Call[] memory calls) external view returns (uint256 blockNumber, bytes[] memory returnData);
+}
+
+interface IBaseRewards{
+    function getReward(address,bool) external;
+}
+
+interface SushiChefV2{
+    function deposit(uint256 pid, uint256 amount, address to) external;
+    function withdraw(uint256 pid, uint256 amount, address to) external;
+    function add(uint256 allocPoint, address token, address rewarder) external;
+    function harvest(uint256 pid, address to) external;
+    function harvestFromMasterChef() external;
+    function poolInfo(uint256 pid) external view returns(uint128,uint64,uint64);
+    function rewarder(uint256 pid) external view returns(address);
+    function lpToken(uint256 pid) external view returns(address);
+    function userInfo(uint256 pid, address account) external view returns(uint256, uint256);
+    function pendingSushi(uint256 pid, address account) external view returns(uint256);
 }
