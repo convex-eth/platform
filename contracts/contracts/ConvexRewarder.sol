@@ -50,7 +50,7 @@ interface IMasterChefV2 {
 }
 
 interface IConvexChef{
-    function userInfo(address _account) external view returns(uint256,uint256);
+    function userInfo(uint256 _pid, address _account) external view returns(uint256,uint256);
     function claim(uint256 _pid, address _account) external;
     function deposit(uint256 _pid, uint256 _amount) external;
 }
@@ -303,7 +303,7 @@ contract ConvexRewarder is ISushiRewarder{
     function checkHarvest() internal{
         //if getting close to the end of the period
         //claim and extend
-        if (block.timestamp >= periodFinish.sub(1 days)  ) {
+        if (periodFinish > 0 && block.timestamp >= periodFinish.sub(1 days)  ) {
             harvestFromMasterChef();
         }
     }
@@ -340,7 +340,7 @@ contract ConvexRewarder is ISushiRewarder{
         }
         //convex chef allows anyone to claim, so we have to look at reward debt difference
         //so that we know how much we have claimed since previous notifyRewardAmount()
-        (,uint256 rewardDebt) = IConvexChef(convexMasterChef).userInfo(address(this));
+        (,uint256 rewardDebt) = IConvexChef(convexMasterChef).userInfo(chefPid, address(this));
         uint256 reward = rewardDebt.sub(previousRewardDebt);
         previousRewardDebt = rewardDebt;
         if(reward == 0) return;
