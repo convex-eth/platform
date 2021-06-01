@@ -154,7 +154,9 @@ interface IBaseRewards{
 interface SushiChefV2{
     function deposit(uint256 pid, uint256 amount, address to) external;
     function withdraw(uint256 pid, uint256 amount, address to) external;
+    function withdrawAndHarvest(uint256 pid, uint256 amount, address to) external;
     function add(uint256 allocPoint, address token, address rewarder) external;
+    function set(uint256 pid, uint256 allocPoint, address rewarder, bool overwrite) external;
     function harvest(uint256 pid, address to) external;
     function harvestFromMasterChef() external;
     function poolInfo(uint256 pid) external view returns(uint128,uint64,uint64);
@@ -162,4 +164,8 @@ interface SushiChefV2{
     function lpToken(uint256 pid) external view returns(address);
     function userInfo(uint256 pid, address account) external view returns(uint256, uint256);
     function pendingSushi(uint256 pid, address account) external view returns(uint256);
+}
+
+interface SushiChefV1{
+    function set(uint256 pid, uint256 allocPoint, bool withUpdate) external;
 }
