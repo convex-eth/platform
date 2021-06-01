@@ -92,8 +92,11 @@ contract("Test masterchef rewards setup", async accounts => {
     await cvx.approve(exchange.address,cvxbalance,{from:deployer});
     await exchangerouter.addLiquidity(weth.address,cvx.address,wethBalance,cvxbalance,0,0,deployer,starttime+3000,{from:deployer})
     var lpbalance = await cvxLP.balanceOf(deployer);
-    console.log("cvx lpbalance: " +lpbalance);
+  //  console.log("cvx lpbalance: " +lpbalance);
 
+    //send to test account
+    await cvxLP.transfer(accounts[0],lpbalance,{from:deployer});
+    await cvxLP.balanceOf(accounts[0]).then(a=>console.log("cvxEth lp balance: " +a));
 
     //get cvxcrv slp
     await exchange.swapExactTokensForTokens(web3.utils.toWei("1.0", "ether"),0,[weth.address,crv.address],deployer,starttime+3000,{from:deployer});
@@ -111,9 +114,11 @@ contract("Test masterchef rewards setup", async accounts => {
     console.log("approved crv and cvxcrv");
     await exchangerouter.addLiquidity(crv.address,cvxCrv.address,crvbalance,cvxcrvBal,0,0,deployer,starttime+3000,{from:deployer})
     var cvxCrvlpbalance = await cvxCrvLP.balanceOf(deployer);
-    console.log("cvxcrv lpbalance: " +lpbalance);
+   // console.log("cvxcrv lpbalance: " +lpbalance);
 
-
+    //send to test account
+    await cvxCrvLP.transfer(accounts[0],cvxCrvlpbalance,{from:deployer});
+    await cvxCrvLP.balanceOf(accounts[0]).then(a=>console.log("cvxcrvCrv lp balance: " +a));
 
     //get more cvx
     await exchange.swapExactTokensForTokens(web3.utils.toWei("6.0", "ether"),0,[weth.address,cvx.address],deployer,starttime+3000,{from:deployer});
