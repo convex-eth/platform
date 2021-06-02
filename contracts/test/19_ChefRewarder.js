@@ -29,8 +29,6 @@ const IUniswapV2Router01 = artifacts.require("IUniswapV2Router01");
 const IERC20 = artifacts.require("IERC20");
 
 
-//3. extra rewards, but with v1 gauges
-
 contract("Test masterchef rewards", async accounts => {
   it("should deposit lp tokens and earn cvx", async () => {
 
@@ -66,9 +64,12 @@ contract("Test masterchef rewards", async accounts => {
     //add slot slot for dummy token on convex master chef
     await chef.add(0,dummyCvx.address,addressZero,true,{from:multisig,gasPrice:0});
     console.log("add slot to convex chef");
+    var cdata = chef.contract.methods.add(0,dummyCvx.address,addressZero,true).encodeABI();
+    console.log(cdata);
     await chef.add(0,dummyCvxCrv.address,addressZero,true,{from:multisig,gasPrice:0});
     console.log("add slot to convex chef");
-
+    cdata = chef.contract.methods.add(0,dummyCvxCrv.address,addressZero,true).encodeABI();
+    console.log(cdata);
 
     //create rewarder for cvx/eth
     let rewardercvx = await ConvexRewarder.new(cvxLP.address,cvx.address,multisig,sushiChef.address,chef.address,2);
@@ -118,20 +119,6 @@ contract("Test masterchef rewards", async accounts => {
 
     await sushiChef.rewarder(1).then(a=>console.log("rewarded on sushi pool: " +a))
 
-    await chef.set(0,0,addressZero,false,false,{from:multisig,gasPrice:0});
-    await chef.set(1,0,addressZero,false,false,{from:multisig,gasPrice:0});
-    await chef.set(2,8000,addressZero,false,false,{from:multisig,gasPrice:0});
-    await chef.set(3,12000,addressZero,true,false,{from:multisig,gasPrice:0});
-
-    //call init(dummy.address)
-    var dummybal = await dummyCvx.balanceOf(deployer);
-    await dummyCvx.approve(rewardercvx.address,dummybal,{from:deployer});
-    console.log("approve dummy for " +dummybal);
-    var cvxbalance = await cvx.balanceOf(deployer);
-    await cvx.transfer(rewardercvx.address,cvxbalance,{from:deployer})
-    console.log("send cvx to rewardercvx: " +cvxbalance)
-    await rewardercvx.init(dummyCvx.address,{from:deployer});
-    console.log("init rewardercvx");
 
     //stake on sushi
     await cvxLP.approve(sushiChef.address,lpbalance,{from:deployer});
@@ -139,8 +126,9 @@ contract("Test masterchef rewards", async accounts => {
     var userinfo = await sushiChef.userInfo(1,deployer);
     console.log("user info: " +JSON.stringify(userinfo));
 
-    for(var i = 0; i < 11; i++){
+    for(var i = 0; i < 3; i++){
       //check info
+      console.log("prerewards cycle: " +i);
       await sushiChef.pendingSushi(1,deployer).then(a=>console.log("pending sushi: " +a))
       await rewardercvx.periodFinish().then(a=>console.log("periodFinish: " +a))
       await rewardercvx.rewardRate().then(a=>console.log("rewardRate: " +a))
@@ -158,6 +146,46 @@ contract("Test masterchef rewards", async accounts => {
       await time.advanceBlock();
       console.log("advance time...");
     }
+
+    await chef.set(0,0,addressZero,false,false,{from:multisig,gasPrice:0});
+    await chef.set(1,0,addressZero,false,false,{from:multisig,gasPrice:0});
+    await chef.set(2,8000,addressZero,false,false,{from:multisig,gasPrice:0});
+    await chef.set(3,12000,addressZero,true,false,{from:multisig,gasPrice:0});
+
+    //call init(dummy.address)
+    var dummybal = await dummyCvx.balanceOf(deployer);
+    await dummyCvx.approve(rewardercvx.address,dummybal,{from:deployer});
+    console.log("approve dummy for " +dummybal);
+    var cvxbalance = await cvx.balanceOf(deployer);
+    await cvx.transfer(rewardercvx.address,cvxbalance,{from:deployer})
+    console.log("send cvx to rewardercvx: " +cvxbalance)
+    await rewardercvx.init(dummyCvx.address,{from:deployer});
+    console.log("init rewardercvx");
+
+
+    for(var i = 0; i < 100; i++){
+      //check info
+      console.log("cycle: " +i);
+      await sushiChef.pendingSushi(1,deployer).then(a=>console.log("pending sushi: " +a))
+      var pendingTokens = await rewardercvx.pendingTokens(0,deployer,0);
+      console.log("pendingTokens: " +JSON.stringify(pendingTokens));
+      await rewardercvx.periodFinish().then(a=>console.log("periodFinish: " +a))
+      await rewardercvx.rewardRate().then(a=>console.log("rewardRate: " +a))
+      await rewardercvx.previousRewardDebt().then(a=>console.log("previousRewardDebt: " +a))
+      await rewardercvx.earned(deployer).then(a=>console.log("cvx earned: " +a))
+      await cvx.balanceOf(deployer).then(a=>console.log("cvx wallet: " +a))
+      console.log("--> harvest");
+      await sushiChef.harvest(1,deployer,{from:deployer});
+      await sushiChef.pendingSushi(1,deployer).then(a=>console.log("pending sushi after harvest: " +a))
+      await sushi.balanceOf(deployer).then(a=>console.log("sushi wallet after claim: " +a))
+      await cvx.balanceOf(deployer).then(a=>console.log("cvx wallet after claim: " +a))
+      await cvx.balanceOf(rewardercvx.address).then(a=>console.log("cvx left on rewardercvx: " +a))
+      console.log("----------------------");
+      await time.increase(86400);
+      await time.advanceBlock();
+      console.log("advance time...");
+    }
+
 
     console.log("--withdraw--")
     await sushiChef.withdrawAndHarvest(1,lpbalance,deployer,{from:deployer});

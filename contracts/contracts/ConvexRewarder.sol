@@ -425,12 +425,20 @@ contract ConvexRewarder is ISushiRewarder{
         view
         returns (IERC20[] memory, uint256[] memory)
     {
-        // TODO should we return additional IReward tokens/balances ?
-        // this is only for inclusion in the sushi UX, not sure if worth the added complexity
-        IERC20[] memory rewardTokens = new IERC20[](1);
+        //extra rewards length
+        uint256 length = extraRewards.length;
+
+        //combine base and extras
+        IERC20[] memory rewardTokens = new IERC20[](1+length);
         rewardTokens[0] = rewardToken;
-        uint256[] memory earnedAmounts = new uint256[](1);
+        for(uint i=0; i < length; i++){
+           rewardTokens[1+i] = IERC20(IRewards(extraRewards[i]).rewardToken());
+        }
+        uint256[] memory earnedAmounts = new uint256[](1+length);
         earnedAmounts[0] = earned(user);
+        for(uint i=0; i < length; i++){
+            earnedAmounts[1+i] = IRewards(extraRewards[i]).earned(user);
+        }
         return (rewardTokens,earnedAmounts);
     }
 }

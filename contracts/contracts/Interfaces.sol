@@ -97,7 +97,9 @@ interface IRewards{
     function queueNewRewards(uint256) external;
     function notifyRewardAmount(uint256) external;
     function addExtraReward(address) external;
-    function stakingToken() external returns (address);
+    function stakingToken() external view returns (address);
+    function rewardToken() external view returns(address);
+    function earned(address account) external view returns (uint256);
 }
 
 interface IStash{
