@@ -58,12 +58,10 @@ contract("Test masterchef rewards setup", async accounts => {
     let oldchefAdmin = "0x9a8541Ddf3a932a9A922B607e9CF7301f1d47bD1";
     let sushi = await IERC20.at("0x6B3595068778DD592e39A122f4f5a5cF09C90fE2");
 
-    let dummyCvx = await ChefToken.new({from:deployer});
-    await dummyCvx.create({from:deployer});
-    console.log("created dummyCvx: " +dummyCvx.address);
-    let dummyCvxCrv = await ChefToken.new({from:deployer});
-    await dummyCvxCrv.create({from:deployer});
-    console.log("created dummyCvxCrv: " +dummyCvxCrv.address);
+    let dummyCvx = await ChefToken.at(contractList.system.chefCvxToken);
+    console.log("dummyCvx: " +dummyCvx.address);
+    let dummyCvxCrv = await ChefToken.at(contractList.system.chefcvxCrvToken);
+    console.log("dummyCvxCrv: " +dummyCvxCrv.address);
 
     //set points from v1 to v2
     await oldchef.set(oldchefPid,50000,false,{from:oldchefAdmin,gasPrice:0})
@@ -89,8 +87,9 @@ contract("Test masterchef rewards setup", async accounts => {
     console.log("weth remainig: " +wethBalance);
     //trade for a bunch of cvx
     //add to slp using a portion
-    await cvx.approve(exchange.address,cvxbalance,{from:deployer});
-    await exchangerouter.addLiquidity(weth.address,cvx.address,wethBalance,cvxbalance,0,0,deployer,starttime+3000,{from:deployer})
+    await cvx.approve(exchangerouter.address,cvxbalance,{from:deployer});
+    await weth.approve(exchangerouter.address,wethBalance,{from:deployer});
+    await exchangerouter.addLiquidity(weth.address,cvx.address,web3.utils.toWei("1.0", "ether"),cvxbalance,0,0,deployer,starttime+3000,{from:deployer})
     var lpbalance = await cvxLP.balanceOf(deployer);
   //  console.log("cvx lpbalance: " +lpbalance);
 
@@ -121,21 +120,24 @@ contract("Test masterchef rewards setup", async accounts => {
     await cvxCrvLP.balanceOf(accounts[0]).then(a=>console.log("cvxcrvCrv lp balance: " +a));
 
     //get more cvx
-    await exchange.swapExactTokensForTokens(web3.utils.toWei("6.0", "ether"),0,[weth.address,cvx.address],deployer,starttime+3000,{from:deployer});
+    // await exchange.swapExactTokensForTokens(web3.utils.toWei("6.0", "ether"),0,[weth.address,cvx.address],deployer,starttime+3000,{from:deployer});
     cvxbalance = await cvx.balanceOf(deployer);
     console.log("cvx for init: " +cvxbalance);
 
     //add slot slot for dummy token on convex master chef
-    await chef.add(8000000000,dummyCvx.address,addressZero,true,{from:multisig,gasPrice:0});
-    console.log("add slot to convex chef");
-    await chef.add(12000000000,dummyCvxCrv.address,addressZero,true,{from:multisig,gasPrice:0});
-    console.log("add slot to convex chef");
+    // await chef.add(8000000000,dummyCvx.address,addressZero,true,{from:multisig,gasPrice:0});
+    // console.log("add slot to convex chef");
+    // await chef.add(12000000000,dummyCvxCrv.address,addressZero,true,{from:multisig,gasPrice:0});
+    // console.log("add slot to convex chef");
 
     //create rewarder for cvx/eth
-    let rewardercvx = await ConvexRewarder.new(cvxLP.address,cvx.address,multisig,sushiChef.address,chef.address,2);
+    let rewardercvx = await ConvexRewarder.at(contractList.system.cvxEthRewarder);
+   // let rewardercvx = await ConvexRewarder.new(cvxLP.address,cvx.address,multisig,sushiChef.address,chef.address,2);
     console.log("created cvxeth rewarder at " +rewardercvx.address);
 
-    let rewardercvxcrv = await ConvexRewarder.new(cvxCrvLP.address,cvx.address,multisig,sushiChef.address,chef.address,3);
+    
+    let rewardercvxcrv = await ConvexRewarder.at(contractList.system.cvxCrvCrvRewarder);
+    //let rewardercvxcrv = await ConvexRewarder.new(cvxCrvLP.address,cvx.address,multisig,sushiChef.address,chef.address,3);
     console.log("created cvxcrvcrv rewarder at " +rewardercvxcrv.address);
 
     //add to sushi chef pool
