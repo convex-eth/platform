@@ -21,7 +21,12 @@ interface ISwapExchange {
     ) external;
 }
 
-contract Buybacker{
+
+/*
+    Just a simple contract to buy cvxcrv and move to rewards.
+    This is test setup and not intended for production
+*/
+contract SimplePurchaser{
     using SafeERC20 for IERC20;
     using Address for address;
     using SafeMath for uint256;
@@ -45,7 +50,7 @@ contract Buybacker{
         IERC20(crv).safeApprove(exchange, uint256(-1));
     }
 
-    function buyback() external{
+    function distribute() external{
 
         //get crv balance
         uint256 crvBal = IERC20(crv).balanceOf(address(this));

@@ -29,7 +29,7 @@ const ICurveGaugeDebug = artifacts.require("ICurveGaugeDebug");
 
 const IERC20 = artifacts.require("IERC20");
 const CvxExtraRewardPool = artifacts.require("CvxExtraRewardPool");
-const Buybacker = artifacts.require("Buybacker");
+const SimplePurchaser = artifacts.require("SimplePurchaser");
 
 
 //3. extra rewards, but with v1 gauges
@@ -51,16 +51,16 @@ contract("Test buyback", async accounts => {
 
 
     let extraPool = await CvxExtraRewardPool.new(cvxRewards.address,cvxCrv.address,{from:deployer});
-    console.log("cvx buyback rewards: " +extraPool.address);
-    let buyback = await Buybacker.new(extraPool.address,{from:deployer});
-    console.log("buybacker: " +buyback.address);
+    console.log("cvx extra rewards: " +extraPool.address);
+    let purchaser = await SimplePurchaser.new(extraPool.address,{from:deployer});
+    console.log("purchaser: " +purchaser.address);
 
-    await extraPool.setOperator(buyback.address,{from:deployer});
-    await buyback.setApprovals({from:deployer});
+    await extraPool.setOperator(purchaser.address,{from:deployer});
+    await purchaser.setApprovals({from:deployer});
     await extraPool.setOwner(multisig,{from:deployer});
     await cvxRewards.addExtraReward(extraPool.address,{from:deployer});
     
-    await booster.setTreasury(buyback.address,{from:multisig,gasPrice:0});
+    await booster.setTreasury(purchaser.address,{from:multisig,gasPrice:0});
     await booster.setFees(1000,300,100,200,{from:multisig,gasPrice:0});
 
     console.log("setup complete");
@@ -74,13 +74,13 @@ contract("Test buyback", async accounts => {
     // await booster.earmarkRewards(26);
     console.log("earmark complete");
 
-    await crv.balanceOf(buyback.address).then(a=>console.log("crv on buyback: "+a))
+    await crv.balanceOf(purchaser.address).then(a=>console.log("crv on purchaser: "+a))
 
-    await buyback.buyback();
-    console.log("buyback complete");
+    await purchaser.distribute();
+    console.log("purchaser complete");
 
-    await crv.balanceOf(buyback.address).then(a=>console.log("crv on buyback: "+a))
-    await cvxCrv.balanceOf(extraPool.address).then(a=>console.log("cvxcrv on buyback: "+a))
+    await crv.balanceOf(purchaser.address).then(a=>console.log("crv on purchaser: "+a))
+    await cvxCrv.balanceOf(extraPool.address).then(a=>console.log("cvxcrv on purchaser: "+a))
 
     await time.increase(86400);
     await time.advanceBlock();
