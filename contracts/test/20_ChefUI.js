@@ -141,9 +141,11 @@ contract("Test masterchef rewards setup", async accounts => {
     console.log("created cvxcrvcrv rewarder at " +rewardercvxcrv.address);
 
     //add to sushi chef pool
-    await sushiChef.add(10000,cvxLP.address,rewardercvx.address,{from:sushiAdmin,gasPrice:0});
+    //await sushiChef.add(10000,cvxLP.address,rewardercvx.address,{from:sushiAdmin,gasPrice:0});
+    await sushiChef.set(1,10000,rewardercvx.address,false,{from:sushiAdmin,gasPrice:0});
     console.log("added slot to sushi chef");
-    await sushiChef.add(10000,cvxCrvLP.address,rewardercvxcrv.address,{from:sushiAdmin,gasPrice:0});
+    //await sushiChef.add(10000,cvxCrvLP.address,rewardercvxcrv.address,{from:sushiAdmin,gasPrice:0});
+    await sushiChef.set(2,10000,rewardercvxcrv.address,false,{from:sushiAdmin,gasPrice:0});
     console.log("added slot to sushi chef");
 
     await sushiChef.rewarder(1).then(a=>console.log("rewarder 1 on sushi pool: " +a))

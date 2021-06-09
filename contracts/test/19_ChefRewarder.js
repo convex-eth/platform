@@ -100,8 +100,8 @@ contract("Test masterchef rewards", async accounts => {
     // console.log("cvx for init: " +cvxbalance);
 
     //add to sushi chef pool
-    await sushiChef.add(10000,cvxLP.address,rewardercvx.address,{from:sushiAdmin,gasPrice:0});
-    console.log("added slot to sushi chef");
+    await sushiChef.set(1,10000,rewardercvx.address,false,{from:sushiAdmin,gasPrice:0});
+   // console.log("added slot to sushi chef");
 
     await sushiChef.rewarder(1).then(a=>console.log("rewarded on sushi pool: " +a))
 
@@ -122,7 +122,10 @@ contract("Test masterchef rewards", async accounts => {
       await rewardercvx.earned(deployer).then(a=>console.log("cvx earned: " +a))
       await cvx.balanceOf(deployer).then(a=>console.log("cvx wallet: " +a))
       console.log("--> harvest");
-      await sushiChef.harvest(1,deployer,{from:deployer});
+      var callA = sushiChef.contract.methods.harvestFromMasterChef().encodeABI();
+      var callB = sushiChef.contract.methods.harvest(1,deployer).encodeABI();
+      await sushiChef.batch([callA,callB],{from:deployer});
+      //await sushiChef.harvest(1,deployer,{from:deployer});
       await sushiChef.pendingSushi(1,deployer).then(a=>console.log("pending sushi after harvest: " +a))
       await sushi.balanceOf(deployer).then(a=>console.log("sushi wallet after claim: " +a))
       await cvx.balanceOf(deployer).then(a=>console.log("cvx wallet after claim: " +a))
