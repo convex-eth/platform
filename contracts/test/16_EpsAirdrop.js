@@ -2,7 +2,7 @@ const { BN, constants, expectEvent, expectRevert, time } = require('openzeppelin
 
 const MerkleTree = require('./helpers/merkleTree');
 var jsonfile = require('jsonfile');
-var droplist = jsonfile.readFileSync('../airdrop/eps/2021_6_03/drop_proofs.json');
+var droplist = jsonfile.readFileSync('../airdrop/eps/2021_6_10/drop_proofs.json');
 var contractList = jsonfile.readFileSync('./contracts.json');
 
 const IERC20 = artifacts.require("IERC20");
@@ -26,7 +26,8 @@ contract("Airdrop Test", async accounts => {
 
     // let airdrop = await MerkleAirdrop.at("0x5F863EDFB62575fe3A838C2afB4919dEd7b511D9");//week 1
     //let airdrop = await MerkleAirdrop.at("0x48389D205Ae9B345C34B1048407fEfa848DfC06F");//week 2
-    let airdrop = await MerkleAirdrop.at("0x43144b4Fc9539DEe891127B8A608d2090C92caa7");//week 3
+    // let airdrop = await MerkleAirdrop.at("0x43144b4Fc9539DEe891127B8A608d2090C92caa7");//week 3
+    let airdrop = await MerkleAirdrop.at("0x23377628Cb549cbfeb9138d4aE70751cF67C44F4");//week 4
     console.log("airdrop at: " +airdrop.address);
 
     // //set reward token
@@ -58,7 +59,7 @@ contract("Airdrop Test", async accounts => {
     var aftercallDataList = [];
     var claimcount = 0;
     var claimsize = 50;
-    for(var i = 1300; i < dropAddresses.length; i++){
+    for(var i = 0; i < dropAddresses.length; i++){
         var info = droplist.users[dropAddresses[i]];
         var amount = info.amount;
         var proof = info.proof;
@@ -94,7 +95,6 @@ contract("Airdrop Test", async accounts => {
                 var claimedAmount = new BN(afterUserbalances[x]).sub(new BN(beforeUserbalances[x]))
                 var info = droplist.users[dropAddresses[i-claimsize+1+x]];
                 var amount = info.amount;
-               // assert.equal(beforeUserbalances[x].toString(),afterUserbalances[x].toString(),"claimed amount doesnt match");
                 //console.log("assert: " +claimedAmount.toString() +" == " +amount.toString())
                 assert.equal(claimedAmount.toString(),amount.toString(),"claimed amount doesnt match");
             }
@@ -124,8 +124,7 @@ contract("Airdrop Test", async accounts => {
             var claimedAmount = new BN(afterUserbalances[x]).sub(new BN(beforeUserbalances[x]))
             var info = droplist.users[dropAddresses[ dropAddresses.length-callDataList.length+x]];
             var amount = info.amount;
-           // assert.equal(beforeUserbalances[x].toString(),afterUserbalances[x].toString(),"claimed amount doesnt match");
-            console.log("assert: " +claimedAmount.toString() +" == " +amount.toString())
+            // console.log("assert: " +claimedAmount.toString() +" == " +amount.toString())
             assert.equal(claimedAmount.toString(),amount.toString(),"claimed amount doesnt match");
         }
         beforecallDataList = [];
