@@ -55,15 +55,42 @@ contract("Test masterchef rewards", async accounts => {
     let oldchefAdmin = "0x9a8541Ddf3a932a9A922B607e9CF7301f1d47bD1";
     let sushi = await IERC20.at("0x6B3595068778DD592e39A122f4f5a5cF09C90fE2");
 
-    let dummyCvx = await ChefToken.at(contractList.system.chefCvxToken);
-    console.log("dummyCvx: " +dummyCvx.address);
-    let dummyCvxCrv = await ChefToken.at(contractList.system.chefcvxCrvToken);
-    console.log("dummyCvxCrv: " +dummyCvxCrv.address);
+    // let dummyCvx = await ChefToken.at(contractList.system.chefCvxToken);
+    // console.log("dummyCvx: " +dummyCvx.address);
+    // let dummyCvxCrv = await ChefToken.at(contractList.system.chefcvxCrvToken);
+    // console.log("dummyCvxCrv: " +dummyCvxCrv.address);
 
 
     let rewardercvx = await ConvexRewarder.at(contractList.system.cvxEthRewarder);
     let rewardercvxcrv = await ConvexRewarder.at(contractList.system.cvxCrvCrvRewarder);
 
+    let dummyCvx = await ChefToken.at(contractList.system.chefCvxToken);
+    console.log("dummyCvx: " +dummyCvx.address);
+    let dummyCvxCrv = await ChefToken.at(contractList.system.chefcvxCrvToken);
+    console.log("dummyCvxCrv: " +dummyCvxCrv.address);
+    //call init(dummy.address)
+    var dummybal = await dummyCvx.balanceOf(deployer);
+    await dummyCvx.approve(rewardercvx.address,dummybal,{from:deployer});
+    console.log("approve dummyCvx for " +dummybal);
+    var dummybal = await dummyCvxCrv.balanceOf(deployer);
+    await dummyCvxCrv.approve(rewardercvxcrv.address,dummybal,{from:deployer});
+    console.log("approve dummyCvx for " +dummybal);
+
+    // var cvxbalance = await cvx.balanceOf(deployer);
+    // cvxbalance = cvxbalance.div(new BN("2"));
+    var cvxcrvAmount = "54000000000000000000000";
+    var cvxAmount = "36000000000000000000000";
+    await cvx.transfer(rewardercvx.address,cvxAmount,{from:deployer})
+    await cvx.transfer(rewardercvxcrv.address,cvxcrvAmount,{from:deployer})
+    await cvx.balanceOf(deployer).then(a=>console.log("balance on deployer:" +a))
+    await cvx.balanceOf(rewardercvx.address).then(a=>console.log("balance on rewardercvx:" +a))
+    await cvx.balanceOf(rewardercvxcrv.address).then(a=>console.log("balance on rewardercvxcrv:" +a))
+    // console.log("send cvx to rewardercvx: " +cvxbalance)
+    await rewardercvx.init(dummyCvx.address,{from:deployer});
+    console.log("init rewardercvx");
+    await rewardercvxcrv.init(dummyCvxCrv.address,{from:deployer});
+    console.log("init rewardercvxcrv");
+    
    // return;
 
     //set points from v1 to v2
@@ -142,14 +169,14 @@ contract("Test masterchef rewards", async accounts => {
     await chef.set(3,12000,addressZero,true,false,{from:multisig,gasPrice:0});
 
     //call init(dummy.address)
-    var dummybal = await dummyCvx.balanceOf(deployer);
-    await dummyCvx.approve(rewardercvx.address,dummybal,{from:deployer});
-    console.log("approve dummy for " +dummybal);
-    var cvxbalance = await cvx.balanceOf(deployer);
-    await cvx.transfer(rewardercvx.address,cvxbalance,{from:deployer})
-    console.log("send cvx to rewardercvx: " +cvxbalance)
-    await rewardercvx.init(dummyCvx.address,{from:deployer});
-    console.log("init rewardercvx");
+    // var dummybal = await dummyCvx.balanceOf(deployer);
+    // await dummyCvx.approve(rewardercvx.address,dummybal,{from:deployer});
+    // console.log("approve dummy for " +dummybal);
+    // var cvxbalance = await cvx.balanceOf(deployer);
+    // await cvx.transfer(rewardercvx.address,cvxbalance,{from:deployer})
+    // console.log("send cvx to rewardercvx: " +cvxbalance)
+    // await rewardercvx.init(dummyCvx.address,{from:deployer});
+    // console.log("init rewardercvx");
 
 
     for(var i = 0; i < 100; i++){

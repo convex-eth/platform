@@ -164,6 +164,7 @@ interface SushiChefV2{
     function lpToken(uint256 pid) external view returns(address);
     function userInfo(uint256 pid, address account) external view returns(uint256, uint256);
     function pendingSushi(uint256 pid, address account) external view returns(uint256);
+    function batch(bytes[] calldata calls, bool revertOnFail) external returns (bool[] memory successes, bytes[] memory results);
 }
 
 interface SushiChefV1{
