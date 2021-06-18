@@ -2,7 +2,7 @@ const { BN, constants, expectEvent, expectRevert, time } = require('openzeppelin
 
 const MerkleTree = require('./helpers/merkleTree');
 var jsonfile = require('jsonfile');
-var droplist = jsonfile.readFileSync('../airdrop/eps/2021_6_10/drop_proofs.json');
+var droplist = jsonfile.readFileSync('../airdrop/eps/2021_6_17/drop_proofs.json');
 var contractList = jsonfile.readFileSync('./contracts.json');
 
 const IERC20 = artifacts.require("IERC20");
@@ -25,9 +25,10 @@ contract("Airdrop Test", async accounts => {
     //return;
 
     // let airdrop = await MerkleAirdrop.at("0x5F863EDFB62575fe3A838C2afB4919dEd7b511D9");//week 1
-    //let airdrop = await MerkleAirdrop.at("0x48389D205Ae9B345C34B1048407fEfa848DfC06F");//week 2
+    // let airdrop = await MerkleAirdrop.at("0x48389D205Ae9B345C34B1048407fEfa848DfC06F");//week 2
     // let airdrop = await MerkleAirdrop.at("0x43144b4Fc9539DEe891127B8A608d2090C92caa7");//week 3
-    let airdrop = await MerkleAirdrop.at("0x23377628Cb549cbfeb9138d4aE70751cF67C44F4");//week 4
+    // let airdrop = await MerkleAirdrop.at("0x23377628Cb549cbfeb9138d4aE70751cF67C44F4");//week 4
+    let airdrop = await MerkleAirdrop.at("0xE09ebF1Cb830D6c334b7Ab973e04Ba2d84B77043");//week 5
     console.log("airdrop at: " +airdrop.address);
 
     // //set reward token
