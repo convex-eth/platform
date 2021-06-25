@@ -23,8 +23,7 @@
         "chefCvxToken": "0x4223AA5BfD783dEDCC54585cdC1cFE9eA1587C0f",
         "chefcvxCrvToken": "0x83D128b0b661dc79A71790b14A9c96e6191FB565",
         "cvxEthRewarder": "0x9e01aaC4b3e8781a85b21d9d9F848e72Af77B362",
-        "cvxCrvCrvRewarder": "0x1FD97b5E5a257B0B9b9A42A96BB8870Cbdd1Eb79",
-        "treasury": "0x1389388d01708118b497f59521f6943Be2541bb7"
+        "cvxCrvCrvRewarder": "0x1FD97b5E5a257B0B9b9A42A96BB8870Cbdd1Eb79"
     },
     "pools": [
         {
@@ -569,6 +568,15 @@
           "stash": "0x521e6EEfDa35f7228f8f83462552bDB41D64d86B",
           "name": "alusd",
           "id": 36
+        },
+        {
+          "lptoken": "0xcA3d75aC011BF5aD07a98d02f18225F9bD9A6BDF",
+          "token": "0x18684099414dcEF486F4FA5b4e44e6eA53C8c554",
+          "gauge": "0x6955a55416a06839309018A8B0cB72c4DDC11f15",
+          "crvRewards": "0x5Edced358e6C0B435D53CC30fbE6f5f0833F404F",
+          "stash": "0x35e86E54eCb0227fe33382c35E12856cF227E9ce",
+          "name": "tricrypto",
+          "id": 37
         }
     ]
 }
