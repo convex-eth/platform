@@ -1,0 +1,582 @@
+{
+    "system": {
+        "voteProxy": "0x989AEb4d175e16225E39E87d0D97A3360524AD80",
+        "treasury": "0x1389388d01708118b497f59521f6943Be2541bb7",
+        "cvx": "0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B",
+        "booster": "0xF403C135812408BFbE8713b5A23a04b3D48AAE31",
+        "rFactory": "0xEdCCB35798fae4925718A43cc608aE136208aa8D",
+        "tFactory": "0x3c995e43E6ddD551E226F4c5544C77BfeD147aB9",
+        "sFactory": "0x877288c4e6EbA4f635bA7428706447353B47De75",
+        "cvxCrv": "0x62B9c7356A2Dc64a1969e19C23e4f579F9810Aa7",
+        "crvDepositor": "0x8014595F2AB54cD7c604B00E9fb932176fDc86Ae",
+        "cvxCrvRewards": "0x3Fe65692bfCD0e6CF84cB1E7d24108E434A7587e",
+        "cvxRewards": "0xCF50b810E57Ac33B91dCF525C6ddd9881B139332",
+        "poolManager": "0x3b2D30734491AD77880d31e8aFe2A4d8aC135a9C",
+        "arbitratorVault": "0x25E12482a25CF36EC70fDA2A09C1ED077Fc21616",
+        "chef": "0x5F465e9fcfFc217c5849906216581a657cd60605",
+        "claimZap": "0x4890970BB23FCdF624A0557845A29366033e6Fa2",
+        "vestedEscrow": "0xe98984aD858075813AdA4261aF47e68A64E28fCC",
+        "dropFactory": "0xa1Bc2Cf69D474b39B91665e24E7f2606Ed142991",
+        "airdrop": "0x2E088A0A19dda628B4304301d1EA70b114e4AcCd",
+        "cvxEthSLP": "0x05767d9EF41dC40689678fFca0608878fb3dE906",
+        "cvxCrvCrvSLP": "0x33F6DDAEa2a8a54062E021873bCaEE006CdF4007",
+        "chefCvxToken": "0x4223AA5BfD783dEDCC54585cdC1cFE9eA1587C0f",
+        "chefcvxCrvToken": "0x83D128b0b661dc79A71790b14A9c96e6191FB565",
+        "cvxEthRewarder": "0x9e01aaC4b3e8781a85b21d9d9F848e72Af77B362",
+        "cvxCrvCrvRewarder": "0x1FD97b5E5a257B0B9b9A42A96BB8870Cbdd1Eb79"
+    },
+    "pools": [
+        {
+            "lptoken": "0x845838DF265Dcd2c412A1Dc9e959c7d08537f8a2",
+            "token": "0x32512Bee3848bfcBb7bEAf647aa697a100f3b706",
+            "gauge": "0x7ca5b0a2910B33e9759DC7dDB0413949071D7575",
+            "crvRewards": "0xf34DFF761145FF0B05e917811d488B441F33a968",
+            "stash": "0x0000000000000000000000000000000000000000",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0xf34DFF761145FF0B05e917811d488B441F33a968"
+                }
+            ],
+            "name": "compound",
+            "id": 0
+        },
+        {
+            "lptoken": "0x9fC689CCaDa600B6DF723D9E47D84d76664a1F23",
+            "token": "0xA1c3492b71938E144ad8bE4c2fB6810b01A43dD8",
+            "gauge": "0xBC89cd85491d81C6AD2954E6d0362Ee29fCa8F53",
+            "crvRewards": "0x8B55351ea358e5Eda371575B031ee24F462d503e",
+            "stash": "0x0000000000000000000000000000000000000000",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0x8B55351ea358e5Eda371575B031ee24F462d503e"
+                }
+            ],
+            "name": "usdt",
+            "id": 1
+        },
+        {
+            "lptoken": "0xdF5e0e81Dff6FAF3A7e52BA697820c5e32D806A8",
+            "token": "0x0928F6753880A03628eB0be07b77992c8af37874",
+            "gauge": "0xFA712EE4788C042e2B7BB55E6cb8ec569C4530c1",
+            "crvRewards": "0xd802a8351A76ED5eCd89A7502Ca615F2225A585d",
+            "stash": "0x0000000000000000000000000000000000000000",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0xd802a8351A76ED5eCd89A7502Ca615F2225A585d"
+                }
+            ],
+            "name": "ypool",
+            "id": 2
+        },
+        {
+            "lptoken": "0x3B3Ac5386837Dc563660FB6a0937DFAa5924333B",
+            "token": "0x59bB786F222d3f0f00B0dA31B799Fff80D552940",
+            "gauge": "0x69Fb7c45726cfE2baDeE8317005d3F94bE838840",
+            "crvRewards": "0x602c4cD53a715D8a7cf648540FAb0d3a2d546560",
+            "stash": "0x0000000000000000000000000000000000000000",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0x602c4cD53a715D8a7cf648540FAb0d3a2d546560"
+                }
+            ],
+            "name": "busd",
+            "id": 3
+        },
+        {
+            "lptoken": "0xC25a3A3b969415c80451098fa907EC722572917F",
+            "token": "0x11D200ef1409cecA8D6d23e6496550f707772F11",
+            "gauge": "0xA90996896660DEcC6E997655E065b23788857849",
+            "crvRewards": "0x22eE18aca7F3Ee920D01F25dA85840D12d98E8Ca",
+            "stash": "0xD2f2B9504Ef708b9f3Bc53f1525353bAaE1B17e4",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0x22eE18aca7F3Ee920D01F25dA85840D12d98E8Ca"
+                }
+            ],
+            "name": "susd",
+            "id": 4
+        },
+        {
+            "lptoken": "0xD905e2eaeBe188fc92179b6350807D8bd91Db0D8",
+            "token": "0x2eA94b0d3349A284488ACF2934E494b2f58ef647",
+            "gauge": "0x64E3C23bfc40722d3B649844055F1D51c1ac041d",
+            "crvRewards": "0xe3DaafC8C14147d5B4A7a56F0BfdED240158e51e",
+            "stash": "0x0000000000000000000000000000000000000000",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0xe3DaafC8C14147d5B4A7a56F0BfdED240158e51e"
+                }
+            ],
+            "name": "pax",
+            "id": 5
+        },
+        {
+            "lptoken": "0x49849C98ae39Fff122806C06791Fa73784FB3675",
+            "token": "0x74b79021Ea6De3f0D1731fb8BdfF6eE7DF10b8Ae",
+            "gauge": "0xB1F2cdeC61db658F091671F5f199635aEF202CAC",
+            "crvRewards": "0x8E299C62EeD737a5d5a53539dF37b5356a27b07D",
+            "stash": "0x0000000000000000000000000000000000000000",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0x8E299C62EeD737a5d5a53539dF37b5356a27b07D"
+                }
+            ],
+            "name": "ren",
+            "id": 6
+        },
+        {
+            "lptoken": "0x075b1bb99792c9E1041bA13afEf80C91a1e70fB3",
+            "token": "0xbA723E335eC2939D52a2efcA2a8199cb4CB93cC3",
+            "gauge": "0x705350c4BcD35c9441419DdD5d2f097d7a55410F",
+            "crvRewards": "0xd727A5A6D1C7b31Ff9Db4Db4d24045B7dF0CFF93",
+            "stash": "0x7B3EE538398829c96E4B187216c7aB2946A620C4",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0xd727A5A6D1C7b31Ff9Db4Db4d24045B7dF0CFF93"
+                }
+            ],
+            "name": "sbtc",
+            "id": 7
+        },
+        {
+            "lptoken": "0xb19059ebb43466C323583928285a49f558E572Fd",
+            "token": "0x33c00bF8CFDf42929E0884d230A55F963221f8f3",
+            "gauge": "0x4c18E409Dc8619bFb6a1cB56D114C3f592E0aE79",
+            "crvRewards": "0x618BD6cBA676a46958c63700C04318c84a7b7c0A",
+            "stash": "0x0000000000000000000000000000000000000000",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0x618BD6cBA676a46958c63700C04318c84a7b7c0A"
+                }
+            ],
+            "name": "hbtc",
+            "id": 8
+        },
+        {
+            "lptoken": "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490",
+            "token": "0x30D9410ED1D5DA1F6C8391af5338C93ab8d4035C",
+            "gauge": "0xbFcF63294aD7105dEa65aA58F8AE5BE2D9d0952A",
+            "crvRewards": "0x689440f2Ff927E1f24c72F1087E1FAF471eCe1c8",
+            "stash": "0x0000000000000000000000000000000000000000",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0x689440f2Ff927E1f24c72F1087E1FAF471eCe1c8"
+                }
+            ],
+            "name": "3pool",
+            "id": 9
+        },
+        {
+            "lptoken": "0xD2967f45c4f384DEEa880F807Be904762a3DeA07",
+            "token": "0x15c2471ef46Fa721990730cfa526BcFb45574576",
+            "gauge": "0xC5cfaDA84E902aD92DD40194f0883ad49639b023",
+            "crvRewards": "0x7A7bBf95C44b144979360C3300B54A7D34b44985",
+            "stash": "0x0000000000000000000000000000000000000000",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0x7A7bBf95C44b144979360C3300B54A7D34b44985"
+                }
+            ],
+            "name": "gusd",
+            "id": 10
+        },
+        {
+            "lptoken": "0x5B5CFE992AdAC0C9D48E05854B2d91C73a003858",
+            "token": "0xe4de776C0eA0974bfA39B8cbB9491091C8cDc1ff",
+            "gauge": "0x2db0E83599a91b508Ac268a6197b8B14F5e72840",
+            "crvRewards": "0x353e489311b21355461353fEC2d02B73EF0eDe7f",
+            "stash": "0x0000000000000000000000000000000000000000",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0x353e489311b21355461353fEC2d02B73EF0eDe7f"
+                }
+            ],
+            "name": "husd",
+            "id": 11
+        },
+        {
+            "lptoken": "0x97E2768e8E73511cA874545DC5Ff8067eB19B787",
+            "token": "0x47941F99F4371CC26637CaEdBbd8Ba5F4bfE5149",
+            "gauge": "0xC2b1DF84112619D190193E48148000e3990Bf627",
+            "crvRewards": "0xa50e9071aCaD20b31cd2bbe4dAa816882De82BBe",
+            "stash": "0x0000000000000000000000000000000000000000",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0xa50e9071aCaD20b31cd2bbe4dAa816882De82BBe"
+                }
+            ],
+            "name": "usdk",
+            "id": 12
+        },
+        {
+            "lptoken": "0x4f3E8F405CF5aFC05D68142F3783bDfE13811522",
+            "token": "0x3689f325E88c2363274E5F3d44b6DaB8f9e1f524",
+            "gauge": "0xF98450B5602fa59CC66e1379DFfB6FDDc724CfC4",
+            "crvRewards": "0x4a2631d090e8b40bBDe245e687BF09e5e534A239",
+            "stash": "0x0000000000000000000000000000000000000000",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0x4a2631d090e8b40bBDe245e687BF09e5e534A239"
+                }
+            ],
+            "name": "usdn",
+            "id": 13
+        },
+        {
+            "lptoken": "0x1AEf73d49Dedc4b1778d0706583995958Dc862e6",
+            "token": "0xd34d466233c5195193dF712936049729140DBBd7",
+            "gauge": "0x5f626c30EC1215f4EdCc9982265E8b1F411D1352",
+            "crvRewards": "0xDBFa6187C79f4fE4Cda20609E75760C5AaE88e52",
+            "stash": "0x2eEa402ff31c580630b8545A33EDc00881E6949c",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0xDBFa6187C79f4fE4Cda20609E75760C5AaE88e52"
+                }
+            ],
+            "name": "musd",
+            "id": 14
+        },
+        {
+            "lptoken": "0xC2Ee6b0334C261ED60C72f6054450b61B8f18E35",
+            "token": "0x8b876C2C02B1f2Ac6Ec207B7f2f06034A4316A87",
+            "gauge": "0x4dC4A289a8E33600D8bD4cf5F6313E43a37adec7",
+            "crvRewards": "0xedfCCF611D7c40F43e77a1340cE2C29EEEC27205",
+            "stash": "0x3a076e8F088bFa7a43e1209B2E460927071e15F2",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0xedfCCF611D7c40F43e77a1340cE2C29EEEC27205"
+                }
+            ],
+            "name": "rsv",
+            "id": 15
+        },
+        {
+            "lptoken": "0x64eda51d3Ad40D56b9dFc5554E06F94e1Dd786Fd",
+            "token": "0x36CED690A1516861f26755b978EE62c1157CFFF9",
+            "gauge": "0x6828bcF74279eE32f2723eC536c22c51Eed383C6",
+            "crvRewards": "0x081A6672f07B615B402e7558a867C97FA080Ce35",
+            "stash": "0x21FdcdeBf375e67219c1Bfa266BCfDaA36a2b4Fe",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0x081A6672f07B615B402e7558a867C97FA080Ce35"
+                }
+            ],
+            "name": "tbtc",
+            "id": 16
+        },
+        {
+            "lptoken": "0x3a664Ab939FD8482048609f652f9a0B0677337B9",
+            "token": "0x06f4fFa5C3636AaA5C30B3DB97bfd1cd9Ac24A19",
+            "gauge": "0xAEA6c312f4b3E04D752946d329693F7293bC2e6D",
+            "crvRewards": "0x1992b82A8cCFC8f89785129D6403b13925d6226E",
+            "stash": "0x07815651B8F1c5bE84797840543F304b7F1aeC2a",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0x1992b82A8cCFC8f89785129D6403b13925d6226E"
+                }
+            ],
+            "name": "dusd",
+            "id": 17
+        },
+        {
+            "lptoken": "0xDE5331AC4B3630f94853Ff322B66407e0D6331E8",
+            "token": "0x21Cce64289407081744F087950b9DB32906470fC",
+            "gauge": "0xd7d147c6Bb90A718c3De8C0568F9B560C79fa416",
+            "crvRewards": "0x2d3C90AEB11D1393CA839Afc9587515B1325D77A",
+            "stash": "0x930CfB64130a90d42eD37d4616792C9dEB791faf",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0x2d3C90AEB11D1393CA839Afc9587515B1325D77A"
+                }
+            ],
+            "name": "pbtc",
+            "id": 18
+        },
+        {
+            "lptoken": "0x410e3E86ef427e30B9235497143881f717d93c2A",
+            "token": "0x2E1f902b9067b5fDd7AF29ef05D4fF6212588388",
+            "gauge": "0xdFc7AdFa664b08767b735dE28f9E84cd30492aeE",
+            "crvRewards": "0x61D741045cCAA5a215cF4E5e55f20E1199B4B843",
+            "stash": "0xd852eFBEd0f49a065194ca92c9F305DE6DdCbF35",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0x61D741045cCAA5a215cF4E5e55f20E1199B4B843"
+                }
+            ],
+            "name": "bbtc",
+            "id": 19
+        },
+        {
+            "lptoken": "0x2fE94ea3d5d4a175184081439753DE15AeF9d614",
+            "token": "0xc1C030139eEc070Ed8FD092CC8C273C638A18bBe",
+            "gauge": "0x11137B10C210b579405c21A07489e28F3c040AB1",
+            "crvRewards": "0xeeeCE77e0bc5e59c77fc408789A9A172A504bD2f",
+            "stash": "0x9a669fb0191D977e588b20CdA3C52EDbC6c9926c",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0xeeeCE77e0bc5e59c77fc408789A9A172A504bD2f"
+                }
+            ],
+            "name": "obtc",
+            "id": 20
+        },
+        {
+            "lptoken": "0x94e131324b6054c0D789b190b2dAC504e4361b53",
+            "token": "0x67c4f788FEB82FAb27E3007daa3d7b90959D5b89",
+            "gauge": "0x3B7020743Bc2A4ca9EaF9D0722d42E20d6935855",
+            "crvRewards": "0xd4Be1911F8a0df178d6e7fF5cE39919c273E2B7B",
+            "stash": "0x6249fD91fE9FF597399c1B192D5A25Cd22Eba6dd",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0xd4Be1911F8a0df178d6e7fF5cE39919c273E2B7B"
+                }
+            ],
+            "name": "ust",
+            "id": 21
+        },
+        {
+            "lptoken": "0x194eBd173F6cDacE046C53eACcE9B953F28411d1",
+            "token": "0xd7E2b9494c529b42Dea53EF6a237C16502E6A927",
+            "gauge": "0x90Bb609649E0451E5aD952683D64BD2d1f245840",
+            "crvRewards": "0xcB8F69E0064d8cdD29cbEb45A14cf771D904BcD3",
+            "stash": "0x007Cc4b4E9d9D088a9ae0e5261995D69e93B8E4C",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0xcB8F69E0064d8cdD29cbEb45A14cf771D904BcD3"
+                }
+            ],
+            "name": "eurs",
+            "id": 22
+        },
+        {
+            "lptoken": "0xA3D87FffcE63B53E0d54fAa1cc983B7eB0b74A9c",
+            "token": "0xAF1d4C576bF55f6aE493AEebAcC3a227675e5B98",
+            "gauge": "0x3C0FFFF15EA30C35d7A85B85c0782D6c94e1d238",
+            "crvRewards": "0x192469CadE297D6B21F418cFA8c366b63FFC9f9b",
+            "stash": "0x1e6f5B8b4CAc5806D182B33A35d0fFF5F4004e86",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0x192469CadE297D6B21F418cFA8c366b63FFC9f9b"
+                }
+            ],
+            "name": "seth",
+            "id": 23
+        },
+        {
+            "lptoken": "0xFd2a8fA60Abd58Efe3EeE34dd494cD491dC14900",
+            "token": "0x23F224C37C3A69A058d86a54D3f561295A93d542",
+            "gauge": "0xd662908ADA2Ea1916B3318327A97eB18aD588b5d",
+            "crvRewards": "0xE82c1eB4BC6F92f85BF7EB6421ab3b882C3F5a7B",
+            "stash": "0x5D4CF00939aa5F7C2cEb10c88615E9bcb0dd67fa",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0xE82c1eB4BC6F92f85BF7EB6421ab3b882C3F5a7B"
+                }
+            ],
+            "name": "aave",
+            "id": 24
+        },
+        {
+            "lptoken": "0x06325440D014e39736583c165C2963BA99fAf14E",
+            "token": "0x9518c9063eB0262D791f38d8d6Eb0aca33c63ed0",
+            "gauge": "0x182B723a58739a9c974cFDB385ceaDb237453c28",
+            "crvRewards": "0x0A760466E1B4621579a82a39CB56Dda2F4E70f03",
+            "stash": "0x9710fD4e5CA524f1049EbeD8936c07C81b5EAB9f",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0x0A760466E1B4621579a82a39CB56Dda2F4E70f03"
+                }
+            ],
+            "name": "steth",
+            "id": 25
+        },
+        {
+            "lptoken": "0x02d341CcB60fAaf662bC0554d13778015d1b285C",
+            "token": "0x09CCD0892b696AB21436e51588a7a7f8b649733d",
+            "gauge": "0x462253b8F74B72304c145DB0e4Eebd326B22ca39",
+            "crvRewards": "0xF86AE6790654b70727dbE58BF1a863B270317fD0",
+            "stash": "0xd2D46004b981FdE1e4D39d0C24E1Be1e93689DD9",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0xF86AE6790654b70727dbE58BF1a863B270317fD0"
+                }
+            ],
+            "name": "saave",
+            "id": 26
+        },
+        {
+            "lptoken": "0xaA17A236F2bAdc98DDc0Cf999AbB47D47Fc0A6Cf",
+            "token": "0x7E96955b66c89B931BBDAf187740Cc0fF2602F21",
+            "gauge": "0x6d10ed2cF043E6fcf51A0e7b4C2Af3Fa06695707",
+            "crvRewards": "0x8798b81b0261934aa850C8de8622472bfdc143F4",
+            "stash": "0x423C444589CE5dB1E6F99820A5f95b3a57976598",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0x8798b81b0261934aa850C8de8622472bfdc143F4"
+                }
+            ],
+            "name": "ankreth",
+            "id": 27
+        },
+        {
+            "lptoken": "0x7Eb40E450b9655f4B3cC4259BCC731c63ff55ae6",
+            "token": "0x7a5dC1FA2e1B10194bD2e2e9F1A224971A681444",
+            "gauge": "0x055be5DDB7A925BfEF3417FC157f53CA77cA7222",
+            "crvRewards": "0x24DfFd1949F888F91A0c8341Fc98a3F280a782a8",
+            "stash": "0xBE25313c53360780e03233Cc70a4409367EC15aE",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0x24DfFd1949F888F91A0c8341Fc98a3F280a782a8"
+                }
+            ],
+            "name": "usdp",
+            "id": 28
+        },
+        {
+            "lptoken": "0x5282a4eF67D9C33135340fB3289cc1711c13638C",
+            "token": "0x912EC00eaEbf3820a9B0AC7a5E15F381A1C91f22",
+            "gauge": "0xF5194c3325202F456c95c1Cf0cA36f8475C1949F",
+            "crvRewards": "0x3E03fFF82F77073cc590b656D42FceB12E4910A8",
+            "stash": "0x3aEaAB3eF0b5a484d8A2380215eA0A64d3101A6D",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0x3E03fFF82F77073cc590b656D42FceB12E4910A8"
+                }
+            ],
+            "name": "ironbank",
+            "id": 29
+        },
+        {
+            "lptoken": "0xcee60cFa923170e4f8204AE08B4fA6A3F5656F3a",
+            "token": "0xD37969740d78C94C648d74671B8BE31eF43c30aB",
+            "gauge": "0xFD4D8a17df4C27c1dD245d153ccf4499e806C87D",
+            "crvRewards": "0x9700152175dc22E7d1f3245fE3c1D2cfa3602548",
+            "stash": "0x63201dc22e52985153E038086c448252d44Bed40",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0x9700152175dc22E7d1f3245fE3c1D2cfa3602548"
+                }
+            ],
+            "name": "link",
+            "id": 30
+        },
+        {
+            "lptoken": "0xEcd5e75AFb02eFa118AF914515D6521aaBd189F1",
+            "token": "0x0A2eA49EB5F9e23058deffD509D13DDd553c2A19",
+            "gauge": "0x359FD5d6417aE3D8D6497d9B2e7A890798262BA4",
+            "crvRewards": "0x308b48F037AAa75406426dACFACA864ebd88eDbA",
+            "stash": "0x12566645C209C1518BD25BdD3B0fd0bAe0910344",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0x308b48F037AAa75406426dACFACA864ebd88eDbA"
+                }
+            ],
+            "name": "tusd",
+            "id": 31
+        },
+        {
+            "lptoken": "0xd632f22692FaC7611d2AA1C0D552930D43CAEd3B",
+            "token": "0xbE0F6478E0E4894CFb14f32855603A083A57c7dA",
+            "gauge": "0x72E158d38dbd50A483501c24f792bDAAA3e7D55C",
+            "crvRewards": "0xB900EF131301B307dB5eFcbed9DBb50A3e209B2e",
+            "stash": "0x10a63847e6cdD2b07e0a22D1f30eB037a72eB790",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0xB900EF131301B307dB5eFcbed9DBb50A3e209B2e"
+                }
+            ],
+            "name": "frax",
+            "id": 32
+        },
+        {
+            "lptoken": "0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA",
+            "token": "0xFB9B2f06FDb404Fd3E2278E9A9edc8f252F273d0",
+            "gauge": "0x9B8519A9a00100720CCdC8a120fBeD319cA47a14",
+            "crvRewards": "0x2ad92A7aE036a038ff02B96c88de868ddf3f8190",
+            "stash": "0x06D972728A9d05CA6F27EDc01e20b50A60b1Deed",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0x2ad92A7aE036a038ff02B96c88de868ddf3f8190"
+                }
+            ],
+            "name": "lusd",
+            "id": 33
+        },
+        {
+            "lptoken": "0x4807862AA8b2bF68830e4C8dc86D0e9A998e085a",
+            "token": "0x02D784f98A312aF3e2771297Feff1Da8273e4F29",
+            "gauge": "0xd4B22fEdcA85E684919955061fDf353b9d38389b",
+            "crvRewards": "0xbD223812d360C9587921292D0644D18aDb6a2ad0",
+            "stash": "0xBE3ED241c90F39cC50450C4937523FCC8d3e9bbc",
+            "rewards": [
+                {
+                    "rToken": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "rAddress": "0xbD223812d360C9587921292D0644D18aDb6a2ad0"
+                }
+            ],
+            "name": "busdv2",
+            "id": 34
+        },
+        {
+          "lptoken": "0x53a901d48795C58f485cBB38df08FA96a24669D5",
+          "token": "0x7ADd8D0E923CB692DF6bC65d96d510f0E2fC37af",
+          "gauge": "0x824F13f1a2F29cFEEa81154b46C0fc820677A637",
+          "crvRewards": "0x61dB6c2321f784c8fAb8d5eF80f58F27C831dCc8",
+          "stash": "0x644C8d1eD4b6aA68738a93C5c13c7fC19e126587",
+          "name": "reth",
+          "id": 35
+        },
+        {
+          "lptoken": "0x43b4FdFD4Ff969587185cDB6f0BD875c5Fc83f8c",
+          "token": "0xCA3D9F45FfA69ED454E66539298709cb2dB8cA61",
+          "gauge": "0x9582C4ADACB3BCE56Fea3e590F05c3ca2fb9C477",
+          "crvRewards": "0x02E2151D4F351881017ABdF2DD2b51150841d5B3",
+          "stash": "0x521e6EEfDa35f7228f8f83462552bDB41D64d86B",
+          "name": "alusd",
+          "id": 36
+        },
+        {
+          "lptoken": "0xcA3d75aC011BF5aD07a98d02f18225F9bD9A6BDF",
+          "token": "0x18684099414dcEF486F4FA5b4e44e6eA53C8c554",
+          "gauge": "0x6955a55416a06839309018A8B0cB72c4DDC11f15",
+          "crvRewards": "0x5Edced358e6C0B435D53CC30fbE6f5f0833F404F",
+          "stash": "0x35e86E54eCb0227fe33382c35E12856cF227E9ce",
+          "name": "tricrypto",
+          "id": 37
+        }
+    ]
+}

@@ -38,37 +38,18 @@ contract ClaimZap{
     using SafeMath for uint256;
 
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
+    address public constant cvx = address(0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B);
+    address public constant cvxCrv = address(0x62B9c7356A2Dc64a1969e19C23e4f579F9810Aa7);
+    address public constant crvDeposit = address(0x8014595F2AB54cD7c604B00E9fb932176fDc86Ae);
+    address public constant cvxCrvRewards = address(0x3Fe65692bfCD0e6CF84cB1E7d24108E434A7587e);
+    address public constant cvxRewards = address(0xCF50b810E57Ac33B91dCF525C6ddd9881B139332);
 
-    address public owner;
-    address public cvx;
-    address public cvxRewards;
-    address public cvxCrvRewards;
+    address public immutable owner;
     address public chefRewards;
-    address public crvDeposit;
-    address public cvxCrv;
 
-    constructor(address _cvxRewards, address _cvxCrvRewards, address _chefRewards, address _cvx, address _cvxCrv, address _crvDeposit) public {
+    constructor() public {
         owner = msg.sender;
-        cvxRewards = _cvxRewards;
-        cvxCrvRewards = _cvxCrvRewards;
-        chefRewards = _chefRewards;
-        cvx = _cvx;
-        cvxCrv = _cvxCrv;
-        crvDeposit = _crvDeposit;
-    }
-
-    function setCvxRewards(address _rewards) external {
-        require(msg.sender == owner, "!auth");
-        cvxRewards = _rewards;
-        IERC20(cvx).safeApprove(cvxRewards, 0);
-        IERC20(cvx).safeApprove(cvxRewards, uint256(-1));
-    }
-
-    function setCvxCrvRewards(address _rewards) external {
-        require(msg.sender == owner, "!auth");
-        cvxCrvRewards = _rewards;
-        IERC20(cvxCrv).safeApprove(cvxCrvRewards, 0);
-        IERC20(cvxCrv).safeApprove(cvxCrvRewards, uint256(-1));
+        chefRewards = address(0x5F465e9fcfFc217c5849906216581a657cd60605);
     }
 
     function setChefRewards(address _rewards) external {
@@ -78,6 +59,8 @@ contract ClaimZap{
 
     function setApprovals() external {
         require(msg.sender == owner, "!auth");
+        IERC20(crv).safeApprove(crvDeposit, 0);
+        IERC20(crv).safeApprove(crvDeposit, uint256(-1));
         IERC20(cvx).safeApprove(cvxRewards, 0);
         IERC20(cvx).safeApprove(cvxRewards, uint256(-1));
         IERC20(cvxCrv).safeApprove(cvxCrvRewards, 0);
