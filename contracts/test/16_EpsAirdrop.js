@@ -17,8 +17,8 @@ contract("Airdrop Test", async accounts => {
   it("should claim airdrop for all users", async () => {
 
     let deployer = "0x947B7742C403f20e5FaCcDAc5E092C943E7D0277";
-
-    //system
+    var dropAddresses = Object.keys(droplist.users);
+    //system    
     let eps = await IERC20.at("0xA7f552078dcC247C2684336020c03648500C6d9F");
     let factory = await MerkleAirdropFactory.at("0xF403C135812408BFbE8713b5A23a04b3D48AAE31");
     //await factory.CreateMerkleAirdrop();
@@ -34,14 +34,21 @@ contract("Airdrop Test", async accounts => {
     console.log("airdrop at: " +airdrop.address);
 
     // //set reward token
-    await airdrop.setRewardToken(eps.address,{from:deployer});
+    // await airdrop.setRewardToken(eps.address,{from:deployer});
 
     // //transfer eps
-    var epsbalance = await eps.balanceOf(deployer);
-    await eps.transfer(airdrop.address,epsbalance,{from:deployer});
-    epsbalance = await eps.balanceOf(airdrop.address);
+    //var epsbalance = await eps.balanceOf(deployer);
+    // await eps.transfer(airdrop.address,epsbalance,{from:deployer});
+    var epsbalance = await eps.balanceOf(airdrop.address);
     console.log("eps drop total: " +epsbalance);
-
+    var total = new BN(0);
+    for(var i = 0; i < dropAddresses.length; i++){
+        var userAmount = droplist.users[dropAddresses[i]].amount;
+        total = total.add(new BN(userAmount.toString()));
+    }
+    console.log("total from drop data: " +total.toString());
+    assert.equal(epsbalance.toString(),total.toString(),"address balance and drop data balance dont match");
+    
     //set merkle root
     await airdrop.setRoot(droplist.root,{from:deployer})
     let mroot = await airdrop.merkleRoot();
@@ -53,7 +60,7 @@ contract("Airdrop Test", async accounts => {
     let multicallerview = await MulticallerView.at("0x1Ee38d535d541c55C9dae27B12edf090C608E6Fb");
 
     //get balances
-    var dropAddresses = Object.keys(droplist.users);
+    
 
     //claiming
     console.log("claiming for " +dropAddresses.length +" users");
@@ -68,7 +75,7 @@ contract("Airdrop Test", async accounts => {
         var proof = info.proof;
         proof = proof.map(e=>Buffer.from(e,'hex'));
 
-        // console.log("claiming " +i +" amount: " +amount +"  user: " +dropAddresses[i]);
+       // console.log("claiming " +i +" amount: " +amount +"  user: " +dropAddresses[i]);
         // await airdrop.claim(proof,dropAddresses[i],amount);
         // console.log("claimed " +i);
         var balancecalldata = eps.contract.methods.balanceOf(dropAddresses[i]).encodeABI();
