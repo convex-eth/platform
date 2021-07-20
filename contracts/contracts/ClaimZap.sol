@@ -32,6 +32,16 @@ interface ICvxCrvDeposit{
     function deposit(uint256, bool) external;
 }
 
+interface ISwapExchange {
+    function swapExactTokensForTokens(
+        uint256,
+        uint256,
+        address[] calldata,
+        address,
+        uint256
+    ) external;
+}
+
 contract ClaimZap{
     using SafeERC20 for IERC20;
     using Address for address;
@@ -44,48 +54,46 @@ contract ClaimZap{
     address public constant cvxCrvRewards = address(0x3Fe65692bfCD0e6CF84cB1E7d24108E434A7587e);
     address public constant cvxRewards = address(0xCF50b810E57Ac33B91dCF525C6ddd9881B139332);
 
+    address public constant exchange = address(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
+
     address public immutable owner;
-    address public chefRewards;
 
     constructor() public {
         owner = msg.sender;
-        chefRewards = address(0x5F465e9fcfFc217c5849906216581a657cd60605);
-    }
-
-    function setChefRewards(address _rewards) external {
-        require(msg.sender == owner, "!auth");
-        chefRewards = _rewards;
     }
 
     function setApprovals() external {
         require(msg.sender == owner, "!auth");
         IERC20(crv).safeApprove(crvDeposit, 0);
         IERC20(crv).safeApprove(crvDeposit, uint256(-1));
+        IERC20(crv).safeApprove(exchange, 0);
+        IERC20(crv).safeApprove(exchange, uint256(-1));
+
         IERC20(cvx).safeApprove(cvxRewards, 0);
         IERC20(cvx).safeApprove(cvxRewards, uint256(-1));
+
         IERC20(cvxCrv).safeApprove(cvxCrvRewards, 0);
         IERC20(cvxCrv).safeApprove(cvxCrvRewards, uint256(-1));
     }
 
     function claimRewards(
         address[] calldata rewardContracts,
-        uint256[] calldata chefIds,
         bool claimCvx,
         bool claimCvxStake,
         bool claimcvxCrv,
+        bool lockCrvDeposit,
         uint256 depositCrvMaxAmount,
+        uint256 minAmountOut,
         uint256 depositCvxMaxAmount
         ) external{
+
+        uint256 crvBalance = IERC20(crv).balanceOf(msg.sender);
+        uint256 cvxBalance = IERC20(cvx).balanceOf(msg.sender);
 
         //claim from main curve LP pools
         for(uint256 i = 0; i < rewardContracts.length; i++){
             if(rewardContracts[i] == address(0)) break;
             IBasicRewards(rewardContracts[i]).getReward(msg.sender,true);
-        }
-
-        //claim from master chef
-        for(uint256 i = 0; i < chefIds.length; i++){
-            IChefRewards(chefRewards).claim(chefIds[i],msg.sender);
         }
 
         //claim (and stake) from cvx rewards
@@ -102,13 +110,21 @@ contract ClaimZap{
 
         //lock upto given amount of crv and stake
         if(depositCrvMaxAmount > 0){
-            uint256 crvBalance = IERC20(crv).balanceOf(msg.sender);
+            crvBalance = IERC20(crv).balanceOf(msg.sender).sub(crvBalance);
             crvBalance = Math.min(crvBalance, depositCrvMaxAmount);
             if(crvBalance > 0){
                 //pull crv
                 IERC20(crv).safeTransferFrom(msg.sender, address(this), crvBalance);
-                //deposit
-                ICvxCrvDeposit(crvDeposit).deposit(crvBalance,true);
+                if(minAmountOut > 0){
+                    //swap
+                    address[] memory path = new address[](2);
+                    path[0] = crv;
+                    path[1] = cvxCrv;
+                    ISwapExchange(exchange).swapExactTokensForTokens(crvBalance,minAmountOut,path,address(this),now.add(1800));
+                }else{
+                    //deposit
+                    ICvxCrvDeposit(crvDeposit).deposit(crvBalance,lockCrvDeposit);
+                }
                 //get cvxamount
                 uint256 cvxCrvBalance = IERC20(cvxCrv).balanceOf(address(this));
                 //stake for msg.sender
@@ -118,7 +134,7 @@ contract ClaimZap{
 
         //stake upto given amount of cvx
         if(depositCvxMaxAmount > 0){
-            uint256 cvxBalance = IERC20(cvx).balanceOf(msg.sender);
+            cvxBalance = IERC20(cvx).balanceOf(msg.sender).sub(cvxBalance);
             cvxBalance = Math.min(cvxBalance, depositCvxMaxAmount);
             if(cvxBalance > 0){
                 //pull cvx
@@ -128,4 +144,5 @@ contract ClaimZap{
             }
         }
     }
+
 }
