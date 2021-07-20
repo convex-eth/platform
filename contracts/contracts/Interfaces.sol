@@ -2,32 +2,6 @@
 pragma solidity 0.6.12;
 
 
-/**
- * @dev Standard math utilities missing in the Solidity language.
- */
-library MathUtil {
-    /**
-     * @dev Returns the smallest of two numbers.
-     */
-    function min(uint256 a, uint256 b) internal pure returns (uint256) {
-        return a < b ? a : b;
-    }
-}
-
-contract ReentrancyGuard {
-    uint256 private _guardCounter;
-
-    constructor () internal {
-        _guardCounter = 1;
-    }
-
-    modifier nonReentrant() {
-        _guardCounter += 1;
-        uint256 localCounter = _guardCounter;
-        _;
-        require(localCounter == _guardCounter, "ReentrancyGuard: reentrant call");
-    }
-}
 
 interface ICurveGauge {
     function deposit(uint256) external;
