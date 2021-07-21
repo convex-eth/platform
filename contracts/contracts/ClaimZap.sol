@@ -17,6 +17,7 @@ library Math {
 
 interface IBasicRewards{
     function getReward(address _account, bool _claimExtras) external;
+    function getReward(address _account) external;
     function stakeFor(address, uint256) external;
 }
 
@@ -78,6 +79,7 @@ contract ClaimZap{
 
     function claimRewards(
         address[] calldata rewardContracts,
+        address[] calldata extraRewardContracts,
         bool claimCvx,
         bool claimCvxStake,
         bool claimcvxCrv,
@@ -94,6 +96,11 @@ contract ClaimZap{
         for(uint256 i = 0; i < rewardContracts.length; i++){
             if(rewardContracts[i] == address(0)) break;
             IBasicRewards(rewardContracts[i]).getReward(msg.sender,true);
+        }
+
+        for(uint256 i = 0; i < extraRewardContracts.length; i++){
+            if(extraRewardContracts[i] == address(0)) break;
+            IBasicRewards(extraRewardContracts[i]).getReward(msg.sender);
         }
 
         //claim (and stake) from cvx rewards
