@@ -39,6 +39,20 @@ interface I2CurveFi {
     function claimable_rewards(address,address) external view returns (uint256);    
 }
 
+interface ICurveAavePool {
+    function get_virtual_price() external view returns (uint256);
+
+    function add_liquidity(
+        // aave pool
+        uint256[3] calldata amounts,
+        uint256 min_mint_amount,
+        bool use_underlying
+    ) external;
+    
+    function claimable_tokens(address) external view returns (uint256);    
+    function claimable_rewards(address,address) external view returns (uint256);    
+}
+
 interface ISPool {
     function get_virtual_price() external view returns (uint256);
 
