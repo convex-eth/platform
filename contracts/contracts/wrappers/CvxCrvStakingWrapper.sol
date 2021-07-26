@@ -18,7 +18,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 //other considerations: might be worth refactoring to use earned() during checkpoints instead of claiming rewards each time
 
 //Based on Curve.fi's gauge wrapper implementations at https://github.com/curvefi/curve-dao-contracts/tree/master/contracts/gauges/wrappers
-contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
+contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard, Ownable {
     using SafeERC20
     for IERC20;
     using Address
@@ -39,13 +39,12 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
     mapping(address => uint256) public cvx_claimable_reward;
 
     //constants/immutables
-    address public constant convexBooster = address(0xF403C135812408BFbE8713b5A23a04b3D48AAE31);
+    address public constant crvDepositor = address(0x8014595F2AB54cD7c604B00E9fb932176fDc86Ae);
+    address public constant cvxCrvStaking = address(0x3Fe65692bfCD0e6CF84cB1E7d24108E434A7587e);
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
     address public constant cvx = address(0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B);
-    address public immutable curveToken;
-    address public immutable convexToken;
-    address public immutable convexPool;
-    uint256 public immutable convexPoolId;
+    address public constant cvxCrv = address(0x62B9c7356A2Dc64a1969e19C23e4f579F9810Aa7);
+
     address public immutable collateralVault;
 
     //rewards
@@ -57,18 +56,14 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
     event Deposited(address indexed _user, address indexed _account, uint256 _amount, bool _wrapped);
     event Withdrawn(address indexed _user, uint256 _amount, bool _unwrapped);
 
-    constructor(address _curveToken, address _convexToken, address _convexPool, uint256 _poolId, address _vault)
+    constructor(address _vault)
     public
     ERC20(
         string(
-            abi.encodePacked("Staked ", ERC20(_convexToken).name())
+            abi.encodePacked("Staked ", ERC20(cvxCrv).name())
         ),
-        string(abi.encodePacked("stk", ERC20(_convexToken).symbol()))
+        string(abi.encodePacked("stk", ERC20(cvxCrv).symbol()))
     ) Ownable() {
-        curveToken = _curveToken;
-        convexToken = _convexToken;
-        convexPool = _convexPool;
-        convexPoolId = _poolId;
         collateralVault = _vault;
     }
 
@@ -77,29 +72,28 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
     }
 
     function setApprovals() external {
-        IERC20(curveToken).safeApprove(convexBooster, 0);
-        IERC20(curveToken).safeApprove(convexBooster, uint256(-1));
-        IERC20(convexToken).safeApprove(convexPool, 0);
-        IERC20(convexToken).safeApprove(convexPool, uint256(-1));
+        IERC20(crv).safeApprove(crvDepositor, 0);
+        IERC20(crv).safeApprove(crvDepositor, uint256(-1));
+        IERC20(cvxCrv).safeApprove(cvxCrvStaking, 0);
+        IERC20(cvxCrv).safeApprove(cvxCrvStaking, uint256(-1));
     }
 
     function addRewards() external {
-        address mainPool = convexPool;
 
         if (rewards.length == 0) {
             rewards.push(
                 RewardType({
                     reward_token: crv,
-                    reward_pool: mainPool,
+                    reward_pool: cvxCrvStaking,
                     reward_integral: 0
                 })
             );
         }
 
-        uint256 extraCount = IRewardStaking(mainPool).extraRewardsLength();
+        uint256 extraCount = IRewardStaking(cvxCrvStaking).extraRewardsLength();
         uint256 startIndex = rewards.length - 1;
         for (uint256 i = startIndex; i < extraCount; i++) {
-            address extraPool = IRewardStaking(mainPool).extraRewards(i);
+            address extraPool = IRewardStaking(cvxCrvStaking).extraRewards(i);
             rewards.push(
                 RewardType({
                     reward_token: IRewardStaking(extraPool).rewardToken(),
@@ -197,7 +191,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
 
     function earned(address _account) external view returns(uint256[] memory claimable) {
         uint256 supply = totalSupply();
-        // uint256 depositedBalance = _getDepositedBalance(_account);
+        //uint256 depositedBalance = _getDepositedBalance(_account);
         uint256 rewardCount = rewards.length;
         claimable = new uint256[](rewardCount + 1);
 
@@ -247,8 +241,8 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
         _checkpoint([_to, address(0)]);
         if (_amount > 0) {
             _mint(_to, _amount);
-            IERC20(curveToken).safeTransferFrom(msg.sender, address(this), _amount);
-            IConvexDeposits(convexBooster).deposit(convexPoolId, _amount, true);
+            IERC20(crv).safeTransferFrom(msg.sender, address(this), _amount);
+            IConvexDeposits(crvDepositor).deposit(_amount, false, cvxCrvStaking);
         }
 
         emit Deposited(msg.sender, _to, _amount, true);
@@ -262,8 +256,8 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
 
         if (_amount > 0) {
             _mint(_to, _amount);
-            IERC20(convexToken).safeTransferFrom(msg.sender, address(this), _amount);
-            IRewardStaking(convexPool).stake(_amount);
+            IERC20(cvxCrv).safeTransferFrom(msg.sender, address(this), _amount);
+            IRewardStaking(cvxCrvStaking).stake(_amount);
         }
 
         emit Deposited(msg.sender, _to, _amount, false);
@@ -275,25 +269,11 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
 
         if (_amount > 0) {
             _burn(msg.sender, _amount);
-            IRewardStaking(convexPool).withdraw(_amount, false);
-            IERC20(convexToken).safeTransfer(msg.sender, _amount);
+            IRewardStaking(cvxCrvStaking).withdraw(_amount, false);
+            IERC20(cvxCrv).safeTransfer(msg.sender, _amount);
         }
 
         emit Withdrawn(msg.sender, _amount, false);
-    }
-
-    //withdraw to underlying curve lp token
-    function withdrawAndUnwrap(uint256 _amount) external nonReentrant {
-        _checkpoint([address(msg.sender), address(0)]);
-
-        if (_amount > 0) {
-            _burn(msg.sender, _amount);
-            IRewardStaking(convexPool).withdrawAndUnwrap(_amount, false);
-            IERC20(curveToken).safeTransfer(msg.sender, _amount);
-        }
-
-        //events
-        emit Withdrawn(msg.sender, _amount, true);
     }
 
     function _beforeTokenTransfer(address _from, address _to, uint256 _amount) internal override {

@@ -9,15 +9,16 @@ const ConvexToken = artifacts.require("ConvexToken");
 const cvxCrvToken = artifacts.require("cvxCrvToken");
 const CurveVoterProxy = artifacts.require("CurveVoterProxy");
 const BaseRewardPool = artifacts.require("BaseRewardPool");
-const ConvexStakingWrapper = artifacts.require("ConvexStakingWrapper");
+const CvxCrvStakingWrapper = artifacts.require("CvxCrvStakingWrapper");
 const IERC20 = artifacts.require("IERC20");
 const ICurveAavePool = artifacts.require("ICurveAavePool");
 const IExchange = artifacts.require("IExchange");
 const IUniswapV2Router01 = artifacts.require("IUniswapV2Router01");
+const CvxMining = artifacts.require("CvxMining");
 
 
-contract("Test stake wrapper", async accounts => {
-  it("should deposit lp tokens and earn rewards while being transferable", async () => {
+contract("Test cvxcrv stake wrapper", async accounts => {
+  it("should deposit cvxcrv and earn rewards while being transferable", async () => {
 
     let deployer = "0x947B7742C403f20e5FaCcDAc5E092C943E7D0277";
     let multisig = "0xa3C5A1e09150B75ff251c1a7815A07182c3de2FB";
@@ -26,9 +27,10 @@ contract("Test stake wrapper", async accounts => {
     //system
     let booster = await Booster.at(contractList.system.booster);
     let voteproxy = await CurveVoterProxy.at(contractList.system.voteProxy);
+    let crvDeposit = await CrvDepositor.at(contractList.system.crvDepositor);
     let cvx = await ConvexToken.at(contractList.system.cvx);
     let crv = await IERC20.at("0xD533a949740bb3306d119CC777fa900bA034cd52");
-    let stkaave = await IERC20.at("0x4da27a545c0c5B758a6BA100e3a049001de870f5");
+    let threeCrv = await IERC20.at("0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490");
     let cvxCrv = await cvxCrvToken.at(contractList.system.cvxCrv);
     let cvxCrvLP = await IERC20.at(contractList.system.cvxCrvCrvSLP);
     let exchange = await IExchange.at("0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F");
@@ -50,27 +52,29 @@ contract("Test stake wrapper", async accounts => {
     var wethBalance = await weth.balanceOf(deployer);
     console.log("receive weth: " +wethBalance)
     await weth.approve(exchange.address,wethBalance,{from:deployer});
-    await exchange.swapExactTokensForTokens(web3.utils.toWei("10.0", "ether"),0,[weth.address,dai.address],deployer,starttime+3000,{from:deployer});
-    var daibalance = await dai.balanceOf(deployer);
-    console.log("swapped for dai: " +daibalance);
+    await exchange.swapExactTokensForTokens(web3.utils.toWei("10.0", "ether"),0,[weth.address,crv.address],deployer,starttime+3000,{from:deployer});
+    var crvbalance = await crv.balanceOf(deployer);
+    console.log("swapped for crv: " +crvbalance);
 
-    await dai.approve(aaveswap.address,daibalance,{from:deployer});
-    console.log("approved");
-    await aaveswap.add_liquidity([daibalance,0,0],0,true,{from:deployer});
-    console.log("liq added");
-    var lpbalance = await curveAave.balanceOf(deployer);
-    console.log("lpbalance: " +lpbalance);
+    // await crv.approve(crvDeposit.address,crvbalance,{from:deployer});
+    // console.log("approved");
+    // await crvDeposit.deposit(crvbalance,false,addressZero,{from:deployer});
+    // console.log("crv deposited");
+    var crvbalance = await crv.balanceOf(deployer);
+    console.log("crvbalance: " +crvbalance);
 
-    var touserB = lpbalance.div(new BN("3"));
-    await curveAave.transfer(userB,touserB,{from:deployer});
-    lpbalance = await curveAave.balanceOf(deployer);
-    await curveAave.transfer(userA,lpbalance,{from:deployer});
-    var userABalance = await curveAave.balanceOf(userA);
-    var userBBalance = await curveAave.balanceOf(userB);
+    var touserB = crvbalance.div(new BN("3"));
+    await crv.transfer(userB,touserB,{from:deployer});
+    crvbalance = await crv.balanceOf(deployer);
+    await crv.transfer(userA,crvbalance,{from:deployer});
+    var userABalance = await crv.balanceOf(userA);
+    var userBBalance = await crv.balanceOf(userB);
     console.log("userA: " +userABalance +",  userB: " +userBBalance);
 
-
-    let staker = await ConvexStakingWrapper.new(curveAave.address,convexAave.address,convexAaveRewards.address, aavepool, addressZero,{from:deployer});
+    let lib = await CvxMining.new();
+    console.log("mining lib at: " +lib.address);
+    await CvxCrvStakingWrapper.link("CvxMining", lib.address);
+    let staker = await CvxCrvStakingWrapper.new(addressZero,{from:deployer});
     console.log("staker token: " +staker.address);
     await staker.name().then(a=>console.log("name: " +a));
     await staker.symbol().then(a=>console.log("symbol: " +a));
@@ -84,17 +88,17 @@ contract("Test stake wrapper", async accounts => {
     }
 
     //user A will deposit curve tokens and user B convex
-    await curveAave.approve(staker.address,userABalance,{from:userA});
-    await curveAave.approve(booster.address,userBBalance,{from:userB});
-    await convexAave.approve(staker.address,userBBalance,{from:userB});
+    await crv.approve(staker.address,userABalance,{from:userA});
+    await crv.approve(crvDeposit.address,userBBalance,{from:userB});
+    await cvxCrv.approve(staker.address,userBBalance,{from:userB});
     console.log("approved booster and staker");
-    await booster.depositAll(aavepool, false, {from:userB});
-    console.log("deposited into convex");
+    await crvDeposit.deposit(userBBalance,false,addressZero,{from:userB});
+    console.log("deposited into convex for user b");
 
 
     await staker.deposit(userABalance,userA,{from:userA});
     console.log("user A deposited")
-    await convexAave.balanceOf(userB).then(a=>console.log("user b convex aave: " +a));
+    await cvxCrv.balanceOf(userB).then(a=>console.log("user b cvxCrv: " +a));
     await staker.stake(userBBalance,userB,{from:userB});
     console.log("user b staked");
     await staker.totalSupply().then(a=>console.log("staker supply: " +a));
@@ -113,19 +117,19 @@ contract("Test stake wrapper", async accounts => {
     await staker.earned(userA).then(a=>console.log("user a earned: " +a ));
     await crv.balanceOf(userA).then(a=>console.log("user a wallet crv: " +a));
     await cvx.balanceOf(userA).then(a=>console.log("user a wallet cvx: " +a));
-    await stkaave.balanceOf(userA).then(a=>console.log("user a wallet stkaave: " +a));
+    await threeCrv.balanceOf(userA).then(a=>console.log("user a wallet threeCrv: " +a));
     console.log("-----");
     await staker.earned(userB).then(a=>console.log("user b earned: " +a ));
     await crv.balanceOf(userB).then(a=>console.log("user b wallet crv: " +a));
     await cvx.balanceOf(userB).then(a=>console.log("user b wallet cvx: " +a));
-    await stkaave.balanceOf(userB).then(a=>console.log("user b wallet stkaave: " +a));
+    await threeCrv.balanceOf(userB).then(a=>console.log("user b wallet threeCrv: " +a));
 
     console.log("checkpoint");
     await staker.user_checkpoint([userA,addressZero]);
     await staker.user_checkpoint([userB,addressZero]);
     await crv.balanceOf(staker.address).then(a=>console.log("staker crv: " +a));
     await cvx.balanceOf(staker.address).then(a=>console.log("staker cvx: " +a));
-    await stkaave.balanceOf(staker.address).then(a=>console.log("staker stkaave: " +a));
+    await threeCrv.balanceOf(staker.address).then(a=>console.log("staker threeCrv: " +a));
     for(var i = 0; i < rewardCount; i++){
       var rInfo = await staker.rewards(i);
       console.log("rewards " +i +": " +JSON.stringify(rInfo));
@@ -136,42 +140,78 @@ contract("Test stake wrapper", async accounts => {
     await staker.earned(userA).then(a=>console.log("user a earned: " +a ));
     await crv.balanceOf(userA).then(a=>console.log("user a wallet crv: " +a));
     await cvx.balanceOf(userA).then(a=>console.log("user a wallet cvx: " +a));
-    await stkaave.balanceOf(userA).then(a=>console.log("user a wallet stkaave: " +a));
+    await threeCrv.balanceOf(userA).then(a=>console.log("user a wallet threeCrv: " +a));
     console.log("-----");
     await staker.earned(userB).then(a=>console.log("user b earned: " +a ));
     await crv.balanceOf(userB).then(a=>console.log("user b wallet crv: " +a));
     await cvx.balanceOf(userB).then(a=>console.log("user b wallet cvx: " +a));
-    await stkaave.balanceOf(userB).then(a=>console.log("user b wallet stkaave: " +a));
+    await threeCrv.balanceOf(userB).then(a=>console.log("user b wallet threeCrv: " +a));
 
     //test transfering to account C
+    await staker.transfer(userC,userBBalance,{from:userB});
+    console.log("transfer to userC");
+    await staker.earned(userB).then(a=>console.log("user b earned: " +a ));
+    await crv.balanceOf(userB).then(a=>console.log("user b wallet crv: " +a));
+    await cvx.balanceOf(userB).then(a=>console.log("user b wallet cvx: " +a));
+    await threeCrv.balanceOf(userB).then(a=>console.log("user b wallet threeCrv: " +a));
+    console.log("-----");
+    await staker.earned(userC).then(a=>console.log("user c earned: " +a ));
+    await crv.balanceOf(userC).then(a=>console.log("user c wallet crv: " +a));
+    await cvx.balanceOf(userC).then(a=>console.log("user c wallet cvx: " +a));
+    await threeCrv.balanceOf(userC).then(a=>console.log("user c wallet threeCrv: " +a));
+
+    await time.increase(86400);
+    await time.advanceBlock();
+    console.log("\nadvance time...\n");
+
+    await staker.earned(userB).then(a=>console.log("user b earned: " +a ));
+    await crv.balanceOf(userB).then(a=>console.log("user b wallet crv: " +a));
+    await cvx.balanceOf(userB).then(a=>console.log("user b wallet cvx: " +a));
+    await threeCrv.balanceOf(userB).then(a=>console.log("user b wallet threeCrv: " +a));
+    console.log("-----");
+    await staker.earned(userC).then(a=>console.log("user c earned: " +a ));
+    await crv.balanceOf(userC).then(a=>console.log("user c wallet crv: " +a));
+    await cvx.balanceOf(userC).then(a=>console.log("user c wallet cvx: " +a));
+    await threeCrv.balanceOf(userC).then(a=>console.log("user c wallet threeCrv: " +a));
 
 
     //withdraw
     console.log("withdrawing...");
-    await staker.withdrawAndUnwrap(userABalance,{from:userA});
-    await staker.withdraw(userBBalance,{from:userB});
+    await staker.withdraw(userABalance,{from:userA});
+    await staker.withdraw(0,{from:userB});
+    await staker.withdraw(userBBalance,{from:userC});
     await staker.getReward(userA,{from:userA});
     await staker.getReward(userB,{from:userB});
-    console.log("withdrew all");
+    await staker.getReward(userC,{from:userC});
+    console.log("withdrew and claimed all");
+
+    console.log("try claim again");
+    await staker.getReward(userC,{from:userC});
 
     await staker.earned(userA).then(a=>console.log("user a earned: " +a ));
     await crv.balanceOf(userA).then(a=>console.log("user a wallet crv: " +a));
     await cvx.balanceOf(userA).then(a=>console.log("user a wallet cvx: " +a));
-    await stkaave.balanceOf(userA).then(a=>console.log("user a wallet stkaave: " +a));
+    await threeCrv.balanceOf(userA).then(a=>console.log("user a wallet threeCrv: " +a));
     console.log("-----");
     await staker.earned(userB).then(a=>console.log("user b earned: " +a ));
     await crv.balanceOf(userB).then(a=>console.log("user b wallet crv: " +a));
     await cvx.balanceOf(userB).then(a=>console.log("user b wallet cvx: " +a));
-    await stkaave.balanceOf(userB).then(a=>console.log("user b wallet stkaave: " +a));
+    await threeCrv.balanceOf(userB).then(a=>console.log("user b wallet threeCrv: " +a));
+    console.log("-----");
+    await staker.earned(userC).then(a=>console.log("user c earned: " +a ));
+    await crv.balanceOf(userC).then(a=>console.log("user c wallet crv: " +a));
+    await cvx.balanceOf(userC).then(a=>console.log("user c wallet cvx: " +a));
+    await threeCrv.balanceOf(userC).then(a=>console.log("user c wallet threeCrv: " +a));
 
     //check whats left on the staker
     console.log(">>> remaining check <<<<");
     await staker.balanceOf(userA).then(a=>console.log("user a staked: " +a));
     await staker.balanceOf(userB).then(a=>console.log("user b staked: " +a));
+    await staker.balanceOf(userC).then(a=>console.log("user c staked: " +a));
     await staker.totalSupply().then(a=>console.log("remaining supply: " +a));
     await crv.balanceOf(staker.address).then(a=>console.log("remaining crv: " +a));
     await cvx.balanceOf(staker.address).then(a=>console.log("remaining cvx: " +a));
-    await stkaave.balanceOf(staker.address).then(a=>console.log("remaining stkaave: " +a));
+    await threeCrv.balanceOf(staker.address).then(a=>console.log("remaining threeCrv: " +a));
 
   });
 });
