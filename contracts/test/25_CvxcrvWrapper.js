@@ -15,6 +15,7 @@ const ICurveAavePool = artifacts.require("ICurveAavePool");
 const IExchange = artifacts.require("IExchange");
 const IUniswapV2Router01 = artifacts.require("IUniswapV2Router01");
 const CvxMining = artifacts.require("CvxMining");
+const CvxCrvRari = artifacts.require("CvxCrvRari");
 
 
 contract("Test cvxcrv stake wrapper", async accounts => {
@@ -74,7 +75,9 @@ contract("Test cvxcrv stake wrapper", async accounts => {
     let lib = await CvxMining.new();
     console.log("mining lib at: " +lib.address);
     await CvxCrvStakingWrapper.link("CvxMining", lib.address);
-    let staker = await CvxCrvStakingWrapper.new(addressZero,{from:deployer});
+    let staker = await CvxCrvStakingWrapper.new(addressZero,"","",{from:deployer});
+    // await CvxCrvRari.link("CvxMining", lib.address);
+    // let staker = await CvxCrvRari.new(addressZero,{from:deployer});
     console.log("staker token: " +staker.address);
     await staker.name().then(a=>console.log("name: " +a));
     await staker.symbol().then(a=>console.log("symbol: " +a));

@@ -45,6 +45,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard, Ownable {
     address public constant cvx = address(0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B);
     address public constant cvxCrv = address(0x62B9c7356A2Dc64a1969e19C23e4f579F9810Aa7);
 
+    //collateral vault
     address public immutable collateralVault;
 
     //rewards
@@ -56,13 +57,13 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard, Ownable {
     event Deposited(address indexed _user, address indexed _account, uint256 _amount, bool _wrapped);
     event Withdrawn(address indexed _user, uint256 _amount, bool _unwrapped);
 
-    constructor(address _vault)
+    constructor(address _vault, string memory _nameTag, string memory _symbolTag)
     public
     ERC20(
         string(
-            abi.encodePacked("Staked ", ERC20(cvxCrv).name())
+            abi.encodePacked("Staked ", ERC20(cvxCrv).name(), _nameTag)
         ),
-        string(abi.encodePacked("stk", ERC20(cvxCrv).symbol()))
+        string(abi.encodePacked("stk", ERC20(cvxCrv).symbol(), _symbolTag))
     ) Ownable() {
         collateralVault = _vault;
     }
@@ -108,11 +109,18 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard, Ownable {
         return rewards.length;
     }
 
-    function _getDepositedBalance(address _account) internal view returns(uint256) {
+    function _getDepositedBalance(address _account) internal virtual view returns(uint256) {
 
-        //get balance from collateralVault
+        //override and add any balance needed (deposited balance)
 
         return balanceOf(_account);
+    }
+
+    function _getTotalSupply() internal virtual view returns(uint256){
+
+        //override and add any supply needed (interest based growth)
+
+        return totalSupply();
     }
 
     function _calcCvxIntegral(address[2] memory _accounts, uint256[2] memory _balances, uint256 _beforeAmount, uint256 _supply) internal {
@@ -170,9 +178,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard, Ownable {
     }
 
     function _checkpoint(address[2] memory _accounts) internal {
-
-        //total supply may need to be modified in a debt based set up
-        uint256 supply = totalSupply();
+        uint256 supply = _getTotalSupply();
         uint256[2] memory depositedBalance;
         depositedBalance[0] = _getDepositedBalance(_accounts[0]);
         if (_accounts[1] != address(0) && _accounts[1] != collateralVault) {
@@ -190,7 +196,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard, Ownable {
     }
 
     function earned(address _account) external view returns(uint256[] memory claimable) {
-        uint256 supply = totalSupply();
+        uint256 supply = _getTotalSupply();
         //uint256 depositedBalance = _getDepositedBalance(_account);
         uint256 rewardCount = rewards.length;
         claimable = new uint256[](rewardCount + 1);
