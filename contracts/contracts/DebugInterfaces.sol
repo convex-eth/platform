@@ -84,6 +84,7 @@ interface IWalletCheckerDebug{
 interface IVoteStarter{
     function newVote(bytes calldata, string calldata, bool, bool) external returns (uint256);
     function votesLength() external view returns (uint256);
+    function executeVote(uint256 _vid) external;
 }
 
 interface IBurner{
