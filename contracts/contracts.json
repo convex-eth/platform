@@ -523,6 +523,26 @@
                 6, 8, 18
             ],
             "id": 37
+        },
+        {
+            "lptoken": "0xc4AD29ba4B3c580e6D59105FFf484999997675Ff",
+            "token": "0x903C9974aAA431A765e60bC07aF45f0A1B3b61fb",
+            "gauge": "0xDeFd8FdD20e0f34115C7018CCfb655796F6B2168",
+            "crvRewards": "0x9D5C5E364D81DaB193b72db9E9BE9D8ee669B652",
+            "stash": "0xDb1A0Bb8C14Bc7B4eDA5ca95B4A6C6013a7b359D",
+            "swap": "0xD51a44d3FaE010294C616388b506AcdA1bfAAE46",
+            "currency": "USD",
+            "name": "tricrypto2",
+            "isV2": true,
+            "coins": [
+                "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+                "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+                "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+            ],
+            "coinDecimals": [
+                6, 8, 18
+            ],
+            "id": 38
         }
     ]
 }
