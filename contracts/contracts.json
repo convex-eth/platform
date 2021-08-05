@@ -543,6 +543,17 @@
                 6, 8, 18
             ],
             "id": 38
+        },
+        {
+            "lptoken": "0xFD5dB7463a3aB53fD211b4af195c5BCCC1A03890",
+            "token": "0x2b2175AC371Ec2900AC39fb87452340F65CC9895",
+            "gauge": "0xe8060Ad8971450E624d5289A10017dD30F5dA85F",
+            "crvRewards": "0xcB8F69E0064d8cdD29cbEb45A14cf771D904BcD3",
+            "stash": "0x353460EACDAaEC993eCdA986440F4c343BBf6c05",
+            "swap": "0xFD5dB7463a3aB53fD211b4af195c5BCCC1A03890",
+            "currency": "EUR",
+            "name": "eurt",
+            "id": 39
         }
     ]
 }
