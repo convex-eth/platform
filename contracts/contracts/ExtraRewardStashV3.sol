@@ -110,7 +110,7 @@ contract ExtraRewardStashV3 {
     }
 
     function setRewardHook(address _hook) external{
-        //owner of booster can set extra rewards
+        //owner of booster can set reward hook
         require(IDeposit(operator).owner() == msg.sender, "!owner");
         rewardHook = _hook;
     }
