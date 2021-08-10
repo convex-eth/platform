@@ -16,6 +16,7 @@ const ICurveGaugeDebug = artifacts.require("ICurveGaugeDebug");
 const IBaseRewards = artifacts.require("IBaseRewards");
 const TreasuryFunds = artifacts.require("TreasuryFunds");
 const ConvexToken = artifacts.require("ConvexToken");
+const RewardHook = artifacts.require("RewardHook");
 
 contract("Factory Update", async accounts => {
   it("should update stash factory", async () => {
@@ -114,17 +115,24 @@ contract("Factory Update", async accounts => {
     await stash.setExtraReward(weth.address,{from:multisig,gasPrice:0});
     console.log("added weth reward")
 
+    let hook = await RewardHook.new(stash.address, weth.address);
+    console.log("created hook: " +hook.address);
+    await stash.setRewardHook(hook.address,{from:multisig,gasPrice:0});
+    console.log("set hook");
+
     var wethbal = await weth.balanceOf(userA);
     await weth.balanceOf(userA).then(a=>console.log("weth on user A " +a));
-    await weth.transfer(stash.address,wethbal,{from:userA});
-    console.log("transfer to stash");
+    await weth.transfer(hook.address,wethbal,{from:userA});
+    console.log("transfer to hook");
 
     await weth.balanceOf(userA).then(a=>console.log("weth on user A " +a));
     await weth.balanceOf(stash.address).then(a=>console.log("weth on stash: " +a));
+    await weth.balanceOf(hook.address).then(a=>console.log("weth on hook: " +a));
     //earmark
     await booster.earmarkRewards(poolCount-1);
     console.log("earmarked")
     await cvx.balanceOf(stash.address).then(a=>console.log("weth on stash after earmark: " +a));
+    await weth.balanceOf(hook.address).then(a=>console.log("weth on hook after earmark: " +a));
 
     await time.increase(10*86400);
     await time.advanceBlock();

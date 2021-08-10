@@ -52,7 +52,7 @@ contract ExtraRewardStashV3 {
     }
 
     function getName() external pure returns (string memory) {
-        return "ExtraRewardStashV3";
+        return "ExtraRewardStashV3.1";
     }
 
     function tokenCount() external view returns (uint256){
