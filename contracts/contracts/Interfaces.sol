@@ -102,6 +102,7 @@ interface IDeposit{
     function claimRewards(uint256,address) external returns(bool);
     function rewardArbitrator() external returns(address);
     function setGaugeRedirect(uint256 _pid) external returns(bool);
+    function owner() external returns(address);
 }
 
 interface ICrvDeposit{

@@ -2,11 +2,16 @@
 pragma solidity 0.6.12;
 
 import "./Interfaces.sol";
+import "./interfaces/IRewardHook.sol";
 import '@openzeppelin/contracts/math/SafeMath.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/utils/Address.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 
+
+//Stash v3: support for curve gauge reward redirect
+//v3.1: support for arbitrary token rewards outside of gauge rewards
+//      add reward hook to pull rewards during claims
 
 contract ExtraRewardStashV3 {
     using SafeERC20 for IERC20;
@@ -15,7 +20,6 @@ contract ExtraRewardStashV3 {
 
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
     uint256 private constant maxRewards = 8;
-    uint256 private constant WEEK = 7 * 86400;
 
     uint256 public immutable pid;
     address public immutable operator;
@@ -25,13 +29,19 @@ contract ExtraRewardStashV3 {
    
     mapping(address => uint256) public historicalRewards;
     bool public hasRedirected;
+    bool public hasCurveRewards;
 
     struct TokenInfo {
         address token;
         address rewardAddress;
     }
-    uint256 public tokenCount;
-    TokenInfo[maxRewards] public tokenInfo;
+
+    //use mapping+array so that we dont have to loop check each time setToken is called
+    mapping(address => TokenInfo) public tokenInfo;
+    address[] public tokenList;
+
+    address public rewardAdmin;
+    address public rewardHook;
 
     constructor(uint256 _pid, address _operator, address _staker, address _gauge, address _rFactory) public {
         pid = _pid;
@@ -45,9 +55,13 @@ contract ExtraRewardStashV3 {
         return "ExtraRewardStashV3";
     }
 
+    function tokenCount() external view returns (uint256){
+        return tokenList.length;
+    }
+
     //try claiming if there are reward tokens registered
     function claimRewards() external returns (bool) {
-        require(msg.sender == operator, "!authorized");
+        require(msg.sender == operator, "!operator");
 
         //this is updateable from v2 gauges now so must check each time.
         checkForNewRewardTokens();
@@ -58,11 +72,16 @@ contract ExtraRewardStashV3 {
             hasRedirected = true;
         }
 
-        uint256 length = tokenCount;
-        if(length > 0){
+        if(hasCurveRewards){
             //claim rewards on gauge for staker
             //using reward_receiver so all rewards will be moved to this stash
             IDeposit(operator).claimRewards(pid,gauge);
+        }
+
+        //hook for reward pulls
+        if(rewardHook != address(0)){
+            try IRewardHook(rewardHook).onRewardClaim(){
+            }catch{}
         }
         return true;
     }
@@ -73,20 +92,35 @@ contract ExtraRewardStashV3 {
         for(uint256 i = 0; i < maxRewards; i++){
             address token = ICurveGauge(gauge).reward_tokens(i);
             if (token == address(0)) {
-                if (i != tokenCount) {
-                    tokenCount = i;
-                }
                 break;
             }
-            setToken(i, token);
+            if(!hasCurveRewards){
+                hasCurveRewards = true;
+            }
+            setToken(token);
         }
     }
 
+    //register an extra reward token to be handled
+    // (any new incentive that is not directly on curve gauges)
+    function setExtraReward(address _token) external{
+        //owner of booster can set extra rewards
+        require(IDeposit(operator).owner() == msg.sender, "!owner");
+        setToken(_token);
+    }
+
+    function setRewardHook(address _hook) external{
+        //owner of booster can set extra rewards
+        require(IDeposit(operator).owner() == msg.sender, "!owner");
+        rewardHook = _hook;
+    }
+
+
     //replace a token on token list
-    function setToken(uint256 _tid, address _token) internal {
-        TokenInfo storage t = tokenInfo[_tid];
-        address currentToken = t.token;
-        if(currentToken != _token){
+    function setToken(address _token) internal {
+        TokenInfo storage t = tokenInfo[_token];
+
+        if(t.token == address(0)){
             //set token address
             t.token = _token;
 
@@ -97,6 +131,9 @@ contract ExtraRewardStashV3 {
                 mainRewardContract,
                 address(this));
             t.rewardAddress = rewardContract;
+
+            //add token to list of known rewards
+            tokenList.push(_token);
         }
     }
 
@@ -111,10 +148,11 @@ contract ExtraRewardStashV3 {
 
     //send all extra rewards to their reward contracts
     function processStash() external returns(bool){
-        require(msg.sender == operator, "!authorized");
+        require(msg.sender == operator, "!operator");
 
-        for(uint i=0; i < tokenCount; i++){
-            TokenInfo storage t = tokenInfo[i];
+        uint256 tCount = tokenList.length;
+        for(uint i=0; i < tCount; i++){
+            TokenInfo storage t = tokenInfo[tokenList[i]];
             address token = t.token;
             if(token == address(0)) continue;
             
