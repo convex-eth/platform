@@ -124,14 +124,17 @@ contract ExtraRewardStashV3 {
             //set token address
             t.token = _token;
 
-            //create new reward contract
-            (,,,address mainRewardContract,,) = IDeposit(operator).poolInfo(pid);
-            address rewardContract = IRewardFactory(rewardFactory).CreateTokenRewards(
-                _token,
-                mainRewardContract,
-                address(this));
-            t.rewardAddress = rewardContract;
-
+            //check if crv
+            if(_token != crv){
+                //create new reward contract (for NON-crv tokens only)
+                (,,,address mainRewardContract,,) = IDeposit(operator).poolInfo(pid);
+                address rewardContract = IRewardFactory(rewardFactory).CreateTokenRewards(
+                    _token,
+                    mainRewardContract,
+                    address(this));
+                
+                t.rewardAddress = rewardContract;
+            }
             //add token to list of known rewards
             tokenList.push(_token);
         }
