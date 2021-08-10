@@ -40,7 +40,7 @@ contract ExtraRewardStashV3 {
     mapping(address => TokenInfo) public tokenInfo;
     address[] public tokenList;
 
-    address public rewardAdmin;
+    //address to call for reward pulls
     address public rewardHook;
 
     constructor(uint256 _pid, address _operator, address _staker, address _gauge, address _rFactory) public {
