@@ -101,10 +101,6 @@ interface IEscro{
     function locked__end(address) external view returns(uint256);
 }
 
-interface IGaugeController{
-    function vote_user_slopes(address,address) external view returns(uint256,uint256,uint256);//slope,power,end
-}
-
 interface ISnxRewards{
     function notifyRewardAmount(uint256) external;
 }
