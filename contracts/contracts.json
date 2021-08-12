@@ -24,7 +24,8 @@
         "chefCvxToken": "0x4223AA5BfD783dEDCC54585cdC1cFE9eA1587C0f",
         "chefcvxCrvToken": "0x83D128b0b661dc79A71790b14A9c96e6191FB565",
         "cvxEthRewarder": "0x9e01aaC4b3e8781a85b21d9d9F848e72Af77B362",
-        "cvxCrvCrvRewarder": "0x1FD97b5E5a257B0B9b9A42A96BB8870Cbdd1Eb79"
+        "cvxCrvCrvRewarder": "0x1FD97b5E5a257B0B9b9A42A96BB8870Cbdd1Eb79",
+        "votePrize": "0x9402Ebd77427C4e21Bcc26CeA4C5d332Cbf248D1"
     },
     "pools": [{
             "lptoken": "0x845838DF265Dcd2c412A1Dc9e959c7d08537f8a2",
