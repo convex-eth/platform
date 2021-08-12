@@ -56,7 +56,7 @@ contract CvxStakingProxy {
     address public pendingOwner;
     uint256 public callIncentive = 25;
 
-    event RewardsDistributed(uint256 cvxCrvAmount);
+    event RewardsDistributed(address indexed token, uint256 amount);
 
     constructor(address _rewards) public {
         rewards = _rewards;
@@ -95,8 +95,7 @@ contract CvxStakingProxy {
 
     function rescueToken(address _token, address _to) external {
         require(msg.sender == owner, "!auth");
-        require(_token != cvx, "not allowed");
-        require(_token != cvxCrv, "not allowed");
+        require(_token != crv && _token != cvx && _token != cvxCrv, "not allowed");
 
         uint256 bal = IERC20(_token).balanceOf(address(this));
         IERC20(_token).safeTransfer(_to, bal);
@@ -127,6 +126,7 @@ contract CvxStakingProxy {
         //claim rewards
         IConvexRewards(cvxStaking).getReward(false);
 
+        //convert any crv that was directly added
         uint256 crvBal = IERC20(crv).balanceOf(address(this));
         if (crvBal > 0) {
             IDepositor(crvDeposit).deposit(crvBal, true);
@@ -139,13 +139,37 @@ contract CvxStakingProxy {
             uint256 incentiveAmount = cvxCrvBal.mul(callIncentive).div(denominator);
             cvxCrvBal = cvxCrvBal.sub(incentiveAmount);
             
-            //send to rewards
+            //send incentives
             IERC20(cvxCrv).safeTransfer(msg.sender,incentiveAmount);
 
             //update rewards
             ICvxLocker(rewards).notifyRewardAmount(cvxCrv, cvxCrvBal);
 
-            emit RewardsDistributed(cvxCrvBal);
+            emit RewardsDistributed(cvxCrv, cvxCrvBal);
+        }
+    }
+
+    //in case a new reward is ever added, allow generic distribution
+    function distributeOther(IERC20 _token) external {
+        require( address(_token) != crv && address(_token) != cvxCrv, "not allowed");
+
+        uint256 bal = _token.balanceOf(address(this));
+
+        if (bal > 0) {
+            uint256 incentiveAmount = bal.mul(callIncentive).div(denominator);
+            bal = bal.sub(incentiveAmount);
+            
+            //send incentives
+            _token.safeTransfer(msg.sender,incentiveAmount);
+
+            //approve
+            _token.safeApprove(rewards, 0);
+            _token.safeApprove(rewards, uint256(-1));
+
+            //update rewards
+            ICvxLocker(rewards).notifyRewardAmount(address(_token), bal);
+
+            emit RewardsDistributed(address(_token), bal);
         }
     }
 }
