@@ -6,7 +6,7 @@
         "booster": "0xF403C135812408BFbE8713b5A23a04b3D48AAE31",
         "rFactory": "0xEdCCB35798fae4925718A43cc608aE136208aa8D",
         "tFactory": "0x3c995e43E6ddD551E226F4c5544C77BfeD147aB9",
-        "sFactory": "0x877288c4e6EbA4f635bA7428706447353B47De75",
+        "sFactory": "0xF40d5402A35b181F440C6c3b7729398Caf807CAE",
         "cvxCrv": "0x62B9c7356A2Dc64a1969e19C23e4f579F9810Aa7",
         "crvDepositor": "0x8014595F2AB54cD7c604B00E9fb932176fDc86Ae",
         "cvxCrvRewards": "0x3Fe65692bfCD0e6CF84cB1E7d24108E434A7587e",
@@ -24,7 +24,8 @@
         "chefCvxToken": "0x4223AA5BfD783dEDCC54585cdC1cFE9eA1587C0f",
         "chefcvxCrvToken": "0x83D128b0b661dc79A71790b14A9c96e6191FB565",
         "cvxEthRewarder": "0x9e01aaC4b3e8781a85b21d9d9F848e72Af77B362",
-        "cvxCrvCrvRewarder": "0x1FD97b5E5a257B0B9b9A42A96BB8870Cbdd1Eb79"
+        "cvxCrvCrvRewarder": "0x1FD97b5E5a257B0B9b9A42A96BB8870Cbdd1Eb79",
+        "votePrize": "0x9402Ebd77427C4e21Bcc26CeA4C5d332Cbf248D1"
     },
     "pools": [{
             "lptoken": "0x845838DF265Dcd2c412A1Dc9e959c7d08537f8a2",
@@ -548,7 +549,7 @@
             "lptoken": "0xFD5dB7463a3aB53fD211b4af195c5BCCC1A03890",
             "token": "0x2b2175AC371Ec2900AC39fb87452340F65CC9895",
             "gauge": "0xe8060Ad8971450E624d5289A10017dD30F5dA85F",
-            "crvRewards": "0xcB8F69E0064d8cdD29cbEb45A14cf771D904BcD3",
+            "crvRewards": "0xD814BFC091111E1417a669672144aFFAA081c3CE",
             "stash": "0x353460EACDAaEC993eCdA986440F4c343BBf6c05",
             "swap": "0xFD5dB7463a3aB53fD211b4af195c5BCCC1A03890",
             "currency": "EUR",

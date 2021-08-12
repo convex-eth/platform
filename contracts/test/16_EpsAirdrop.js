@@ -1,8 +1,9 @@
 const { BN, constants, expectEvent, expectRevert, time } = require('openzeppelin-test-helpers');
-
+const fs = require('fs');
 const MerkleTree = require('./helpers/merkleTree');
 var jsonfile = require('jsonfile');
-var droplist = jsonfile.readFileSync('../airdrop/eps/2021_7_29/drop_proofs.json');
+
+var droplist = jsonfile.readFileSync('../airdrop/eps/2021_8_05/drop_proofs.json');
 var contractList = jsonfile.readFileSync('./contracts.json');
 
 const IERC20 = artifacts.require("IERC20");
@@ -12,6 +13,14 @@ const MerkleAirdropFactory = artifacts.require("MerkleAirdropFactory");
 const Multicaller = artifacts.require("Multicaller");
 const MulticallerView = artifacts.require("MulticallerView");
 
+const progressFile = "drop_progress.json";
+if (fs.existsSync(progressFile)) {
+    drop_progress = jsonfile.readFileSync(progressFile);
+} else {
+    drop_progress = {
+        progress: 0
+    };
+}
 
 contract("Airdrop Test", async accounts => {
   it("should claim airdrop for all users", async () => {
@@ -34,7 +43,8 @@ contract("Airdrop Test", async accounts => {
     // let airdrop = await MerkleAirdrop.at("0x81E47381aA927ffA2138263e50716B1C573B0Eb5");//week 8
     // let airdrop = await MerkleAirdrop.at("0xc789F8fc2dD7D14DFFEA9e3D7e78BDe43ea9F439");//week 9
     // let airdrop = await MerkleAirdrop.at("0xA0f7B26ccDc490ef9E5CedB7e956351aA4bE5B1B");//week 10
-    let airdrop = await MerkleAirdrop.at("0xcbCa4Cd79aF621184DDc14CDC6C43E37Db780470");//week 11
+    // let airdrop = await MerkleAirdrop.at("0xcbCa4Cd79aF621184DDc14CDC6C43E37Db780470");//week 11
+    let airdrop = await MerkleAirdrop.at("0xA988E0B94F0b187474ff45D7ca9F1ecbe80824E7");//week 12
     console.log("airdrop at: " +airdrop.address);
 
     // //set reward token
@@ -73,7 +83,7 @@ contract("Airdrop Test", async accounts => {
     var aftercallDataList = [];
     var claimcount = 0;
     var claimsize = 50;
-    for(var i = 0; i < dropAddresses.length; i++){
+    for(var i = drop_progress.progress; i < dropAddresses.length; i++){
         var info = droplist.users[dropAddresses[i]];
         var amount = info.amount;
         var proof = info.proof;
@@ -95,6 +105,7 @@ contract("Airdrop Test", async accounts => {
             var beforeUserbalances = [];
             var afterUserbalances = [];
             let retData = await multicallerview.aggregate(beforecallDataList);
+            
             for(var d = 0; d < retData[1].length; d++){
                 //console.log("add balance bn2: " +web3.utils.toBN(retData[1][d]).toString());
                 beforeUserbalances.push(web3.utils.toBN(retData[1][d]).toString());
@@ -112,6 +123,9 @@ contract("Airdrop Test", async accounts => {
                 //console.log("assert: " +claimedAmount.toString() +" == " +amount.toString())
                 assert.equal(claimedAmount.toString(),amount.toString(),"claimed amount doesnt match");
             }
+
+            drop_progress.progress = i+1;
+            jsonfile.writeFileSync(progressFile, drop_progress, { spaces: 4 });
             beforecallDataList = [];
             callDataList = [];
             aftercallDataList = [];
