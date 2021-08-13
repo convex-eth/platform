@@ -99,6 +99,7 @@ contract CvxLocker is ReentrancyGuard, Ownable {
     uint256 public maximumStake = 10000;
     address public stakingProxy;
     address public constant cvxcrvStaking = address(0x3Fe65692bfCD0e6CF84cB1E7d24108E434A7587e);
+    uint256 public constant stakeOffsetOnLock = 500; //allow broader range for staking when depositing
 
     //management
     uint256 public kickRewardPerEpoch = 100;
@@ -173,7 +174,7 @@ contract CvxLocker is ReentrancyGuard, Ownable {
         require(_maximum <= denominator, "max range");
         minimumStake = _minimum;
         maximumStake = _maximum;
-        updateStakeRatio();
+        updateStakeRatio(0);
     }
 
     //set boost parameters
@@ -530,7 +531,7 @@ contract CvxLocker is ReentrancyGuard, Ownable {
         }
 
         //update staking
-        updateStakeRatio();
+        updateStakeRatio(stakeOffsetOnLock);
 
         emit Staked(_account, _amount, lockAmount, boostedAmount);
     }
@@ -640,9 +641,8 @@ contract CvxLocker is ReentrancyGuard, Ownable {
 
     function allocateCVXForTransfer(uint256 _amount) internal{
         uint256 balance = stakingToken.balanceOf(address(this));
-        uint256 needed = _amount.sub(balance);
-        if (needed > 0) {
-            IStakingProxy(stakingProxy).withdraw(needed);
+        if (_amount > balance) {
+            IStakingProxy(stakingProxy).withdraw(_amount.sub(balance));
         }
     }
 
@@ -654,11 +654,11 @@ contract CvxLocker is ReentrancyGuard, Ownable {
 
         //update staking
         if(_updateStake){
-            updateStakeRatio();
+            updateStakeRatio(0);
         }
     }
 
-    function updateStakeRatio() internal {
+    function updateStakeRatio(uint256 _offset) internal {
         if (isShutdown) return;
 
         //get balances
@@ -672,11 +672,13 @@ contract CvxLocker is ReentrancyGuard, Ownable {
         uint256 ratio = staked.mul(denominator).div(total);
         //mean where be where we reset to if unbalanced
         uint256 mean = maximumStake.add(minimumStake).div(2);
-        if (ratio > maximumStake) {
+        uint256 max = maximumStake.add(_offset);
+        uint256 min = Math.min(minimumStake, minimumStake - _offset);
+        if (ratio > max) {
             //remove
             uint256 remove = staked.sub(total.mul(mean).div(denominator));
             IStakingProxy(stakingProxy).withdraw(remove);
-        } else if (ratio < minimumStake) {
+        } else if (ratio < min) {
             //add
             uint256 increase = total.mul(mean).div(denominator).sub(staked);
             stakingToken.safeTransfer(stakingProxy, increase);
@@ -730,6 +732,11 @@ contract CvxLocker is ReentrancyGuard, Ownable {
         IERC20(_rewardsToken).safeTransferFrom(msg.sender, address(this), _reward);
         
         emit RewardAdded(_reward);
+
+        if(_rewardsToken == address(stakingToken)){
+            //update staking ratios
+            updateStakeRatio(0);
+        }
     }
 
     // Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders

@@ -247,6 +247,9 @@ contract("Test lock contract", async accounts => {
     await lockerInfo();
     console.log("set to 0/0")
     await locker.setStakeLimits(0,0,{from:deployer});
+    console.log("try deposit user b")
+    var tx = await locker.lock(userB,"1000000000000000000",0,{from:userB})
+    await userInfo(userB);
     await lockerInfo();
     console.log("set to 90/100")
     await locker.setStakeLimits(9000,10000,{from:deployer});
