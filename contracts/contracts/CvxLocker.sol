@@ -733,8 +733,8 @@ contract CvxLocker is ReentrancyGuard, Ownable {
         
         emit RewardAdded(_reward);
 
-        if(_rewardsToken == address(stakingToken)){
-            //update staking ratios
+        if(_rewardsToken == cvxCrv){
+            //update staking ratio if main reward
             updateStakeRatio(0);
         }
     }
