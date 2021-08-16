@@ -302,7 +302,8 @@ contract("Test lock contract", async accounts => {
     await userInfo(userB);
 
     //todo: add a deposit from b to test other if branch of kick
-
+    //todo: try setting setKickIncentive for different results
+    
     console.log("kick user b by c (should work)");
     await currentEpoch();
     await userInfo(userC);
