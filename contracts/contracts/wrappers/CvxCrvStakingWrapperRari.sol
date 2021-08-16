@@ -34,7 +34,10 @@ contract CvxCrvRari is CvxCrvStakingWrapper {
 
     
     function _getDepositedBalance(address _account) internal override view returns(uint256) {
-
+        if (_account == address(0) || _account == collateralVault) {
+            return 0;
+        }
+        
         //get underlying balance
         uint256 underlying = IRariToken(collateralVault).balanceOfUnderlying(_account);
 
@@ -44,15 +47,12 @@ contract CvxCrvRari is CvxCrvStakingWrapper {
 
     function _getTotalSupply() internal override view returns(uint256){
 
-        //get difference of underlying balance of the rari token and the supply of the rari token
-        //to get outstanding interest
-        uint256 cash = IRariToken(collateralVault).getCash();
-        uint256 borrows = IRariToken(collateralVault).totalBorrows();
-        uint256 reserves = IRariToken(collateralVault).totalReserves();
+        //get outstanding supply by exchangeRate*supply - supply
+        uint256 exchange = IRariToken(collateralVault).exchangeRateCurrent();
         uint256 fsupply = IRariToken(collateralVault).totalSupply();
-        uint256 outstanding = cash.add(borrows).sub(reserves).sub(fsupply);
+        uint256 outstanding = exchange.mul(fsupply).div(1e18).sub(fsupply);
 
-        //add the outstanding interest to this token's supply
+        //add the outstanding supply to this token's supply
         return totalSupply().add(outstanding);
     }
 

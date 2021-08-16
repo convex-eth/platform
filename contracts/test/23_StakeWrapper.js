@@ -14,7 +14,7 @@ const IERC20 = artifacts.require("IERC20");
 const ICurveAavePool = artifacts.require("ICurveAavePool");
 const IExchange = artifacts.require("IExchange");
 const IUniswapV2Router01 = artifacts.require("IUniswapV2Router01");
-
+const CvxMining = artifacts.require("CvxMining");
 
 contract("Test stake wrapper", async accounts => {
   it("should deposit lp tokens and earn rewards while being transferable", async () => {
@@ -69,7 +69,9 @@ contract("Test stake wrapper", async accounts => {
     var userBBalance = await curveAave.balanceOf(userB);
     console.log("userA: " +userABalance +",  userB: " +userBBalance);
 
-
+    let lib = await CvxMining.new();
+    console.log("mining lib at: " +lib.address);
+    await ConvexStakingWrapper.link("CvxMining", lib.address);
     let staker = await ConvexStakingWrapper.new(curveAave.address,convexAave.address,convexAaveRewards.address, aavepool, addressZero,{from:deployer});
     console.log("staker token: " +staker.address);
     await staker.name().then(a=>console.log("name: " +a));

@@ -555,6 +555,17 @@
             "currency": "EUR",
             "name": "eurt",
             "id": 39
+        },
+        {
+            "lptoken": "0x5a6A4D54456819380173272A5E8E9B9904BdF41B",
+            "token": "0xabB54222c2b77158CC975a2b715a3d703c256F05",
+            "gauge": "0xd8b712d29381748dB89c36BCa0138d7c75866ddF",
+            "crvRewards": "0xFd5AbF66b003881b88567EB9Ed9c651F14Dc4771",
+            "stash": "0xEd3D937A12fEed5298827B3adf05caaFfb0efDda",
+            "swap": "0x5a6A4D54456819380173272A5E8E9B9904BdF41B",
+            "currency": "USD",
+            "name": "mim",
+            "id": 40
         }
     ]
 }
