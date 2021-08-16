@@ -12,7 +12,7 @@
         "cvxCrvRewards": "0x3Fe65692bfCD0e6CF84cB1E7d24108E434A7587e",
         "threeCrvRewards": "0x7091dbb7fcbA54569eF1387Ac89Eb2a5C9F6d2EA",
         "cvxRewards": "0xCF50b810E57Ac33B91dCF525C6ddd9881B139332",
-        "poolManager": "0x3b2D30734491AD77880d31e8aFe2A4d8aC135a9C",
+        "poolManager": "0xAE5F315A5b5dD4dBacD38862562a51490E500183",
         "arbitratorVault": "0x25E12482a25CF36EC70fDA2A09C1ED077Fc21616",
         "chef": "0x5F465e9fcfFc217c5849906216581a657cd60605",
         "claimZap": "0x8cB38a75eCd8572Af23a8D086e9bda96ca521889",
@@ -24,7 +24,8 @@
         "chefCvxToken": "0x4223AA5BfD783dEDCC54585cdC1cFE9eA1587C0f",
         "chefcvxCrvToken": "0x83D128b0b661dc79A71790b14A9c96e6191FB565",
         "cvxEthRewarder": "0x9e01aaC4b3e8781a85b21d9d9F848e72Af77B362",
-        "cvxCrvCrvRewarder": "0x1FD97b5E5a257B0B9b9A42A96BB8870Cbdd1Eb79"
+        "cvxCrvCrvRewarder": "0x1FD97b5E5a257B0B9b9A42A96BB8870Cbdd1Eb79",
+        "votePrize": "0x9402Ebd77427C4e21Bcc26CeA4C5d332Cbf248D1"
     },
     "pools": [{
             "lptoken": "0x845838DF265Dcd2c412A1Dc9e959c7d08537f8a2",
@@ -554,6 +555,17 @@
             "currency": "EUR",
             "name": "eurt",
             "id": 39
+        },
+        {
+            "lptoken": "0x5a6A4D54456819380173272A5E8E9B9904BdF41B",
+            "token": "0xabB54222c2b77158CC975a2b715a3d703c256F05",
+            "gauge": "0xd8b712d29381748dB89c36BCa0138d7c75866ddF",
+            "crvRewards": "0xFd5AbF66b003881b88567EB9Ed9c651F14Dc4771",
+            "stash": "0xEd3D937A12fEed5298827B3adf05caaFfb0efDda",
+            "swap": "0x5a6A4D54456819380173272A5E8E9B9904BdF41B",
+            "currency": "USD",
+            "name": "mim",
+            "id": 40
         }
     ]
 }
