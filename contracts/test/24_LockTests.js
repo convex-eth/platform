@@ -276,20 +276,42 @@ contract("Test lock contract", async accounts => {
     await currentEpoch();
     await lockerInfo();
     await userInfo(userA);
+    await userInfo(userB);
 
-    console.log("process locks for user A, check cvx supply, user lock data update, user wallet info")
+    console.log("process locks for user A(withdraw), check cvx supply, user lock data update, user wallet info")
     var tx = await locker.processExpiredLocks(false,{from:userA});
     console.log("gas cost: " +tx.receipt.gasUsed);
     await lockerInfo();
     await userInfo(userA);
 
+    console.log("advance enough to have B unlockable")
 
-    await advanceTime(day*7*4);
+    await advanceTime(day*7*2);
     await locker.checkpointEpoch();
     await lockerInfo();
-    await userInfo(userA);
+    await userInfo(userB);
+    await currentEpoch();
+    console.log("kick user b by c (should revert)");
+    await locker.kickExpiredLocks(userB,{from:userC}).catch(a=>console.log(" -> reverted. still grace period"));
+    await userInfo(userC);
 
-    console.log("process locks for user A, check cvx supply, user lock data update, user wallet info")
+    console.log("move past grace period...");
+    await advanceTime(day*7*3);
+    await locker.checkpointEpoch();
+    await lockerInfo();
+    await userInfo(userB);
+
+    //todo: add a deposit from b to test other if branch of kick
+
+    console.log("kick user b by c (should work)");
+    await currentEpoch();
+    await userInfo(userC);
+    var tx = await locker.kickExpiredLocks(userB,{from:userC});
+    console.log("gas cost: " +tx.receipt.gasUsed);
+    await userInfo(userC);
+    await userInfo(userB);
+
+    console.log("process locks for user A(relock), check cvx supply, user lock data update, user wallet info")
     var tx = await locker.methods['processExpiredLocks(bool,uint256,address)'](true,500,userA,{from:userA});
     console.log("gas cost: " +tx.receipt.gasUsed);
     await lockerInfo();

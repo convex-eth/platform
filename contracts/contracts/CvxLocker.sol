@@ -545,7 +545,7 @@ contract CvxLocker is ReentrancyGuard, Ownable {
         uint256 length = locks.length;
         uint256 reward = 0;
         
-        if (isShutdown || locks[length - 1].unlockTime <= block.timestamp.add(_checkDelay)) {
+        if (isShutdown || locks[length - 1].unlockTime <= block.timestamp.sub(_checkDelay)) {
             locked = userBalance.locked;
             boostedAmount = userBalance.boosted;
 
@@ -556,10 +556,10 @@ contract CvxLocker is ReentrancyGuard, Ownable {
             //but this section is supposed to be for quick and easy low gas processing of all locks
             //we'll assume that if the reward was good enough someone would have processed at an earlier epoch
             if (_checkDelay > 0) {
-                uint256 currentEpoch = block.timestamp.div(rewardsDuration).mul(rewardsDuration);
-                uint256 epochsover = uint256(locks[length - 1].unlockTime).sub(currentEpoch).sub(_checkDelay).div(rewardsDuration);
-                uint256 rRate = MathUtil.min(kickRewardPerEpoch.mul(epochsover), denominator);
-                reward =  uint256(locks[length - 1].amount).mul(rRate).div(denominator);
+                uint256 currentEpoch = block.timestamp.sub(_checkDelay).div(rewardsDuration).mul(rewardsDuration);
+                uint256 epochsover = currentEpoch.sub(uint256(locks[length - 1].unlockTime)).div(rewardsDuration);
+                uint256 rRate = MathUtil.min(kickRewardPerEpoch.mul(epochsover+1), denominator);
+                reward = uint256(locks[length - 1].amount).mul(rRate).div(denominator);
             }
         } else {
 
@@ -567,16 +567,16 @@ contract CvxLocker is ReentrancyGuard, Ownable {
             //deleting does not change array length
             uint32 nextUnlockIndex = userBalance.nextUnlockIndex;
             for (uint i = nextUnlockIndex; i < length; i++) {
-                if (locks[i].unlockTime > block.timestamp.add(_checkDelay)) break;
+                if (locks[i].unlockTime > block.timestamp.sub(_checkDelay)) break;
 
                 locked = locked.add(locks[i].amount);
                 boostedAmount = boostedAmount.add(locks[i].boosted);
 
                 //check for incentivized processing of old locks
                 if (_checkDelay > 0) {
-                    uint256 currentEpoch = block.timestamp.div(rewardsDuration).mul(rewardsDuration);
-                    uint256 epochsover = uint256(locks[i].unlockTime).sub(currentEpoch).sub(_checkDelay).div(rewardsDuration);
-                    uint256 rRate = MathUtil.min(kickRewardPerEpoch.mul(epochsover), denominator);
+                    uint256 currentEpoch = block.timestamp.sub(_checkDelay).div(rewardsDuration).mul(rewardsDuration);
+                    uint256 epochsover = currentEpoch.sub(uint256(locks[i].unlockTime)).div(rewardsDuration);
+                    uint256 rRate = MathUtil.min(kickRewardPerEpoch.mul(epochsover+1), denominator);
                     reward = reward.add( uint256(locks[i].amount).mul(rRate).div(denominator));
                 }
                 //set next unlock index
@@ -595,17 +595,12 @@ contract CvxLocker is ReentrancyGuard, Ownable {
 
         //send process incentive
         if (reward > 0) {
+            //if theres a reward(kicked), it will always be a withdraw only
+            //preallocate enough cvx from stake contract to pay for both reward and withdraw
+            allocateCVXForTransfer(uint256(locked));
+
             //reduce return amount by the kick reward
             locked = locked.sub(reward.to112());
-            
-            if(!_relock){
-                //preallocate enough cvx from stake contract to pay for both reward and withdraw
-                allocateCVXForTransfer(uint256(locked).add(reward));
-            }else{
-                //preallocate enough cvx for reward and whatever is going to be spent on boosting
-                //if this allocation is exact, then we wont have to repay the gas used for staking when calling _lock()
-                allocateCVXForTransfer(reward.add(uint256(locked).mul(_spendRatio).div(denominator)));
-            }
             
             //transfer reward
             transferCVX(_rewardAddress, reward, false);
