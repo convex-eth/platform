@@ -114,11 +114,20 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
         return rewards.length;
     }
 
-    function _getDepositedBalance(address _account) internal view returns(uint256) {
-
+    function _getDepositedBalance(address _account) internal virtual view returns(uint256) {
+        if (_account == address(0) || _account == collateralVault) {
+            return 0;
+        }
         //get balance from collateralVault
 
         return balanceOf(_account);
+    }
+
+    function _getTotalSupply() internal virtual view returns(uint256){
+
+        //override and add any supply needed (interest based growth)
+
+        return totalSupply();
     }
 
     function _calcCvxIntegral(address[2] memory _accounts, uint256[2] memory _balances, uint256 _beforeAmount, uint256 _supply) internal {
@@ -178,12 +187,11 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
     function _checkpoint(address[2] memory _accounts) internal {
 
         //total supply may need to be modified in a debt based set up
-        uint256 supply = totalSupply();
+        uint256 supply = _getTotalSupply();
         uint256[2] memory depositedBalance;
         depositedBalance[0] = _getDepositedBalance(_accounts[0]);
-        if (_accounts[1] != address(0) && _accounts[1] != collateralVault) {
-            depositedBalance[1] = _getDepositedBalance(_accounts[1]);
-        }
+        depositedBalance[1] = _getDepositedBalance(_accounts[1]);
+        
         uint256 rewardCount = rewards.length;
         for (uint256 i = 0; i < rewardCount; i++) {
            _calcRewardIntegral(i,_accounts,depositedBalance,supply);
@@ -196,7 +204,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
     }
 
     function earned(address _account) external view returns(uint256[] memory claimable) {
-        uint256 supply = totalSupply();
+        uint256 supply = _getTotalSupply();
         // uint256 depositedBalance = _getDepositedBalance(_account);
         uint256 rewardCount = rewards.length;
         claimable = new uint256[](rewardCount + 1);
@@ -244,7 +252,8 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
     function deposit(uint256 _amount, address _to) external nonReentrant {
         require(!isShutdown, "shutdown");
 
-        _checkpoint([_to, address(0)]);
+        //dont need to call checkpoint since _mint() will
+
         if (_amount > 0) {
             _mint(_to, _amount);
             IERC20(curveToken).safeTransferFrom(msg.sender, address(this), _amount);
@@ -258,7 +267,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
     function stake(uint256 _amount, address _to) external nonReentrant {
         require(!isShutdown, "shutdown");
 
-        _checkpoint([_to, address(0)]);
+        //dont need to call checkpoint since _mint() will
 
         if (_amount > 0) {
             _mint(_to, _amount);
@@ -271,7 +280,8 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
 
     //withdraw to convex deposit token
     function withdraw(uint256 _amount) external nonReentrant {
-        _checkpoint([address(msg.sender), address(0)]);
+
+        //dont need to call checkpoint since _burn() will
 
         if (_amount > 0) {
             _burn(msg.sender, _amount);
@@ -284,7 +294,8 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
 
     //withdraw to underlying curve lp token
     function withdrawAndUnwrap(uint256 _amount) external nonReentrant {
-        _checkpoint([address(msg.sender), address(0)]);
+        
+        //dont need to call checkpoint since _burn() will
 
         if (_amount > 0) {
             _burn(msg.sender, _amount);

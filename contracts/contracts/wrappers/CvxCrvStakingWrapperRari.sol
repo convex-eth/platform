@@ -34,7 +34,10 @@ contract CvxCrvRari is CvxCrvStakingWrapper {
 
     
     function _getDepositedBalance(address _account) internal override view returns(uint256) {
-
+        if (_account == address(0) || _account == collateralVault) {
+            return 0;
+        }
+        
         //get underlying balance
         uint256 underlying = IRariToken(collateralVault).balanceOfUnderlying(_account);
 
