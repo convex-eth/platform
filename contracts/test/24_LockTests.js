@@ -9,6 +9,7 @@ const cvxRewardPool = artifacts.require("cvxRewardPool");
 const IERC20 = artifacts.require("IERC20");
 const IExchange = artifacts.require("IExchange");
 const IUniswapV2Router01 = artifacts.require("IUniswapV2Router01");
+const DepositToken = artifacts.require("DepositToken");
 
 /*
 - lock for self
@@ -59,10 +60,14 @@ contract("Test lock contract", async accounts => {
     let userA = accounts[0];
     let userB = accounts[1];
     let userC = accounts[2];
+    let userD = accounts[3];
     var userNames = {};
     userNames[userA] = "A";
     userNames[userB] = "B";
     userNames[userC] = "C";
+    userNames[userD] = "D";
+
+    var isShutdown = false;
 
     let starttime = await time.latest();
 
@@ -78,13 +83,12 @@ contract("Test lock contract", async accounts => {
     console.log("swapped for cvx(userA): " +cvxbalance);
     console.log("swapped for cvx(userB): " +cvxbalanceB);
 
-
     //deploy
     let locker = await CvxLocker.new({from:deployer});
     let stakeproxy = await CvxStakingProxy.new(locker.address,{from:deployer});
     console.log("deployed");
     await stakeproxy.setApprovals();
-    await locker.addReward(cvxcrv.address, stakeproxy.address,{from:deployer});
+    await locker.addReward(cvxcrv.address, stakeproxy.address, true, {from:deployer});
     await locker.setStakingContract(stakeproxy.address,{from:deployer});
     await locker.setApprovals();
 
@@ -142,11 +146,11 @@ contract("Test lock contract", async accounts => {
       for(var i = 0; i < epochs; i++){
         var balAtE = await locker.balanceAtEpochOf(i, _user);
         console.log("\t   voteBalanceAtEpochOf("+i+") " +balAtE );
-        if(i==epochs-1){
+        if(!isShutdown && i==epochs-1){
           assert(balAtE.toString()==bal.toString(),"balanceOf should be equal to value at most recent epoch (" +i +")");
         }
       }
-      console.log("\t---- user info: "+userNames[_user]+" end ----");
+      console.log("\t---- user info: "+userNames[_user]+"("+_user +") end ----");
     }
 
     await lockerInfo();
@@ -157,6 +161,8 @@ contract("Test lock contract", async accounts => {
 
     await cvx.approve(locker.address,cvxbalance,{from:userA});
     await cvx.approve(locker.address,cvxbalanceB,{from:userB});
+    await cvx.approve(locker.address,cvxbalanceB,{from:userC});
+    await cvx.approve(locker.address,cvxbalance,{from:userD});
     console.log("approved users");
     var tx = await locker.lock(userA,"1000000000000000000",0,{from:userA});
     console.log("locked for user a, gas: " +tx.receipt.gasUsed);
@@ -301,8 +307,13 @@ contract("Test lock contract", async accounts => {
     await lockerInfo();
     await userInfo(userB);
 
-    //todo: add a deposit from b to test other if branch of kick
-    //todo: try setting setKickIncentive for different results
+    //add a deposit from b to test other if branch of kick
+    // console.log("try deposit user b to force kick into other if block")
+    // await locker.lock(userB,"1000000000000000000",0,{from:userB})
+    
+    //try setting setKickIncentive for different results
+    await locker.setKickIncentive(500,4,{from:deployer});
+    console.log("set kick incentive to 5%");
     
     console.log("kick user b by c (should work)");
     await currentEpoch();
@@ -322,6 +333,92 @@ contract("Test lock contract", async accounts => {
     await locker.checkpointEpoch();
     await lockerInfo();
     await userInfo(userA);
+
+
+    console.log("test adding a reward that is non-boosted...")
+    var userCBalance = await cvx.balanceOf(userC);
+    var userBrelockBalance = new BN(userCBalance.toString()).mul(new BN("10"));
+    console.log("user c balance: " +userCBalance +"  user b 10x deposit: " +userBrelockBalance);
+    await locker.lock(userC,userCBalance,0,{from:userC});
+    await locker.lock(userB,userBrelockBalance,500,{from:userB});
+    console.log("locked");
+    //remove balance from user b to make output easier to read
+    cvxbalanceB = await cvx.balanceOf(userB);
+    await cvx.transfer(userD,cvxbalanceB,{from:userB})
+
+
+    //create new rewards
+    let dummyReward = await DepositToken.new(userA, cvx.address);
+    await dummyReward.mint(userA, "1000000000000000",{from:userA});
+    console.log("create and mint dummy reward: " +dummyReward.address);
+    await locker.addReward(dummyReward.address, userA, false, {from:deployer});
+    console.log("set user A as distributor for dummyReward");
+    await dummyReward.approve(locker.address,"1000000000000000",{from:userA});
+    await locker.notifyRewardAmount(dummyReward.address, "1000000000000000", {from:userA})
+    console.log("reward added")
+    await dummyReward.balanceOf(locker.address).then(a=>console.log("locker dummy: " +a))
+
+    await userInfo(userB);
+    await userInfo(userC);
+    await advanceTime(day*7);
+    console.log("check claimables, user b should be 10x of c (non-boosted)");
+    await userInfo(userB);
+    await userInfo(userC);
+
+    await dummyReward.balanceOf(locker.address).then(a=>console.log("locker dummy: " +a))
+    console.log("claim rewards, claimable moved to wallet")
+    await locker.getReward(userB,false);
+    console.log("claimed b");
+    await dummyReward.balanceOf(locker.address).then(a=>console.log("locker dummy: " +a))
+    await userInfo(userB);
+    await dummyReward.balanceOf(userB).then(a=>console.log("userB dummy on wallet: " +a))
+    await userInfo(userC);
+    await locker.getReward(userC,false);
+    console.log("claimed c");
+    await userInfo(userC);
+    await dummyReward.balanceOf(userC).then(a=>console.log("userC dummy on wallet: " +a))
+
+
+    console.log("check gas reduction when small deposits");
+    var tx = await locker.lock(userD,"100000000000000000000",0,{from:userD})
+    console.log("expensive gas(first): " +tx.receipt.gasUsed);
+    var tx = await locker.lock(userD,"100000000000000000000",0,{from:userD})
+    console.log("gas: " +tx.receipt.gasUsed);
+    var tx = await locker.lock(userD,"100000000000000000000",0,{from:userD})
+    console.log("gas: " +tx.receipt.gasUsed);
+    var tx = await locker.lock(userD,"100000000000000000",0,{from:userD})
+    console.log("cheaper gas(stake delayed): " +tx.receipt.gasUsed);
+    console.log("locker info should show some cvx not staked")
+    await lockerInfo();
+    var tx = await locker.lock(userD,"100000000000000000000",0,{from:userD})
+    console.log("normal lock gas: " +tx.receipt.gasUsed);
+    console.log("everything should be staked now")
+    await lockerInfo();
+
+    //test transfering power
+    await locker.owner().then(a=>console.log("owner: " +a));
+    await locker.transferOwnership(multisig,{from:deployer});
+    await locker.owner().then(a=>console.log("owner after: " +a));
+
+    await stakeproxy.owner().then(a=>console.log("stake owner: " +a));
+    await stakeproxy.setPendingOwner(multisig,{from:deployer});
+    await stakeproxy.pendingOwner().then(a=>console.log("stake pending: " +a));
+    await stakeproxy.applyPendingOwner({from:deployer});
+    await stakeproxy.owner().then(a=>console.log("stake owner: " +a));
+    await stakeproxy.pendingOwner().then(a=>console.log("stake pending: " +a));
+
+
+    //test shutdown
+    console.log("shutdown");
+    await locker.shutdown({from:multisig,gasPrice:0});
+    isShutdown = true;
+
+    await userInfo(userA);
+    await locker.processExpiredLocks(true,{from:userA}).catch(a=>console.log("try to lock -> reverted. shutdown"));
+    console.log("withdraw user a")
+    await locker.processExpiredLocks(false,{from:userA})
+    await userInfo(userA);
+    await lockerInfo();
   });
 });
 
