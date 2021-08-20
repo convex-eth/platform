@@ -58,6 +58,11 @@ contract("setup lock contract", async accounts => {
     let locker = await CvxLocker.new({from:deployer});
     let stakeproxy = await CvxStakingProxy.new(locker.address,{from:deployer});
     console.log("deployed");
+    console.log("locker: " +locker.address);
+    console.log("stakeproxy: " +stakeproxy.address);
+    contractList.system.locker = locker.address;
+    contractList.system.lockerStakeProxy = stakeproxy.address;
+    jsonfile.writeFileSync("./contracts.json", contractList, { spaces: 4 });
     await stakeproxy.setApprovals();
     await locker.addReward(cvxcrv.address, stakeproxy.address, true, {from:deployer});
     await locker.setStakingContract(stakeproxy.address,{from:deployer});

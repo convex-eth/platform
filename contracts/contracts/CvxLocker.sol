@@ -702,6 +702,10 @@ contract CvxLocker is ReentrancyGuard, Ownable {
         }
     }
 
+    function getReward(address _account) external{
+        getReward(_account,false);
+    }
+
 
     /* ========== RESTRICTED FUNCTIONS ========== */
 

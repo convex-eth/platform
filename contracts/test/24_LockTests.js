@@ -186,7 +186,7 @@ contract("Test lock contract", async accounts => {
     const day = 86400;
     await advanceTime(day);
 
-    await stakeproxy.distribute();
+    await stakeproxy.distribute({from:deployer});
     console.log("distribute()");
 
     await lockerInfo();
@@ -202,7 +202,7 @@ contract("Test lock contract", async accounts => {
     await lockerInfo();
     await userInfo(userA);
 
-    var tx = await locker.getReward(userA,false,{from:userA});
+    var tx = await locker.methods['getReward(address)'](userA,{from:userA});
     console.log("get reward for user A");
     console.log("gas used: " +tx.receipt.gasUsed);
 
