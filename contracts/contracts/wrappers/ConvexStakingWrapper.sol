@@ -57,13 +57,13 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
     event Deposited(address indexed _user, address indexed _account, uint256 _amount, bool _wrapped);
     event Withdrawn(address indexed _user, uint256 _amount, bool _unwrapped);
 
-    constructor(address _curveToken, address _convexToken, address _convexPool, uint256 _poolId, address _vault)
+    constructor(address _curveToken, address _convexToken, address _convexPool, uint256 _poolId, address _vault, string memory _nameTag, string memory _symbolTag)
     public
     ERC20(
         string(
-            abi.encodePacked("Staked ", ERC20(_convexToken).name())
+            abi.encodePacked("Staked ", ERC20(_convexToken).name(), _nameTag )
         ),
-        string(abi.encodePacked("stk", ERC20(_convexToken).symbol()))
+        string(abi.encodePacked("stk", ERC20(_convexToken).symbol(), _symbolTag))
     ) Ownable() {
         curveToken = _curveToken;
         convexToken = _convexToken;
@@ -201,6 +201,10 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
     function user_checkpoint(address[2] calldata _accounts) external returns(bool) {
         _checkpoint([_accounts[0], _accounts[1]]);
         return true;
+    }
+
+    function totalBalanceOf(address _account) external view returns(uint256){
+        return _getDepositedBalance(_account);
     }
 
     function earned(address _account) external view returns(uint256[] memory claimable) {
