@@ -96,8 +96,9 @@ contract("Test lock contract", async accounts => {
       var currentTime = await time.latest();
       currentTime = (currentTime / (86400*7)).toFixed(0) * (86400*7)
       console.log("current epoch: " + currentTime);
+      return currentTime;
     }
-    await currentEpoch();
+    let firstepoch = await currentEpoch();
 
     await locker.epochCount().then(a=>console.log("epoch count before: " +a))
     await locker.checkpointEpoch();
@@ -280,9 +281,33 @@ contract("Test lock contract", async accounts => {
     await advanceTime(day*7*12);
     await locker.checkpointEpoch();
     await currentEpoch();
-    await lockerInfo();
     await userInfo(userA);
     await userInfo(userB);
+    await lockerInfo();
+
+    //find epoch id checks
+    var epochNow = await currentEpoch();
+    function getRandomRange(min, max) {
+      return (Math.random() * (max - min) + min).toFixed(0);
+    }
+    for(var i=0; i < 20; i++){
+      var r = getRandomRange(firstepoch, epochNow);
+      if(i==0){
+        r = firstepoch;
+      }
+      if(i==1){
+        r = epochNow;
+      }
+      var epochIdx = await locker.findEpochId(r);
+      var repoch = await locker.epochs(epochIdx);
+      var epochDate = Number(repoch.date);
+      var nextEpoch = epochDate + (86400*7);
+      console.log("random: " +r +"  epochIdx: " +epochIdx +"  epochDate: " +epochDate +"  next epoch: " +nextEpoch);
+      assert(r < nextEpoch,"random value should be less than the start of next epoch");
+      assert(r >= epochDate,"random value should be greater or equal to given epoch")
+    }
+
+
 
     console.log("process locks for user A(withdraw), check cvx supply, user lock data update, user wallet info")
     var tx = await locker.processExpiredLocks(false,{from:userA});
