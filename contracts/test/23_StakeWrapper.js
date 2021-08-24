@@ -95,11 +95,11 @@ contract("Test stake wrapper", async accounts => {
     console.log("deposited into convex");
 
 
-    await staker.deposit(userABalance,userA,{from:userA});
-    console.log("user A deposited")
+    var tx = await staker.deposit(userABalance,userA,{from:userA});
+    console.log("user A deposited: " +tx.receipt.gasUsed)
     await convexAave.balanceOf(userB).then(a=>console.log("user b convex aave: " +a));
-    await staker.stake(userBBalance,userB,{from:userB});
-    console.log("user b staked");
+    var tx = await staker.stake(userBBalance,userB,{from:userB});
+    console.log("user b staked: " +tx.receipt.gasUsed)
     await staker.totalSupply().then(a=>console.log("staker supply: " +a));
 
     await staker.balanceOf(userA).then(a=>console.log("user a: " +a));
@@ -128,6 +128,19 @@ contract("Test stake wrapper", async accounts => {
     console.log("checkpoint a gas: " +tx.receipt.gasUsed)
     var tx = await staker.user_checkpoint([userB,addressZero]);
     console.log("checkpoint b gas: " +tx.receipt.gasUsed)
+
+    await staker.earned(userA).then(a=>console.log("user a earned: " +a ));
+    await staker.earned(userB).then(a=>console.log("user b earned: " +a ));
+
+    await time.increase(86400);
+    await time.advanceBlock();
+    console.log("advance time...");
+    var tx = await convexAaveRewards.getReward(staker.address,true);
+    console.log("getReward gas: " +tx.receipt.gasUsed);
+
+    await staker.earned(userA).then(a=>console.log("user a earned: " +a ));
+    await staker.earned(userB).then(a=>console.log("user b earned: " +a ));
+
     await crv.balanceOf(staker.address).then(a=>console.log("staker crv: " +a));
     await cvx.balanceOf(staker.address).then(a=>console.log("staker cvx: " +a));
     await stkaave.balanceOf(staker.address).then(a=>console.log("staker stkaave: " +a));
