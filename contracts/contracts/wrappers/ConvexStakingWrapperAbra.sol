@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 
 import "../interfaces/ICauldron.sol";
+import "../interfaces/IBentoBox.sol";
 import "./ConvexStakingWrapper.sol";
 
 //Staking wrapper for Abracadabra platform
@@ -28,6 +29,7 @@ contract ConvexStakingWrapperAbra is ConvexStakingWrapper {
         
         //get collateral balance
         uint256 collateral = ICauldron(cauldron).userCollateralShare(_account);
+        collateral = IBentoBox(collateralVault).toAmount(address(this), collateral, false);
 
         //add to balance of this token
         return balanceOf(_account).add(collateral);
