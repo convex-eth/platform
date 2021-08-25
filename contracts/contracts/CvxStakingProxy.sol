@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.6 .12;
 
+import "./interfaces/ICrvDepositor.sol";
 import '@openzeppelin/contracts/utils/Address.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
 
 
-interface IDepositor {
-    function deposit(uint256, bool) external;
-}
 
 interface IConvexRewards {
     function withdraw(uint256 _amount, bool _claim) external;
@@ -129,7 +127,7 @@ contract CvxStakingProxy {
         //convert any crv that was directly added
         uint256 crvBal = IERC20(crv).balanceOf(address(this));
         if (crvBal > 0) {
-            IDepositor(crvDeposit).deposit(crvBal, true);
+            ICrvDepositor(crvDeposit).deposit(crvBal, true);
         }
 
         //distribute cvxcrv
