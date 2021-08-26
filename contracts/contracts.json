@@ -25,7 +25,8 @@
         "chefcvxCrvToken": "0x83D128b0b661dc79A71790b14A9c96e6191FB565",
         "cvxEthRewarder": "0x9e01aaC4b3e8781a85b21d9d9F848e72Af77B362",
         "cvxCrvCrvRewarder": "0x1FD97b5E5a257B0B9b9A42A96BB8870Cbdd1Eb79",
-        "votePrize": "0x9402Ebd77427C4e21Bcc26CeA4C5d332Cbf248D1"
+        "votePrize": "0x9402Ebd77427C4e21Bcc26CeA4C5d332Cbf248D1",
+        "cvxMining": "0x3c75BFe6FbfDa3A94E7E7E8c2216AFc684dE5343"
     },
     "pools": [{
             "lptoken": "0x845838DF265Dcd2c412A1Dc9e959c7d08537f8a2",
@@ -565,6 +566,11 @@
             "swap": "0x5a6A4D54456819380173272A5E8E9B9904BdF41B",
             "currency": "USD",
             "name": "mim",
+            "extras": [{
+                "contract": "0x69a92f1656cd2e193797546cFe2EaF32EACcf6f7",
+                "token": "0x090185f2135308bad17527004364ebcc2d37e5f6",
+                "name": "SPELL"
+            }],
             "id": 40
         }
     ]

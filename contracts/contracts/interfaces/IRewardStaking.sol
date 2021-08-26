@@ -9,7 +9,8 @@ interface IRewardStaking {
     function earned(address account) external view returns (uint256);
     function getReward() external;
     function getReward(address _account, bool _claimExtras) external;
-    function extraRewardsLength() external returns (uint256);
-    function extraRewards(uint256 _pid) external returns (address);
-    function rewardToken() external returns (address);
+    function extraRewardsLength() external view returns (uint256);
+    function extraRewards(uint256 _pid) external view returns (address);
+    function rewardToken() external view returns (address);
+    function balanceOf(address _account) external view returns (uint256);
 }
