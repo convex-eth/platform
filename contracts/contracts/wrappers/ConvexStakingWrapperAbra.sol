@@ -15,11 +15,15 @@ contract ConvexStakingWrapperAbra is ConvexStakingWrapper {
     using SafeMath
     for uint256;
 
-    address public immutable cauldron;
+    address public cauldron;
 
-    constructor(address _curveToken, address _convexToken, address _convexPool, uint256 _poolId, address _vault)
+    constructor(address _curveToken, address _convexToken, address _convexPool, uint256 _poolId)
     public ConvexStakingWrapper(_curveToken, _convexToken, _convexPool, _poolId, address(0xF5BCE5077908a1b7370B9ae04AdC565EBd643966)," Abra", "-abra"){
-        cauldron = _vault;
+    }
+
+    function setCauldron(address _cauldron) external onlyOwner{
+        require(cauldron == address(0),"!0");
+        cauldron = _cauldron;
     }
 
     function _getDepositedBalance(address _account) internal override view returns(uint256) {
