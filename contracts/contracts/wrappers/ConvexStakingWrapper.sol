@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.6.12;
+pragma experimental ABIEncoderV2;
 
 import "../interfaces/IRewardStaking.sol";
 import "../interfaces/IConvexDeposits.sol";
@@ -24,6 +25,11 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
     for address;
     using SafeMath
     for uint256;
+
+    struct EarnedData {
+        address token;
+        uint256 amount;
+    }
 
     struct RewardType {
         address reward_token;
@@ -254,11 +260,11 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
         return _getDepositedBalance(_account);
     }
 
-    function earned(address _account) external view returns(uint256[] memory claimable) {
+    function earned(address _account) external view returns(EarnedData[] memory claimable) {
         uint256 supply = _getTotalSupply();
         // uint256 depositedBalance = _getDepositedBalance(_account);
         uint256 rewardCount = rewards.length;
-        claimable = new uint256[](rewardCount + 1);
+        claimable = new EarnedData[](rewardCount + 1);
 
         for (uint256 i = 0; i < rewardCount; i++) {
             RewardType storage reward = rewards[i];
@@ -274,13 +280,16 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
             }
 
             uint256 newlyClaimable = _getDepositedBalance(_account).mul(I.sub(reward.reward_integral_for[_account])).div(1e20);
-            claimable[i] = reward.claimable_reward[_account].add(newlyClaimable);
+            claimable[i].amount = reward.claimable_reward[_account].add(newlyClaimable);
+            claimable[i].token = reward.reward_token;
 
             //calc cvx here
             if(reward.reward_token == crv){
-                claimable[rewardCount] = cvx_claimable_reward[_account].add(CvxMining.ConvertCrvToCvx(newlyClaimable));
+                claimable[rewardCount].amount = cvx_claimable_reward[_account].add(CvxMining.ConvertCrvToCvx(newlyClaimable));
+                claimable[i].token = cvx;
             }
         }
+        return claimable;
     }
 
     function getReward(address _account) external {

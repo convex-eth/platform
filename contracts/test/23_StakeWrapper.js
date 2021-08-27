@@ -10,7 +10,6 @@ const cvxCrvToken = artifacts.require("cvxCrvToken");
 const CurveVoterProxy = artifacts.require("CurveVoterProxy");
 const BaseRewardPool = artifacts.require("BaseRewardPool");
 const ConvexStakingWrapper = artifacts.require("ConvexStakingWrapper");
-const ConvexStakingWrapperV2 = artifacts.require("ConvexStakingWrapperV2");
 const IERC20 = artifacts.require("IERC20");
 const ICurveAavePool = artifacts.require("ICurveAavePool");
 const IExchange = artifacts.require("IExchange");
@@ -70,7 +69,7 @@ contract("Test stake wrapper", async accounts => {
     var userBBalance = await curveAave.balanceOf(userB);
     console.log("userA: " +userABalance +",  userB: " +userBBalance);
 
-    let lib = await CvxMining.new();
+    let lib = await CvxMining.at(contractList.system.cvxMining);
     console.log("mining lib at: " +lib.address);
     await ConvexStakingWrapper.link("CvxMining", lib.address);
     let staker = await ConvexStakingWrapper.new(curveAave.address,convexAave.address,convexAaveRewards.address, aavepool, addressZero, " Test", "tst", {from:deployer});
