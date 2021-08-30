@@ -27,8 +27,6 @@ contract CvxCrvRari is CvxCrvStakingWrapper {
 
     //NOTE: the collateralVault (rari's ftoken) MUST be modified to call checkpoint([from,to]) when doing transfers
 
-    //TODO: check with Rari team if this is the proper way to handle everything.
-
     constructor(address _vault)
     public CvxCrvStakingWrapper(_vault," Rari", "-rari"){}
 
@@ -46,14 +44,20 @@ contract CvxCrvRari is CvxCrvStakingWrapper {
     }
 
     function _getTotalSupply() internal override view returns(uint256){
+        uint256 tSupply = totalSupply();
 
-        //get outstanding supply by exchangeRate*supply - supply
-        uint256 exchange = IRariToken(collateralVault).exchangeRateCurrent();
-        uint256 fsupply = IRariToken(collateralVault).totalSupply();
-        uint256 outstanding = exchange.mul(fsupply).div(1e18).sub(fsupply);
 
-        //add the outstanding supply to this token's supply
-        return totalSupply().add(outstanding);
+        //MEMO: if ONLY used as colalteral, total supply doesnt have to take into account borrowing
+        //get outstanding supply by exchangeRate*supply - cash
+        // uint256 exchange = IRariToken(collateralVault).exchangeRateCurrent();
+        // uint256 fsupply = IRariToken(collateralVault).totalSupply();
+        // uint256 cash = IRariToken(collateralVault).getCash()();
+        // uint256 outstanding = exchange.mul(fsupply).sub(cash);
+        // //add the outstanding supply to this token's supply
+        // tSupply = tSupply.add(outstanding);
+
+        
+        return tSupply;
     }
 
 }

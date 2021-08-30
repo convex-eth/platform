@@ -7,5 +7,7 @@ interface IRariToken {
     function getCash() external view returns (uint);
     function totalBorrows() external view returns (uint);
     function totalReserves() external view returns (uint);
+    function totalAdminFees() external view returns (uint);
+    function totalFuseFees() external view returns (uint);
     function exchangeRateCurrent() external view returns (uint);
 }
