@@ -12,6 +12,7 @@ import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 //Stash v3: support for curve gauge reward redirect
 //v3.1: support for arbitrary token rewards outside of gauge rewards
 //      add reward hook to pull rewards during claims
+//v3.2: move constuctor to init function for proxy creation
 
 contract ExtraRewardStashV3 {
     using SafeERC20 for IERC20;
@@ -21,11 +22,11 @@ contract ExtraRewardStashV3 {
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
     uint256 private constant maxRewards = 8;
 
-    uint256 public immutable pid;
-    address public immutable operator;
-    address public immutable staker;
-    address public immutable gauge;
-    address public immutable rewardFactory;
+    uint256 public pid;
+    address public operator;
+    address public staker;
+    address public gauge;
+    address public rewardFactory;
    
     mapping(address => uint256) public historicalRewards;
     bool public hasRedirected;
@@ -44,6 +45,10 @@ contract ExtraRewardStashV3 {
     address public rewardHook;
 
     constructor(uint256 _pid, address _operator, address _staker, address _gauge, address _rFactory) public {
+    }
+
+    function initialize(uint256 _pid, address _operator, address _staker, address _gauge, address _rFactory) external {
+        require(gauge == address(0),"2init");
         pid = _pid;
         operator = _operator;
         staker = _staker;
@@ -52,7 +57,7 @@ contract ExtraRewardStashV3 {
     }
 
     function getName() external pure returns (string memory) {
-        return "ExtraRewardStashV3.1";
+        return "ExtraRewardStashV3.2";
     }
 
     function tokenCount() external view returns (uint256){
