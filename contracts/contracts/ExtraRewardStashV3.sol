@@ -44,7 +44,7 @@ contract ExtraRewardStashV3 {
     //address to call for reward pulls
     address public rewardHook;
 
-    constructor(uint256 _pid, address _operator, address _staker, address _gauge, address _rFactory) public {
+    constructor() public {
     }
 
     function initialize(uint256 _pid, address _operator, address _staker, address _gauge, address _rFactory) external {

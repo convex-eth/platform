@@ -9,7 +9,7 @@ import '@openzeppelin/contracts/utils/Address.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 
 
-contract StashFactory {
+contract StashFactoryV2 {
     using Address for address;
 
     bytes4 private constant rewarded_token = 0x16fa50b1; //rewarded_token()
@@ -45,16 +45,19 @@ contract StashFactory {
 
         if(_stashVersion == uint256(3) && IsV3(_gauge)){
             //v3
+            require(v3Implementation!=address(0),"0 impl");
             address stash = IProxyFactory(proxyFactory).clone(v3Implementation);
             IStash(stash).initialize(_pid,operator,_staker,_gauge,rewardFactory);
             return stash;
         }else if(_stashVersion == uint256(1) && IsV1(_gauge)){
             //v1
+            require(v1Implementation!=address(0),"0 impl");
             address stash = IProxyFactory(proxyFactory).clone(v1Implementation);
             IStash(stash).initialize(_pid,operator,_staker,_gauge,rewardFactory);
             return stash;
         }else if(_stashVersion == uint256(2) && !IsV3(_gauge) && IsV2(_gauge)){
             //v2
+            require(v2Implementation!=address(0),"0 impl");
             address stash = IProxyFactory(proxyFactory).clone(v2Implementation);
             IStash(stash).initialize(_pid,operator,_staker,_gauge,rewardFactory);
             return stash;
