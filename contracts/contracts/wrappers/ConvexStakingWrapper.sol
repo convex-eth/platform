@@ -286,7 +286,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
             //calc cvx here
             if(reward.reward_token == crv){
                 claimable[rewardCount].amount = cvx_claimable_reward[_account].add(CvxMining.ConvertCrvToCvx(newlyClaimable));
-                claimable[i].token = cvx;
+                claimable[rewardCount].token = cvx;
             }
         }
         return claimable;
