@@ -13,6 +13,7 @@ const IUniswapV2Router01 = artifacts.require("IUniswapV2Router01");
 const DepositToken = artifacts.require("DepositToken");
 const IDelegation = artifacts.require("IDelegation");
 const BasicCvxHolder = artifacts.require("BasicCvxHolder");
+const BaseRewardPool = artifacts.require("BaseRewardPool");
 
 
 contract("setup lock contract", async accounts => {
@@ -47,6 +48,13 @@ contract("setup lock contract", async accounts => {
     var isShutdown = false;
 
     let starttime = await time.latest();
+
+    const advanceTime = async (secondsElaspse) => {
+      await time.increase(secondsElaspse);
+      await time.advanceBlock();
+      console.log("\n  >>>>  advance time " +(secondsElaspse/86400) +" days  >>>>\n");
+    }
+    const day = 86400;
 
     //swap for cvx
     await weth.sendTransaction({value:web3.utils.toWei("10.0", "ether"),from:deployer});
@@ -92,6 +100,47 @@ contract("setup lock contract", async accounts => {
     //snapshot website creates a tx with data that looks like this:
     //0xbd86e508 6376782e65746800000000000000000000000000000000000000000000000000000000000000000000000000
     //..which appears to NOT be keccak and is just a string
+
+    await cvx.transfer(holder.address,cvxbalance,{from:userA});
+    await cvx.balanceOf(holder.address).then(a=>console.log("unlocked cvx: " +a));
+    await holder.lock(0,0);
+    await cvx.balanceOf(holder.address).then(a=>console.log("unlocked cvx: " +a));
+    await locker.lockedBalanceOf(holder.address).then(a=>console.log("locked cvx: " +a));
+    await locker.balanceOf(holder.address).then(a=>console.log("voting power: " +a));
+    await locker.lockedBalances(holder.address).then(a=>console.log("locked balances: " +JSON.stringify(a)));
+  
+
+    await advanceTime(day);
+    await stakeproxy.distribute();
+    await advanceTime(day);
+    await locker.claimableRewards(holder.address).then(a=>console.log("claimables: " +a));
+
+    await advanceTime(day);
+    await locker.lockedBalances(holder.address).then(a=>console.log("locked balances: " +JSON.stringify(a)));
+  
+    await advanceTime(day * 7);
+    await locker.lockedBalances(holder.address).then(a=>console.log("locked balances: " +JSON.stringify(a)));
+  
+    await locker.claimableRewards(holder.address).then(a=>console.log("claimables: " +a));
+    await holder.processRewards();
+    await locker.claimableRewards(holder.address).then(a=>console.log("claimables: " +a));
+
+
+    await advanceTime(day * 7 * 16);
+    await locker.lockedBalances(holder.address).then(a=>console.log("locked balances: " +JSON.stringify(a)));
+  
+    await holder.processExpiredLocks(false,0);
+    console.log("locks processed");
+    var cvxcrvRewards = await BaseRewardPool.at("0x3Fe65692bfCD0e6CF84cB1E7d24108E434A7587e");
+    var cvxcrvBal = await cvxcrvRewards.balanceOf(holder.address);
+    console.log("staked cvxcrv: " +cvxcrvBal);
+    await holder.withdrawCvxCrv(cvxcrvBal,userA);
+
+    await cvxcrv.balanceOf(userA).then(a=>console.log("withdraw cvxcrv to a: " +a));
+
+    await holder.withdrawTo(cvx.address, cvxbalance, userA);
+
+    await cvx.balanceOf(userA).then(a=>console.log("withdraw cvx to a: " +a));
   });
 });
 
