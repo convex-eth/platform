@@ -137,6 +137,8 @@ contract("Test stake wrapper", async accounts => {
     var tx = await convexAaveRewards.getReward(staker.address,true);
     console.log("getReward gas: " +tx.receipt.gasUsed);
 
+    await booster.earmarkRewards(24,{from:deployer});
+
     await staker.earned(userA).then(a=>console.log("user a earned: " +a ));
     await staker.earned(userB).then(a=>console.log("user b earned: " +a ));
 
@@ -159,10 +161,115 @@ contract("Test stake wrapper", async accounts => {
     await crv.balanceOf(userB).then(a=>console.log("user b wallet crv: " +a));
     await cvx.balanceOf(userB).then(a=>console.log("user b wallet cvx: " +a));
     await stkaave.balanceOf(userB).then(a=>console.log("user b wallet stkaave: " +a));
+    for(var i = 0; i < rewardCount; i++){
+      var rInfo = await staker.rewards(i);
+      console.log("rewards " +i +": " +JSON.stringify(rInfo));
+    }
 
-    //test transfering to account C
+
+    await time.increase(86400);
+    await time.advanceBlock();
+    console.log("\n\nadvance time...");
+    console.log("======");
+    await staker.earned(userA).then(a=>console.log("user a earned: " +a ));
+    await crv.balanceOf(userA).then(a=>console.log("user a wallet crv: " +a));
+    await cvx.balanceOf(userA).then(a=>console.log("user a wallet cvx: " +a));
+    await stkaave.balanceOf(userA).then(a=>console.log("user a wallet stkaave: " +a));
+    console.log("-----");
+    await staker.earned(userB).then(a=>console.log("user b earned: " +a ));
+    await crv.balanceOf(userB).then(a=>console.log("user b wallet crv: " +a));
+    await cvx.balanceOf(userB).then(a=>console.log("user b wallet cvx: " +a));
+    await stkaave.balanceOf(userB).then(a=>console.log("user b wallet stkaave: " +a));
+    console.log("claiming rewards...");
+    var tx = await staker.getReward(userA,{from:userA});
+    console.log("claimed A, gas: " +tx.receipt.gasUsed)
+    var tx = await staker.getReward(userB,{from:userB});
+    console.log("claimed B, gas: " +tx.receipt.gasUsed)
+    await crv.balanceOf(staker.address).then(a=>console.log("crv on staker: " +a));
+    console.log("======");
+    await staker.earned(userA).then(a=>console.log("user a earned: " +a ));
+    await crv.balanceOf(userA).then(a=>console.log("user a wallet crv: " +a));
+    await cvx.balanceOf(userA).then(a=>console.log("user a wallet cvx: " +a));
+    await stkaave.balanceOf(userA).then(a=>console.log("user a wallet stkaave: " +a));
+    console.log("-----");
+    await staker.earned(userB).then(a=>console.log("user b earned: " +a ));
+    await crv.balanceOf(userB).then(a=>console.log("user b wallet crv: " +a));
+    await cvx.balanceOf(userB).then(a=>console.log("user b wallet cvx: " +a));
+    await stkaave.balanceOf(userB).then(a=>console.log("user b wallet stkaave: " +a));
+    for(var i = 0; i < rewardCount; i++){
+      var rInfo = await staker.rewards(i);
+      console.log("rewards " +i +": " +JSON.stringify(rInfo));
+    }
+
+    await booster.earmarkRewards(24,{from:deployer});
+    await time.increase(86400*5);
+    await time.advanceBlock();
+    console.log("\n\nadvance time...");
+    console.log("======");
+    await staker.earned(userA).then(a=>console.log("user a earned: " +a ));
+    await crv.balanceOf(userA).then(a=>console.log("user a wallet crv: " +a));
+    await cvx.balanceOf(userA).then(a=>console.log("user a wallet cvx: " +a));
+    await stkaave.balanceOf(userA).then(a=>console.log("user a wallet stkaave: " +a));
+    console.log("-----");
+    await staker.earned(userB).then(a=>console.log("user b earned: " +a ));
+    await crv.balanceOf(userB).then(a=>console.log("user b wallet crv: " +a));
+    await cvx.balanceOf(userB).then(a=>console.log("user b wallet cvx: " +a));
+    await stkaave.balanceOf(userB).then(a=>console.log("user b wallet stkaave: " +a));
+    console.log("claiming rewards...");
+    var tx = await staker.getReward(userA,{from:userA});
+    console.log("claimed A, gas: " +tx.receipt.gasUsed)
+    var tx = await staker.getReward(userB,{from:userB});
+    console.log("claimed B, gas: " +tx.receipt.gasUsed)
+    await crv.balanceOf(staker.address).then(a=>console.log("crv on staker: " +a));
+    console.log("======");
+    await staker.earned(userA).then(a=>console.log("user a earned: " +a ));
+    await crv.balanceOf(userA).then(a=>console.log("user a wallet crv: " +a));
+    await cvx.balanceOf(userA).then(a=>console.log("user a wallet cvx: " +a));
+    await stkaave.balanceOf(userA).then(a=>console.log("user a wallet stkaave: " +a));
+    console.log("-----");
+    await staker.earned(userB).then(a=>console.log("user b earned: " +a ));
+    await crv.balanceOf(userB).then(a=>console.log("user b wallet crv: " +a));
+    await cvx.balanceOf(userB).then(a=>console.log("user b wallet cvx: " +a));
+    await stkaave.balanceOf(userB).then(a=>console.log("user b wallet stkaave: " +a));
+    for(var i = 0; i < rewardCount; i++){
+      var rInfo = await staker.rewards(i);
+      console.log("rewards " +i +": " +JSON.stringify(rInfo));
+    }
+
+    await booster.earmarkRewards(24,{from:deployer});
+    await time.increase(86400*10);
+    await time.advanceBlock();
+    console.log("\n\nadvance time...");
+    console.log("======");
+    await staker.earned(userA).then(a=>console.log("user a earned: " +a ));
+    await crv.balanceOf(userA).then(a=>console.log("user a wallet crv: " +a));
+    await cvx.balanceOf(userA).then(a=>console.log("user a wallet cvx: " +a));
+    await stkaave.balanceOf(userA).then(a=>console.log("user a wallet stkaave: " +a));
+    console.log("-----");
+    await staker.earned(userB).then(a=>console.log("user b earned: " +a ));
+    await crv.balanceOf(userB).then(a=>console.log("user b wallet crv: " +a));
+    await cvx.balanceOf(userB).then(a=>console.log("user b wallet cvx: " +a));
+    await stkaave.balanceOf(userB).then(a=>console.log("user b wallet stkaave: " +a));
+    console.log("claiming rewards...");
+    var tx = await staker.getReward(userA,{from:userA});
+    console.log("claimed A, gas: " +tx.receipt.gasUsed)
+    var tx = await staker.getReward(userB,{from:userB});
+    console.log("claimed B, gas: " +tx.receipt.gasUsed)
+    console.log("======");
+    await staker.earned(userA).then(a=>console.log("user a earned: " +a ));
+    await crv.balanceOf(userA).then(a=>console.log("user a wallet crv: " +a));
+    await cvx.balanceOf(userA).then(a=>console.log("user a wallet cvx: " +a));
+    await stkaave.balanceOf(userA).then(a=>console.log("user a wallet stkaave: " +a));
+    console.log("-----");
+    await staker.earned(userB).then(a=>console.log("user b earned: " +a ));
+    await crv.balanceOf(userB).then(a=>console.log("user b wallet crv: " +a));
+    await cvx.balanceOf(userB).then(a=>console.log("user b wallet cvx: " +a));
+    await stkaave.balanceOf(userB).then(a=>console.log("user b wallet stkaave: " +a));
 
 
+    await time.increase(86400);
+    await time.advanceBlock();
+    console.log("\n\nadvance time...");
     //withdraw
     console.log("withdrawing...");
     await staker.withdrawAndUnwrap(userABalance,{from:userA});
