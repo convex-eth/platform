@@ -10,14 +10,6 @@ contract("Move Time", async accounts => {
     await time.increase(86400);
     await time.advanceBlock();
     await time.advanceBlock();
-    await time.advanceBlock();
-    await time.advanceBlock();
-    await time.advanceBlock();
-    await time.advanceBlock();
-    await time.advanceBlock();
-    await time.advanceBlock();
-    await time.advanceBlock();
-    await time.advanceBlock();
     console.log("advance time...");
     await time.latest().then(a=>console.log("current time: " +a))
     await time.latestBlock().then(a=>console.log("current block: " +a));

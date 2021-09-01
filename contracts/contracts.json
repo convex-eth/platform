@@ -573,5 +573,23 @@
             }],
             "id": 40
         }
+    ],
+    "abrapools":[
+        {
+            "token":"0xd92494CB921E5C0d3A39eA88d0147bbd82E51008",
+            "name":"stk-3pool"
+        },
+        {
+            "token":"0x0f323FB120Abc243eda72f2d344b627Cd4f37335",
+            "name":"stk-tricrypto2"
+        },
+        {
+            "token":"0xF538e33EEd98912988bfaF5B0e3989FDa9eD61ab",
+            "name":"stk-ren"
+        },
+        {
+            "token":"0xd7F2007514eeD82e078C77d98C375f1D7aEA44eA",
+            "name":"stk-alusd"
+        }
     ]
 }

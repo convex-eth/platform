@@ -36,6 +36,11 @@ library BoringMath {
         c = uint32(a);
     }
 
+    function to40(uint256 a) internal pure returns (uint40 c) {
+        require(a <= uint40(-1), "BoringMath: uint40 Overflow");
+        c = uint40(a);
+    }
+
     function to112(uint256 a) internal pure returns (uint112 c) {
         require(a <= uint112(-1), "BoringMath: uint112 Overflow");
         c = uint112(a);
@@ -44,6 +49,16 @@ library BoringMath {
     function to224(uint256 a) internal pure returns (uint224 c) {
         require(a <= uint224(-1), "BoringMath: uint224 Overflow");
         c = uint224(a);
+    }
+
+    function to208(uint256 a) internal pure returns (uint208 c) {
+        require(a <= uint208(-1), "BoringMath: uint208 Overflow");
+        c = uint208(a);
+    }
+
+    function to216(uint256 a) internal pure returns (uint216 c) {
+        require(a <= uint216(-1), "BoringMath: uint216 Overflow");
+        c = uint216(a);
     }
 }
 

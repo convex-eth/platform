@@ -1,19 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.6.12;
 
-import '@openzeppelin/contracts/utils/Address.sol';
+import "./interfaces/MathUtil.sol";
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
 
-library Math {
-    /**
-     * @dev Returns the smallest of two numbers.
-     */
-    function min(uint256 a, uint256 b) internal pure returns (uint256) {
-        return a < b ? a : b;
-    }
-}
 
 interface IBasicRewards{
     function getReward(address _account, bool _claimExtras) external;
@@ -45,7 +37,6 @@ interface ISwapExchange {
 
 contract ClaimZap{
     using SafeERC20 for IERC20;
-    using Address for address;
     using SafeMath for uint256;
 
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
@@ -118,7 +109,7 @@ contract ClaimZap{
         //lock upto given amount of crv and stake
         if(depositCrvMaxAmount > 0){
             crvBalance = IERC20(crv).balanceOf(msg.sender).sub(crvBalance);
-            crvBalance = Math.min(crvBalance, depositCrvMaxAmount);
+            crvBalance = MathUtil.min(crvBalance, depositCrvMaxAmount);
             if(crvBalance > 0){
                 //pull crv
                 IERC20(crv).safeTransferFrom(msg.sender, address(this), crvBalance);
@@ -142,7 +133,7 @@ contract ClaimZap{
         //stake upto given amount of cvx
         if(depositCvxMaxAmount > 0){
             cvxBalance = IERC20(cvx).balanceOf(msg.sender).sub(cvxBalance);
-            cvxBalance = Math.min(cvxBalance, depositCvxMaxAmount);
+            cvxBalance = MathUtil.min(cvxBalance, depositCvxMaxAmount);
             if(cvxBalance > 0){
                 //pull cvx
                 IERC20(cvx).safeTransferFrom(msg.sender, address(this), cvxBalance);
