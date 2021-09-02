@@ -94,7 +94,7 @@ contract("Test lock contract", async accounts => {
 
     const currentEpoch = async() =>{
       var currentTime = await time.latest();
-      currentTime = (currentTime / (86400*7)).toFixed(0) * (86400*7)
+      currentTime = (Math.floor(currentTime / (86400*7))).toFixed(0) * (86400*7)
       console.log("current epoch: " + currentTime);
       return currentTime;
     }
