@@ -27,8 +27,8 @@
         "cvxCrvCrvRewarder": "0x1FD97b5E5a257B0B9b9A42A96BB8870Cbdd1Eb79",
         "votePrize": "0x9402Ebd77427C4e21Bcc26CeA4C5d332Cbf248D1",
         "cvxMining": "0x3c75BFe6FbfDa3A94E7E7E8c2216AFc684dE5343",
-        "locker": "0x5ae0FCa14Ed08a3122FFB8d624E063e07bce56A1",
-        "lockerStakeProxy": "0x4401f14970a874D27FAd5C8a945292cbE97943fa"
+        "locker": "0xD18140b4B819b895A3dba5442F959fA44994AF50",
+        "lockerStakeProxy": "0xE096ccEc4a1D36F191189Fe61E803d8B2044DFC3"
     },
     "pools": [
         {
