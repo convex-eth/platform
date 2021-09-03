@@ -26,9 +26,12 @@
         "cvxEthRewarder": "0x9e01aaC4b3e8781a85b21d9d9F848e72Af77B362",
         "cvxCrvCrvRewarder": "0x1FD97b5E5a257B0B9b9A42A96BB8870Cbdd1Eb79",
         "votePrize": "0x9402Ebd77427C4e21Bcc26CeA4C5d332Cbf248D1",
-        "cvxMining": "0x3c75BFe6FbfDa3A94E7E7E8c2216AFc684dE5343"
+        "cvxMining": "0x3c75BFe6FbfDa3A94E7E7E8c2216AFc684dE5343",
+        "locker": "0x5ae0FCa14Ed08a3122FFB8d624E063e07bce56A1",
+        "lockerStakeProxy": "0x4401f14970a874D27FAd5C8a945292cbE97943fa"
     },
-    "pools": [{
+    "pools": [
+        {
             "lptoken": "0x845838DF265Dcd2c412A1Dc9e959c7d08537f8a2",
             "token": "0x32512Bee3848bfcBb7bEAf647aa697a100f3b706",
             "gauge": "0x7ca5b0a2910B33e9759DC7dDB0413949071D7575",
@@ -81,11 +84,13 @@
             "swap": "0xA5407eAE9Ba41422680e2e00537571bcC53efBfD",
             "currency": "USD",
             "name": "susd",
-            "extras": [{
-                "contract": "0x81fCe3E10D12Da6c7266a1A169c4C96813435263",
-                "token": "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f",
-                "name": "SNX"
-            }],
+            "extras": [
+                {
+                    "contract": "0x81fCe3E10D12Da6c7266a1A169c4C96813435263",
+                    "token": "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f",
+                    "name": "SNX"
+                }
+            ],
             "id": 4
         },
         {
@@ -207,11 +212,13 @@
             "swap": "0xC18cC39da8b11dA8c3541C598eE022258F9744da",
             "currency": "USD",
             "name": "rsv",
-            "extras": [{
-                "contract": "0x94C259DC4C6dF248B0b5D23C055CB7574A587d67",
-                "token": "0x8762db106b2c2a0bccb3a80d1ed41273552616e8",
-                "name": "rsr"
-            }],
+            "extras": [
+                {
+                    "contract": "0x94C259DC4C6dF248B0b5D23C055CB7574A587d67",
+                    "token": "0x8762db106b2c2a0bccb3a80d1ed41273552616e8",
+                    "name": "rsr"
+                }
+            ],
             "id": 15
         },
         {
@@ -234,11 +241,13 @@
             "swap": "0x8038C01A0390a8c547446a0b2c18fc9aEFEcc10c",
             "currency": "USD",
             "name": "dusd",
-            "extras": [{
-                "contract": "0x666F8eEE6FD6839853993977CC86a7A51425673C",
-                "token": "0x20c36f062a31865bED8a5B1e512D9a1A20AA333A",
-                "name": "dfd"
-            }],
+            "extras": [
+                {
+                    "contract": "0x666F8eEE6FD6839853993977CC86a7A51425673C",
+                    "token": "0x20c36f062a31865bED8a5B1e512D9a1A20AA333A",
+                    "name": "dfd"
+                }
+            ],
             "id": 17
         },
         {
@@ -250,11 +259,13 @@
             "swap": "0x7F55DDe206dbAD629C080068923b36fe9D6bDBeF",
             "currency": "BTC",
             "name": "pbtc",
-            "extras": [{
-                "contract": "0xAF138B29205c2246B069Ed8f0b213b205FBc14E0",
-                "token": "0x89Ab32156e46F46D02ade3FEcbe5Fc4243B9AAeD",
-                "name": "PNT"
-            }],
+            "extras": [
+                {
+                    "contract": "0xAF138B29205c2246B069Ed8f0b213b205FBc14E0",
+                    "token": "0x89Ab32156e46F46D02ade3FEcbe5Fc4243B9AAeD",
+                    "name": "PNT"
+                }
+            ],
             "id": 18
         },
         {
@@ -277,11 +288,13 @@
             "swap": "0xd81dA8D904b52208541Bade1bD6595D8a251F8dd",
             "currency": "BTC",
             "name": "obtc",
-            "extras": [{
-                "contract": "0xAE97D3766924526084dA88ba9B2bd7aF989Bf6fC",
-                "token": "0x3c9d6c1C73b31c837832c72E04D3152f051fc1A9",
-                "name": "BOR"
-            }],
+            "extras": [
+                {
+                    "contract": "0xAE97D3766924526084dA88ba9B2bd7aF989Bf6fC",
+                    "token": "0x3c9d6c1C73b31c837832c72E04D3152f051fc1A9",
+                    "name": "BOR"
+                }
+            ],
             "id": 20
         },
         {
@@ -326,11 +339,13 @@
             "swap": "0xDeBF20617708857ebe4F679508E7b7863a8A8EeE",
             "currency": "USD",
             "name": "aave",
-            "extras": [{
-                "contract": "0x00469d388b06127221D6310843A43D079eb2bB18",
-                "token": "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9",
-                "name": "stkAave"
-            }],
+            "extras": [
+                {
+                    "contract": "0x00469d388b06127221D6310843A43D079eb2bB18",
+                    "token": "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9",
+                    "name": "stkAave"
+                }
+            ],
             "id": 24
         },
         {
@@ -342,11 +357,13 @@
             "swap": "0xDC24316b9AE028F1497c275EB9192a3Ea0f67022",
             "currency": "ETH",
             "name": "steth",
-            "extras": [{
-                "contract": "0x008aEa5036b819B4FEAEd10b2190FBb3954981E8",
-                "token": "0x5a98fcbea516cf06857215779fd812ca3bef1b32",
-                "name": "LDO"
-            }],
+            "extras": [
+                {
+                    "contract": "0x008aEa5036b819B4FEAEd10b2190FBb3954981E8",
+                    "token": "0x5a98fcbea516cf06857215779fd812ca3bef1b32",
+                    "name": "LDO"
+                }
+            ],
             "id": 25
         },
         {
@@ -358,11 +375,13 @@
             "swap": "0xEB16Ae0052ed37f479f7fe63849198Df1765a733",
             "currency": "USD",
             "name": "saave",
-            "extras": [{
-                "contract": "0x20165075174b51a2f9Efbf7d6D8F3c72BBc63064",
-                "token": "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9",
-                "name": "stkAave"
-            }],
+            "extras": [
+                {
+                    "contract": "0x20165075174b51a2f9Efbf7d6D8F3c72BBc63064",
+                    "token": "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9",
+                    "name": "stkAave"
+                }
+            ],
             "id": 26
         },
         {
@@ -374,7 +393,8 @@
             "swap": "0xA96A65c051bF88B4095Ee1f2451C2A9d43F53Ae2",
             "currency": "ETH",
             "name": "ankreth",
-            "extras": [{
+            "extras": [
+                {
                     "contract": "0x177252Ac74f1D77513971aA85AF7009C43EcdEe2",
                     "token": "0xe0ad1806fd3e7edf6ff52fdb822432e847411033",
                     "name": "onx"
@@ -440,11 +460,13 @@
             "swap": "0xd632f22692FaC7611d2AA1C0D552930D43CAEd3B",
             "currency": "USD",
             "name": "frax",
-            "extras": [{
-                "contract": "0xcDEC6714eB482f28f4889A0c122868450CDBF0b0",
-                "token": "0x3432b6a60d23ca0dfca7761b7ab56459d9c964d0",
-                "name": "FXS"
-            }],
+            "extras": [
+                {
+                    "contract": "0xcDEC6714eB482f28f4889A0c122868450CDBF0b0",
+                    "token": "0x3432b6a60d23ca0dfca7761b7ab56459d9c964d0",
+                    "name": "FXS"
+                }
+            ],
             "id": 32
         },
         {
@@ -455,11 +477,13 @@
             "stash": "0x06D972728A9d05CA6F27EDc01e20b50A60b1Deed",
             "swap": "0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA",
             "currency": "USD",
-            "extras": [{
-                "contract": "0x55d59b791f06dc519B176791c4E037E8Cf2f6361",
-                "token": "0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D",
-                "name": "LQTY"
-            }],
+            "extras": [
+                {
+                    "contract": "0x55d59b791f06dc519B176791c4E037E8Cf2f6361",
+                    "token": "0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D",
+                    "name": "LQTY"
+                }
+            ],
             "name": "lusd",
             "id": 33
         },
@@ -482,11 +506,13 @@
             "stash": "0x644C8d1eD4b6aA68738a93C5c13c7fC19e126587",
             "swap": "0xF9440930043eb3997fc70e1339dBb11F341de7A8",
             "currency": "ETH",
-            "extras": [{
-                "contract": "0x681A790debE586A64eea055BF0983CD6629d8359",
-                "token": "0xef3A930e1FfFFAcd2fc13434aC81bD278B0ecC8d",
-                "name": "FIS"
-            }],
+            "extras": [
+                {
+                    "contract": "0x681A790debE586A64eea055BF0983CD6629d8359",
+                    "token": "0xef3A930e1FfFFAcd2fc13434aC81bD278B0ecC8d",
+                    "name": "FIS"
+                }
+            ],
             "name": "reth",
             "id": 35
         },
@@ -498,11 +524,13 @@
             "stash": "0x521e6EEfDa35f7228f8f83462552bDB41D64d86B",
             "swap": "0x43b4FdFD4Ff969587185cDB6f0BD875c5Fc83f8c",
             "currency": "USD",
-            "extras": [{
-                "contract": "0xd731495bb78a4250bC094686788F3fF890dEe0f4",
-                "token": "0xdbdb4d16eda451d0503b854cf79d55697f90c8df",
-                "name": "ALCX"
-            }],
+            "extras": [
+                {
+                    "contract": "0xd731495bb78a4250bC094686788F3fF890dEe0f4",
+                    "token": "0xdbdb4d16eda451d0503b854cf79d55697f90c8df",
+                    "name": "ALCX"
+                }
+            ],
             "name": "alusd",
             "id": 36
         },
@@ -522,7 +550,9 @@
                 "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
             ],
             "coinDecimals": [
-                6, 8, 18
+                6,
+                8,
+                18
             ],
             "id": 37
         },
@@ -542,7 +572,9 @@
                 "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
             ],
             "coinDecimals": [
-                6, 8, 18
+                6,
+                8,
+                18
             ],
             "id": 38
         },
@@ -566,30 +598,33 @@
             "swap": "0x5a6A4D54456819380173272A5E8E9B9904BdF41B",
             "currency": "USD",
             "name": "mim",
-            "extras": [{
-                "contract": "0x69a92f1656cd2e193797546cFe2EaF32EACcf6f7",
-                "token": "0x090185f2135308bad17527004364ebcc2d37e5f6",
-                "name": "SPELL"
-            }],
+            "extras": [
+                {
+                    "contract": "0x69a92f1656cd2e193797546cFe2EaF32EACcf6f7",
+                    "token": "0x090185f2135308bad17527004364ebcc2d37e5f6",
+                    "name": "SPELL"
+                }
+            ],
             "id": 40
         }
     ],
-    "abrapools":[
+    "abrapools": [
         {
-            "token":"0xd92494CB921E5C0d3A39eA88d0147bbd82E51008",
-            "name":"stk-3pool"
+            "token": "0xd92494CB921E5C0d3A39eA88d0147bbd82E51008",
+            "cauldron": "0x806e16ec797c69afa8590A55723CE4CC1b54050E",
+            "name": "stk-3pool"
         },
         {
-            "token":"0x0f323FB120Abc243eda72f2d344b627Cd4f37335",
-            "name":"stk-tricrypto2"
+            "token": "0x0f323FB120Abc243eda72f2d344b627Cd4f37335",
+            "name": "stk-tricrypto2"
         },
         {
-            "token":"0xF538e33EEd98912988bfaF5B0e3989FDa9eD61ab",
-            "name":"stk-ren"
+            "token": "0xF538e33EEd98912988bfaF5B0e3989FDa9eD61ab",
+            "name": "stk-ren"
         },
         {
-            "token":"0xd7F2007514eeD82e078C77d98C375f1D7aEA44eA",
-            "name":"stk-alusd"
+            "token": "0xd7F2007514eeD82e078C77d98C375f1D7aEA44eA",
+            "name": "stk-alusd"
         }
     ]
 }
