@@ -187,8 +187,13 @@ contract("Test lock contract", async accounts => {
     const day = 86400;
     await advanceTime(day);
 
+    await cvxrewards.getReward(stakeproxy.address, true, true);
+    await cvxcrvrewards.balanceOf(stakeproxy.address).then(a=>console.log("staked cvxcrv on proxy: " +a));
+
     await stakeproxy.distribute({from:deployer});
     console.log("distribute()");
+    await cvxcrvrewards.balanceOf(stakeproxy.address).then(a=>console.log("staked cvxcrv on proxy: " +a));
+    
 
     await lockerInfo();
     await userInfo(userA);
