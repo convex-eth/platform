@@ -79,19 +79,19 @@ contract("setup stash proxies", async accounts => {
     await advanceTime(day*7);
 
     //execute vote for new pool
-    var voter = await IVoteStarter.at("0xE478de485ad2fe566d49342Cbd03E49ed7DB3356");
-    await voter.executeVote(73);
-    console.log("vote executed");
+    // var voter = await IVoteStarter.at("0xE478de485ad2fe566d49342Cbd03E49ed7DB3356");
+    // await voter.executeVote(73);
+    // console.log("vote executed");
 
     var cvxcrvLP = await IERC20.at("0x9D0464996170c6B9e75eED71c68B99dDEDf279e8");
     var cvxcrvGauge = "0x903dA6213a5A12B61c821598154EfAd98C3B20E4";
     var trigauge = "0xDeFd8FdD20e0f34115C7018CCfb655796F6B2168";
 
     //add weight
-    await booster.voteGaugeWeight([trigauge,cvxcrvGauge],[0,1500],{from:multisig,gasPrice:0});
-    console.log("weight added");
+    // await booster.voteGaugeWeight([trigauge,cvxcrvGauge],[0,1500],{from:multisig,gasPrice:0});
+    // console.log("weight added");
 
-    await advanceTime(day*7);
+    // await advanceTime(day*7);
 
     await pools.revertControl({from:multisig,gasPrice:0});
     console.log("reverted pool control");

@@ -6,7 +6,7 @@
         "booster": "0xF403C135812408BFbE8713b5A23a04b3D48AAE31",
         "rFactory": "0xEdCCB35798fae4925718A43cc608aE136208aa8D",
         "tFactory": "0x3c995e43E6ddD551E226F4c5544C77BfeD147aB9",
-        "sFactory": "0xF40d5402A35b181F440C6c3b7729398Caf807CAE",
+        "sFactory": "0x884da067B66677e72530df91eabb6e3CE69c2bE4",
         "cvxCrv": "0x62B9c7356A2Dc64a1969e19C23e4f579F9810Aa7",
         "crvDepositor": "0x8014595F2AB54cD7c604B00E9fb932176fDc86Ae",
         "cvxCrvRewards": "0x3Fe65692bfCD0e6CF84cB1E7d24108E434A7587e",
@@ -28,7 +28,9 @@
         "votePrize": "0x9402Ebd77427C4e21Bcc26CeA4C5d332Cbf248D1",
         "cvxMining": "0x3c75BFe6FbfDa3A94E7E7E8c2216AFc684dE5343",
         "locker": "0xD18140b4B819b895A3dba5442F959fA44994AF50",
-        "lockerStakeProxy": "0xE096ccEc4a1D36F191189Fe61E803d8B2044DFC3"
+        "lockerStakeProxy": "0xE096ccEc4a1D36F191189Fe61E803d8B2044DFC3",
+        "proxyFactory": "0x66807B5598A848602734B82E432dD88DBE13fC8f",
+        "stashv3Impl": "0xd7AbC64CAFc30FDd08A42Ea4bC13846be455399C"
     },
     "pools": [
         {

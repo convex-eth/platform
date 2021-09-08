@@ -48,7 +48,7 @@ contract ExtraRewardStashV3 {
     }
 
     function initialize(uint256 _pid, address _operator, address _staker, address _gauge, address _rFactory) external {
-        require(gauge == address(0),"2init");
+        require(gauge == address(0),"!init");
         pid = _pid;
         operator = _operator;
         staker = _staker;
