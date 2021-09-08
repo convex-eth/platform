@@ -61,8 +61,9 @@ contract("setup stash proxies", async accounts => {
 
     //deploy
     let pfactory = await ProxyFactory.new({from:deployer});
+    console.log("proxy factory: " +pfactory.address);
     let sfactory = await StashFactoryV2.new(contractList.system.booster,contractList.system.rFactory,pfactory.address,{from:deployer});
-    console.log("deployed: " +sfactory.address);
+    console.log("stash factory: " +sfactory.address);
     let v3impl = await ExtraRewardStashV3.new();
     console.log("impl at " +v3impl.address);
     await sfactory.setImplementation(addressZero,addressZero,v3impl.address,{from:multisig,gasPrice:0});
