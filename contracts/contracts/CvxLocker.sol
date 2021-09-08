@@ -162,9 +162,9 @@ contract CvxLocker is ReentrancyGuard, Ownable {
         rewardDistributors[_rewardsToken][_distributor] = _approved;
     }
 
-    //Set the staking contract for the underlying cvx. immutable to avoid foul play
+    //Set the staking contract for the underlying cvx. only allow change if nothing is currently staked
     function setStakingContract(address _staking) external onlyOwner {
-        require(stakingProxy == address(0), "staking contract immutable");
+        require(stakingProxy == address(0) || (minimumStake == 0 && maximumStake == 0), "!assign");
 
         stakingProxy = _staking;
     }

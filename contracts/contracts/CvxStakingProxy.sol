@@ -45,6 +45,7 @@ contract CvxStakingProxy {
 
     //convex addresses
     address public constant cvxStaking = address(0xCF50b810E57Ac33B91dCF525C6ddd9881B139332);
+    address public constant cvxCrvStaking = address(0x3Fe65692bfCD0e6CF84cB1E7d24108E434A7587e);
     address public constant crvDeposit = address(0x8014595F2AB54cD7c604B00E9fb932176fDc86Ae);
     uint256 public constant denominator = 10000;
 
@@ -128,6 +129,12 @@ contract CvxStakingProxy {
         uint256 crvBal = IERC20(crv).balanceOf(address(this));
         if (crvBal > 0) {
             ICrvDepositor(crvDeposit).deposit(crvBal, true);
+        }
+
+        //make sure nothing is in here
+        uint256 sCheck  = IConvexRewards(cvxCrvStaking).balanceOf(address(this));
+        if(sCheck > 0){
+            IConvexRewards(cvxCrvStaking).withdraw(sCheck,false);
         }
 
         //distribute cvxcrv
