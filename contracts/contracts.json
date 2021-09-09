@@ -608,6 +608,24 @@
                 }
             ],
             "id": 40
+        },
+        {
+            "lptoken": "0x9D0464996170c6B9e75eED71c68B99dDEDf279e8",
+            "token": "0x8FDF7cabfEc73d5FfD1447867834b4cf39B745B7",
+            "gauge": "0x903dA6213a5A12B61c821598154EfAd98C3B20E4",
+            "crvRewards": "0x0392321e86F42C2F94FBb0c6853052487db521F0",
+            "stash": "0xF025A9FbcaA41E03e7a443716fe2182d13cf80a4",
+            "swap": "0x9D0464996170c6B9e75eED71c68B99dDEDf279e8",
+            "currency": "ETH",
+            "name": "cvxcrv",
+            "extras": [
+                {
+                    "contract": "0xbE4DEa8E5d1E53FAd661610E47501f858F25852D",
+                    "token": "0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b",
+                    "name": "CVX"
+                }
+            ],
+            "id": 41
         }
     ],
     "abrapools": [
