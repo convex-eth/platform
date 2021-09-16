@@ -644,7 +644,14 @@
             "stash": "0xc87E93D6138c08a99b581f6dE4424c1e4b71A03F",
             "swap": "0x8818a9bb44Fbf33502bE7c15c500d0C783B73067",
             "currency": "JPY",
-            "name": "f-ibjpy",
+            "name": "fixedforex:jpy",
+            "extras": [
+                {
+                    "contract": "",
+                    "token": "0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b",
+                    "name": "CVX"
+                }
+            ],
             "id": 42
         },
         {
@@ -655,7 +662,14 @@
             "stash": "0xA335f705e0e33e986Bae79244F2Cd73899932290",
             "swap": "0xD6Ac1CB9019137a896343Da59dDE6d097F710538",
             "currency": "GBP",
-            "name": "f-ibgbp",
+            "name": "fixedforex:gbp",
+            "extras": [
+                {
+                    "contract": "",
+                    "token": "0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b",
+                    "name": "CVX"
+                }
+            ],
             "id": 43
         },
         {
@@ -666,7 +680,14 @@
             "stash": "0xCc96f06fa34d934a90089793b27d36801842A599",
             "swap": "0x3F1B0278A9ee595635B61817630cC19DE792f506",
             "currency": "AUD",
-            "name": "f-ibaud",
+            "name": "fixedforex:aud",
+            "extras": [
+                {
+                    "contract": "",
+                    "token": "0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b",
+                    "name": "CVX"
+                }
+            ],
             "id": 44
         },
         {
@@ -677,7 +698,14 @@
             "stash": "0x65d3834Ca2F62AB3f484cD50bB8a2Ba784cc69AA",
             "swap": "0x19b080FE1ffA0553469D20Ca36219F17Fcf03859",
             "currency": "EUR",
-            "name": "f-ibeur",
+            "name": "fixedforex:eur",
+            "extras": [
+                {
+                    "contract": "",
+                    "token": "0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b",
+                    "name": "CVX"
+                }
+            ],
             "id": 45
         },
         {
@@ -688,7 +716,14 @@
             "stash": "0x44789Fa0e02ed06E3cA4A1405CBef7EA2F11D282",
             "swap": "0x9c2C8910F113181783c249d8F6Aa41b51Cde0f0c",
             "currency": "CHF",
-            "name": "f-ibchf",
+            "name": "fixedforex:chf",
+            "extras": [
+                {
+                    "contract": "",
+                    "token": "0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b",
+                    "name": "CVX"
+                }
+            ],
             "id": 46
         },
         {
@@ -699,7 +734,14 @@
             "stash": "0xb75b7297f29d5f6211f112D24b1edF9Dc77eD834",
             "swap": "0x8461A004b50d321CB22B7d034969cE6803911899",
             "currency": "KRW",
-            "name": "f-ibkrw",
+            "name": "fixedforex:krw",
+            "extras": [
+                {
+                    "contract": "",
+                    "token": "0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b",
+                    "name": "CVX"
+                }
+            ],
             "id": 47
         }
     ],
