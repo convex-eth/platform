@@ -80,8 +80,8 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     function initialize(address _curveToken, address _convexToken, address _convexPool, uint256 _poolId, address _vault)
     virtual external {
         require(!isInit,"already init");
-        owner = msg.sender;
-        emit OwnershipTransferred(address(0), msg.sender);
+        owner = address(0xa3C5A1e09150B75ff251c1a7815A07182c3de2FB); //default to convex multisig
+        emit OwnershipTransferred(address(0), owner);
 
         _tokenname = string(abi.encodePacked("Staked ", ERC20(_convexToken).name() ));
         _tokensymbol = string(abi.encodePacked("stk", ERC20(_convexToken).symbol()));
@@ -92,6 +92,10 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         convexPool = _convexPool;
         convexPoolId = _poolId;
         collateralVault = _vault;
+
+        //add rewards
+        addRewards();
+        setApprovals();
     }
 
     function name() public view override returns (string memory) {
@@ -122,14 +126,14 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         isShutdown = true;
     }
 
-    function setApprovals() external {
+    function setApprovals() public {
         IERC20(curveToken).safeApprove(convexBooster, 0);
         IERC20(curveToken).safeApprove(convexBooster, uint256(-1));
         IERC20(convexToken).safeApprove(convexPool, 0);
         IERC20(convexToken).safeApprove(convexPool, uint256(-1));
     }
 
-    function addRewards() external {
+    function addRewards() public {
         address mainPool = convexPool;
 
         if (rewards.length == 0) {

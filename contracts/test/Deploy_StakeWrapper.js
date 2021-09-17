@@ -16,6 +16,7 @@ const IExchange = artifacts.require("IExchange");
 const IUniswapV2Router01 = artifacts.require("IUniswapV2Router01");
 const CvxMining = artifacts.require("CvxMining");
 const ConvexStakingWrapperAbra = artifacts.require("ConvexStakingWrapperAbra");
+const ProxyFactory = artifacts.require("ProxyFactory");
 
 contract("Deploy stake wrapper", async accounts => {
   it("should deploy contracts", async () => {
@@ -42,41 +43,34 @@ contract("Deploy stake wrapper", async accounts => {
     let convexAaveRewards = await BaseRewardPool.at("0xE82c1eB4BC6F92f85BF7EB6421ab3b882C3F5a7B");
     let dai = await IERC20.at("0x6B175474E89094C44Da98b954EedeAC495271d0F");
 
-    //3pool
-    // let curveLP = "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490";
-    // let convexLP = "0x30D9410ED1D5DA1F6C8391af5338C93ab8d4035C";
-    // let convexPool = "0x689440f2Ff927E1f24c72F1087E1FAF471eCe1c8";
-    // let poolId = 9;
+    //master deploy
+    // let lib = await CvxMining.at(contractList.system.cvxMining);
+    // console.log("mining lib at: " +lib.address);
+    // await ConvexStakingWrapperAbra.link("CvxMining", lib.address);
 
-    //tri2
-    // let curveLP = "0xc4AD29ba4B3c580e6D59105FFf484999997675Ff";
-    // let convexLP = "0x903C9974aAA431A765e60bC07aF45f0A1B3b61fb";
-    // let convexPool = "0x9D5C5E364D81DaB193b72db9E9BE9D8ee669B652";
-    // let poolId = 38;
+    // let master = await ConvexStakingWrapperAbra.new();
+    // console.log("master abra wrapper: " +master.address);
+    // return;
 
-    // //ren
-    // let curveLP = "0x49849C98ae39Fff122806C06791Fa73784FB3675";
-    // let convexLP = "0x74b79021Ea6De3f0D1731fb8BdfF6eE7DF10b8Ae";
-    // let convexPool = "0x8E299C62EeD737a5d5a53539dF37b5356a27b07D";
-    // let poolId = 6;
+    //clone deploy
+    // let cloneName = "ren";
+    // let cloneName = "tricrypto2";
+    let cloneName = "alusd";
 
-    // //alusd
-    let curveLP = "0x43b4FdFD4Ff969587185cDB6f0BD875c5Fc83f8c";
-    let convexLP = "0xCA3D9F45FfA69ED454E66539298709cb2dB8cA61";
-    let convexPool = "0x02E2151D4F351881017ABdF2DD2b51150841d5B3";
-    let poolId = 36;
-
-
-    var cvxlib = await CvxMining.at(contractList.system.cvxMining);
-    console.log("mining cvxlib at: " +cvxlib.address);
-    await ConvexStakingWrapperAbra.link("CvxMining", cvxlib.address);
-    var abraLP = await ConvexStakingWrapperAbra.new(curveLP,convexLP,convexPool,poolId,{from:deployer});
-    console.log("abraLP token: " +abraLP.address);
-    await abraLP.name().then(a=>console.log("name: " +a));
-    await abraLP.symbol().then(a=>console.log("symbol: " +a));
-    await abraLP.setApprovals();
-    await abraLP.addRewards({from:deployer});
-    console.log("finish");
+    let pfactory = await ProxyFactory.at(contractList.system.proxyFactory);
+    let clone = await pfactory.clone.call(contractList.system.masterAbraWrapper);
+    console.log("clone: " +clone);
+    let clonetx = await pfactory.clone(contractList.system.masterAbraWrapper);
+    
+    let staker = await ConvexStakingWrapperAbra.at(clone)
+    let pool = contractList.pools.find(a => a.name == cloneName);
+    await staker.initialize(pool.lptoken,pool.token,pool.crvRewards,pool.id,addressZero);
+    console.log("staker token: " +staker.address);
+    await staker.name().then(a=>console.log("name: " +a));
+    await staker.symbol().then(a=>console.log("symbol: " +a));
+    await staker.curveToken().then(a=>console.log("curve token: " +a));
+    await staker.convexToken().then(a=>console.log("convex token: " +a));
+    await staker.convexPoolId().then(a=>console.log("convex poolId: " +a));
 
     return;
   });

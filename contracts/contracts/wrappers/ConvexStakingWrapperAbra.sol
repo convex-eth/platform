@@ -23,8 +23,8 @@ contract ConvexStakingWrapperAbra is ConvexStakingWrapper {
     function initialize(address _curveToken, address _convexToken, address _convexPool, uint256 _poolId, address _vault)
     override external {
         require(!isInit,"already init");
-        owner = msg.sender;
-        emit OwnershipTransferred(address(0), msg.sender);
+        owner = address(0xa3C5A1e09150B75ff251c1a7815A07182c3de2FB); //default to convex multisig
+        emit OwnershipTransferred(address(0), owner);
         _tokenname = string(abi.encodePacked("Staked ", ERC20(_convexToken).name(), " Abra" ));
         _tokensymbol = string(abi.encodePacked("stk", ERC20(_convexToken).symbol(), "-abra"));
         isShutdown = false;
@@ -35,16 +35,24 @@ contract ConvexStakingWrapperAbra is ConvexStakingWrapper {
         convexPoolId = _poolId;
         cauldron = _vault;
         collateralVault = address(0xF5BCE5077908a1b7370B9ae04AdC565EBd643966);
+    
+        //add rewards
+        addRewards();
+        setApprovals();
     }
 
     function setCauldron(address _cauldron) external onlyOwner{
-        require(cauldron == address(0),"!0");
+        require(cauldron == address(0),"!0"); //immutable once set
         cauldron = _cauldron;
     }
 
     function _getDepositedBalance(address _account) internal override view returns(uint256) {
         if (_account == address(0) || _account == collateralVault) {
             return 0;
+        }
+
+        if(cauldron == address(0)){
+            return balanceOf(_account);
         }
         
         //get collateral balance
