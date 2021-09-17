@@ -18,8 +18,23 @@ contract ConvexStakingWrapperAbra is ConvexStakingWrapper {
 
     address public cauldron;
 
-    constructor(address _curveToken, address _convexToken, address _convexPool, uint256 _poolId)
-    public ConvexStakingWrapper(_curveToken, _convexToken, _convexPool, _poolId, address(0xF5BCE5077908a1b7370B9ae04AdC565EBd643966)," Abra", "-abra"){
+    constructor() public{}
+
+    function initialize(address _curveToken, address _convexToken, address _convexPool, uint256 _poolId, address _vault)
+    override external {
+        require(!isInit,"already init");
+        owner = msg.sender;
+        emit OwnershipTransferred(address(0), msg.sender);
+        _tokenname = string(abi.encodePacked("Staked ", ERC20(_convexToken).name(), " Abra" ));
+        _tokensymbol = string(abi.encodePacked("stk", ERC20(_convexToken).symbol(), "-abra"));
+        isShutdown = false;
+        isInit = true;
+        curveToken = _curveToken;
+        convexToken = _convexToken;
+        convexPool = _convexPool;
+        convexPoolId = _poolId;
+        cauldron = _vault;
+        collateralVault = address(0xF5BCE5077908a1b7370B9ae04AdC565EBd643966);
     }
 
     function setCauldron(address _cauldron) external onlyOwner{

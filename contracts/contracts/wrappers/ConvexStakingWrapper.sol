@@ -11,14 +11,14 @@ import '@openzeppelin/contracts/utils/Address.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+// import "@openzeppelin/contracts/access/Ownable.sol";
 
 
 //Example of a tokenize a convex staked position.
 //if used as collateral some modifications will be needed to fit the specific platform
 
 //Based on Curve.fi's gauge wrapper implementations at https://github.com/curvefi/curve-dao-contracts/tree/master/contracts/gauges/wrappers
-contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
+contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     using SafeERC20
     for IERC20;
     using Address
@@ -49,34 +49,73 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard, Ownable {
     address public constant convexBooster = address(0xF403C135812408BFbE8713b5A23a04b3D48AAE31);
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
     address public constant cvx = address(0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B);
-    address public immutable curveToken;
-    address public immutable convexToken;
-    address public immutable convexPool;
-    uint256 public immutable convexPoolId;
-    address public immutable collateralVault;
+    address public curveToken;
+    address public convexToken;
+    address public convexPool;
+    uint256 public convexPoolId;
+    address public collateralVault;
 
     //rewards
     RewardType[] public rewards;
 
     //management
-    bool public isShutdown = false;
+    bool public isShutdown;
+    bool public isInit;
+    address public owner;
+
+    string internal _tokenname;
+    string internal _tokensymbol;
 
     event Deposited(address indexed _user, address indexed _account, uint256 _amount, bool _wrapped);
     event Withdrawn(address indexed _user, uint256 _amount, bool _unwrapped);
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
-    constructor(address _curveToken, address _convexToken, address _convexPool, uint256 _poolId, address _vault, string memory _nameTag, string memory _symbolTag)
-    public
-    ERC20(
-        string(
-            abi.encodePacked("Staked ", ERC20(_convexToken).name(), _nameTag )
-        ),
-        string(abi.encodePacked("stk", ERC20(_convexToken).symbol(), _symbolTag))
-    ) Ownable() {
+    constructor() public
+        ERC20(
+            "StakedConvexToken",
+            "stkCvx"
+        ){
+    }
+
+    function initialize(address _curveToken, address _convexToken, address _convexPool, uint256 _poolId, address _vault)
+    virtual external {
+        require(!isInit,"already init");
+        owner = msg.sender;
+        emit OwnershipTransferred(address(0), msg.sender);
+
+        _tokenname = string(abi.encodePacked("Staked ", ERC20(_convexToken).name() ));
+        _tokensymbol = string(abi.encodePacked("stk", ERC20(_convexToken).symbol()));
+        isShutdown = false;
+        isInit = true;
         curveToken = _curveToken;
         convexToken = _convexToken;
         convexPool = _convexPool;
         convexPoolId = _poolId;
         collateralVault = _vault;
+    }
+
+    function name() public view override returns (string memory) {
+        return _tokenname;
+    }
+
+    function symbol() public view override returns (string memory) {
+        return _tokensymbol;
+    }
+
+    modifier onlyOwner() {
+        require(owner == msg.sender, "Ownable: caller is not the owner");
+        _;
+    }
+
+    function transferOwnership(address newOwner) public virtual onlyOwner {
+        require(newOwner != address(0), "Ownable: new owner is the zero address");
+        emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
+    }
+
+    function renounceOwnership() public virtual onlyOwner {
+        emit OwnershipTransferred(owner, address(0));
+        owner = address(0);
     }
 
     function shutdown() external onlyOwner {
