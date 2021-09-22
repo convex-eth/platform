@@ -30,7 +30,8 @@
         "locker": "0xD18140b4B819b895A3dba5442F959fA44994AF50",
         "lockerStakeProxy": "0xE096ccEc4a1D36F191189Fe61E803d8B2044DFC3",
         "proxyFactory": "0x66807B5598A848602734B82E432dD88DBE13fC8f",
-        "stashv3Impl": "0xd7AbC64CAFc30FDd08A42Ea4bC13846be455399C"
+        "stashv3Impl": "0xd7AbC64CAFc30FDd08A42Ea4bC13846be455399C",
+        "masterAbraWrapper": "0x6E7B467b76bC563B1ac0cD9C2dd7465127b30Cc1"
     },
     "curve":{
         "registry":"0x0000000022D53366457F9d5E68Ec105046FC4383",
@@ -752,15 +753,18 @@
             "name": "stk-3pool"
         },
         {
-            "token": "0x0f323FB120Abc243eda72f2d344b627Cd4f37335",
+            "token": "0x5958A8DB7dfE0CC49382209069b00F54e17929C2",
+            "cauldron": "",
             "name": "stk-tricrypto2"
         },
         {
-            "token": "0xF538e33EEd98912988bfaF5B0e3989FDa9eD61ab",
+            "token": "0x7bF98B2569335C022BDAa22ddD20E590a1Fbb0CE",
+            "cauldron": "",
             "name": "stk-ren"
         },
         {
-            "token": "0xd7F2007514eeD82e078C77d98C375f1D7aEA44eA",
+            "token": "0x684dB3c6E9E297774fb1372069098134D2453cE4",
+            "cauldron": "",
             "name": "stk-alusd"
         }
     ]
