@@ -648,7 +648,12 @@
             "name": "fixedforex:jpy",
             "extras": [
                 {
-                    "contract": "",
+                    "contract": "0x771bc5c888d1B318D0c5b177e4F996d3D5fd3d18",
+                    "token": "0xEdB67Ee1B171c4eC66E6c10EC43EDBbA20FaE8e9",
+                    "name": "rKP3R"
+                },
+                {
+                    "contract": "0x8a3F52c2Eb02De2d8356a8286c96909352c62B10",
                     "token": "0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b",
                     "name": "CVX"
                 }
@@ -665,6 +670,11 @@
             "currency": "GBP",
             "name": "fixedforex:gbp",
             "extras": [
+                {
+                    "contract": "",
+                    "token": "0xEdB67Ee1B171c4eC66E6c10EC43EDBbA20FaE8e9",
+                    "name": "rKP3R"
+                },
                 {
                     "contract": "",
                     "token": "0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b",
@@ -684,7 +694,12 @@
             "name": "fixedforex:aud",
             "extras": [
                 {
-                    "contract": "",
+                    "contract": "0x91ad51F0897552ce77f76B44e9a86B4Ad2B28c25",
+                    "token": "0xEdB67Ee1B171c4eC66E6c10EC43EDBbA20FaE8e9",
+                    "name": "rKP3R"
+                },
+                {
+                    "contract": "0x040A6Ae6314e190974ee4839f3c2FBf849EF54Eb",
                     "token": "0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b",
                     "name": "CVX"
                 }
@@ -701,6 +716,11 @@
             "currency": "EUR",
             "name": "fixedforex:eur",
             "extras": [
+                {
+                    "contract": "",
+                    "token": "0xEdB67Ee1B171c4eC66E6c10EC43EDBbA20FaE8e9",
+                    "name": "rKP3R"
+                },
                 {
                     "contract": "",
                     "token": "0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b",
@@ -721,6 +741,11 @@
             "extras": [
                 {
                     "contract": "",
+                    "token": "0xEdB67Ee1B171c4eC66E6c10EC43EDBbA20FaE8e9",
+                    "name": "rKP3R"
+                },
+                {
+                    "contract": "",
                     "token": "0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b",
                     "name": "CVX"
                 }
@@ -737,6 +762,11 @@
             "currency": "KRW",
             "name": "fixedforex:krw",
             "extras": [
+                {
+                    "contract": "",
+                    "token": "0xEdB67Ee1B171c4eC66E6c10EC43EDBbA20FaE8e9",
+                    "name": "rKP3R"
+                },
                 {
                     "contract": "",
                     "token": "0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b",
