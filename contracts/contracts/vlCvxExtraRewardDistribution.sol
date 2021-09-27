@@ -73,6 +73,9 @@ contract vlCvxExtraRewardDistribution {
 
         //pull
         IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+    
+        //event
+        emit RewardAdded(_token, _epoch, _amount);
     }
 
     //get claimable rewards for a specific token
@@ -116,6 +119,9 @@ contract vlCvxExtraRewardDistribution {
 
             //send
             IERC20(_token).safeTransfer(_account, claimableTokens);
+
+            //event
+            emit RewardPaid(_account, _token, claimableTokens);
         }
     }
 
@@ -138,6 +144,13 @@ contract vlCvxExtraRewardDistribution {
 
         //set claim checkpoint. next claim starts from index+1
         userClaims[_token][msg.sender] = _index + 1;
+
+        emit RewardForfeited(msg.sender, _token, _index);
     }
 
+
+    /* ========== EVENTS ========== */
+    event RewardAdded(address indexed _token, uint256 indexed _epoch, uint256 _reward);
+    event RewardPaid(address indexed _user, address indexed _rewardsToken, uint256 _reward);
+    event RewardForfeited(address indexed _user, address indexed _rewardsToken, uint256 _index);
 }

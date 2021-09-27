@@ -102,12 +102,6 @@ contract("Rescue tokens from voteProxy", async accounts => {
     let rstash = await ExtraRewardStashTokenRescue.at(poolInfo.stash);
     console.log("stash: " +rstash.address);
 
-    let alcx = await IERC20.at("0xdbdb4d16eda451d0503b854cf79d55697f90c8df");
-    let spell = await IERC20.at("0x090185f2135308bad17527004364ebcc2d37e5f6");
-
-    await rstash.setExtraReward(alcx.address,true,{from:multisig,gasPrice:0}); //alcx
-    await rstash.setExtraReward(spell.address,true,{from:multisig,gasPrice:0}); //spell
-    console.log("stash rewards added");
 
     //let rdeposit = await RewardDeposit.new(deployer);
     let rdeposit = await vlCvxExtraRewardDistribution.new();
@@ -117,16 +111,23 @@ contract("Rescue tokens from voteProxy", async accounts => {
     // await rstash.setDistribution(deployer,addressZero,deployer,{from:multisig,gasPrice:0});
     console.log("distro set");
 
+    let alcx = await IERC20.at("0xdbdb4d16eda451d0503b854cf79d55697f90c8df");
+    let spell = await IERC20.at("0x090185f2135308bad17527004364ebcc2d37e5f6");
+
+    await rstash.setExtraReward(alcx.address,true,{from:multisig,gasPrice:0}); //alcx
+    await rstash.setExtraReward(spell.address,true,{from:multisig,gasPrice:0}); //spell
+    console.log("stash rewards added");
+
     await alcx.balanceOf(contractList.system.voteProxy).then(a=>console.log("trapped alcx: "+a));
     await spell.balanceOf(contractList.system.voteProxy).then(a=>console.log("trapped spell: "+a));
 
-    await rstash.claimRewardToken(0,{from:deployer});
+    await rstash.claimRewardToken(alcx.address,{from:deployer});
     await rstash.setExtraReward(spell.address,false,{from:multisig,gasPrice:0}); //spell
     console.log("set spell off")
-    await rstash.claimRewardToken(1,{from:deployer}).catch(a=>console.log("-> revert: catch fail claim"));
+    await rstash.claimRewardToken(spell.address,{from:deployer}).catch(a=>console.log("-> revert: catch fail claim"));
     await rstash.setExtraReward(spell.address,true,{from:multisig,gasPrice:0}); //spell
     console.log("set spell on")
-    await rstash.claimRewardToken(1,{from:deployer});
+    await rstash.claimRewardToken(spell.address,{from:deployer});
     console.log("\nrescue tokens...\n");
 
     await alcx.balanceOf(contractList.system.voteProxy).then(a=>console.log("trapped alcx: "+a));
