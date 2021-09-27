@@ -16,19 +16,19 @@ contract ChefRewardHook is IRewardHook{
     IERC20 public constant rewardToken = IERC20(0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B);
     
     address public constant chef = address(0x5F465e9fcfFc217c5849906216581a657cd60605);
-    address public immutable distributor;
-    uint256 public immutable pid;
+    address public distributor;
+    uint256 public pid;
 
     bool public isInit;
 
-    constructor(address _distributor, uint256 _pid) public {
-        distributor = _distributor;
-        pid = _pid;
-    }
+    constructor() public {}
 
-    function init(IERC20 dummyToken) external {
+    function init(address _distributor, uint256 _pid, IERC20 dummyToken) external {
         require(!isInit,"already init");
         isInit = true;
+        distributor = _distributor;
+        pid = _pid;
+
         uint256 balance = dummyToken.balanceOf(msg.sender);
         require(balance != 0, "Balance must exceed 0");
         dummyToken.safeTransferFrom(msg.sender, address(this), balance);
