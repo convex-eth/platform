@@ -114,8 +114,7 @@ contract vlCvxExtraRewardDistribution {
     }
 
     function forfeitRewards(address _token, uint256 _index) external {
-        uint256 l = rewardEpochs[_token].length;
-        require(_index > 0 && _index < rewardEpochs[_token][l - 1], "!past");
+        require(_index > 0 && _index < rewardEpochs[_token].length-1, "!past");
         require(_index >= userClaims[_token][msg.sender], "already claimed");
 
         //set claim checkpoint. next claim starts from index+1

@@ -110,8 +110,8 @@ contract("Extra rewards for vlcvx", async accounts => {
     await rewardDistro.rewardEpochs(spell.address,1).then(a=>console.log("reward epochs: " +a));
     await rewardDistro.rewardData(spell.address,1).then(a=>console.log("reward data: " +a));
     await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable: " +a));
-    // var tx = await rewardDistro.getReward(userZ,spell.address);
-    // console.log("claimed, gas: " +tx.receipt.gasUsed);
+    var tx = await rewardDistro.getReward(userZ,spell.address);
+    console.log("claimed, gas: " +tx.receipt.gasUsed);
     await rewardDistro.userClaims(spell.address,userZ).then(a=>console.log("next user claim index: " +a));
     await spell.balanceOf(userZ).then(a=>console.log("spell on userZ: " +a));
   
@@ -129,12 +129,13 @@ contract("Extra rewards for vlcvx", async accounts => {
     await rewardDistro.rewardData(spell.address,2).then(a=>console.log("reward data(2): " +a));
     await rewardDistro.rewardData(spell.address,3).then(a=>console.log("reward data(3): " +a));
     // await rewardDistro.forfeitRewards(spell.address,1,{from:userZ,gasPrice:0});
-    await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable (should be 0): " +a));
+    // console.log("forfeit");
+    await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable (should not include epoch 3): " +a));
     await advanceTime(day*7);
-    await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable (should be 0): " +a));
+    await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable (should not include epoch 3): " +a));
     await locker.checkpointEpoch();
     console.log("checkpoint epoch");
-    await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable (should be positive): " +a));
+    await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable (should include epoch 3): " +a));
   });
 });
 
