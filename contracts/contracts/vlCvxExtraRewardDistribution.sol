@@ -120,7 +120,7 @@ contract vlCvxExtraRewardDistribution {
     }
 
     //claim multiple tokens
-    function getRewards(address _account, address[] calldata _tokens) public {
+    function getRewards(address _account, address[] calldata _tokens) external {
         for(uint i = 0; i < _tokens.length; i++){
             getReward(_account, _tokens[i]);
         }
