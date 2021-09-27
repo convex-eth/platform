@@ -105,8 +105,8 @@ contract vlCvxExtraRewardDistribution {
         return balance.mul(rewardData[_token][_epoch]).div(1e20);
     }
 
-    //get rewards for a specific token at a specific epoch
-    function getReward(address _account, address _token) external {
+    //claim rewards for a specific token at a specific epoch
+    function getReward(address _account, address _token) public {
         //get claimable tokens
         uint256 claimableTokens = _allClaimableRewards(_account, _token);
 
@@ -119,6 +119,12 @@ contract vlCvxExtraRewardDistribution {
         }
     }
 
+    //claim multiple tokens
+    function getRewards(address _account, address[] calldata _tokens) public {
+        for(uint i = 0; i < _tokens.length; i++){
+            getReward(_account, _tokens[i]);
+        }
+    }
 
     //Because claims cycle through all periods that a specific reward was given
     //there becomes a situation where, for example, a new user could lock
