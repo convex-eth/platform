@@ -25,9 +25,6 @@ const RescueToken = artifacts.require("RescueToken");
 const RewardDeposit = artifacts.require("RewardDeposit");
 const CvxLocker = artifacts.require("CvxLocker");
 const vlCvxExtraRewardDistribution = artifacts.require("vlCvxExtraRewardDistribution");
-// const ChefToken = artifacts.require("ChefToken");
-// const ChefRewardHook = artifacts.require("ChefRewardHook");
-// const TreasuryFunds = artifacts.require("TreasuryFunds");
 
 
 contract("Extra rewards for vlcvx", async accounts => {
@@ -48,43 +45,8 @@ contract("Extra rewards for vlcvx", async accounts => {
     let exchange = await IExchange.at("0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F");
     let exchangerouter = await IUniswapV2Router01.at("0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F");
     let weth = await IERC20.at("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
-    // let curvetoken = await IERC20.at("0x49849C98ae39Fff122806C06791Fa73784FB3675");
-    // let curveswap = await I2CurveFi.at("0x93054188d876f558f4a66B2EF1d97d16eDf0895B");
     let spell = await IERC20.at("0x090185f2135308bad17527004364ebcc2d37e5f6");
 
-    // let cheftoken = await ChefToken.at("0x51854310A2411e682F5C1A23924DD9de79D0342a");
-    // let chefhook = await ChefRewardHook.at("0x5e2706946c2bE55b038f4a0475cb7b19f5a67897");
-    // await cheftoken.approve(chefhook.address,web3.utils.toWei("1.0", "ether"),{from:deployer});
-    // await chefhook.init(contractList.system.treasury,5,cheftoken.address,{from:deployer});
-    // return;
-    // let treasury = await TreasuryFunds.at(contractList.system.treasury);
-    // var calldata = chefhook.contract.methods.onRewardClaim().encodeABI();
-    // console.log("calldata: " +calldata);
-
-    // await treasury.execute(chefhook.address,0,calldata,{from:multisig,gasPrice:0})
-    // await cvx.balanceOf(contractList.system.treasury).then(a=>console.log("treasury: " +a));
-    
-    // await time.increase(86400*1);
-    // await time.advanceBlock();
-    // await time.advanceBlock();
-    // await time.advanceBlock();
-    // await time.advanceBlock();
-    // await time.advanceBlock();
-    // await time.advanceBlock();
-    // await time.advanceBlock();
-    // await time.advanceBlock();
-    // await time.advanceBlock();
-    // await time.advanceBlock();
-    // await time.advanceBlock();
-    // await time.advanceBlock();
-    // await time.advanceBlock();
-    // await time.advanceBlock();
-
-    // await treasury.execute(chefhook.address,0,calldata,{from:multisig,gasPrice:0})
-
-    // await cvx.balanceOf(contractList.system.treasury).then(a=>console.log("treasury: " +a));
-
-    // return;
 
     let userA = accounts[0];
     let userB = accounts[1];
