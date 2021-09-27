@@ -15,7 +15,7 @@ import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 //v3.2: move constuctor to init function for proxy creation
 
 interface IRewardDeposit {
-    function depositNotify(address _token, uint256 _amount) external;
+    function addReward(address _token, uint256 _amount) external;
 }
 
 contract ExtraRewardStashTokenRescue {
@@ -34,6 +34,7 @@ contract ExtraRewardStashTokenRescue {
 
     address public distributor;
     address public rewardDeposit;
+    address public treasuryDeposit;
    
     // mapping(address => uint256) public historicalRewards;
     // bool public hasRedirected;
@@ -41,7 +42,7 @@ contract ExtraRewardStashTokenRescue {
 
     struct TokenInfo {
         address token;
-        //address rewardAddress;
+        bool active;
     }
 
     //use mapping+array so that we dont have to loop check each time setToken is called
@@ -72,17 +73,18 @@ contract ExtraRewardStashTokenRescue {
     }
 
     //try claiming if there are reward tokens registered
-    function claimRewards() external returns (bool) {
+    function claimRewards() external pure returns (bool) {
         return true;
     }
 
     function claimRewardToken(uint256 _tid) public returns (bool) {
-        require(msg.sender == distributor || distributor == address(0), "!distributor");
-        require(rewardDeposit != address(0), "!deposit set");
+        require(distributor == address(0) || msg.sender == distributor, "!distributor");
+        require(rewardDeposit != address(0) || treasuryDeposit != address(0), "!deposit set");
 
-        // TokenInfo storage t = tokenInfo[tokenList[_tid]];
-        address token = tokenInfo[tokenList[_tid]].token;
-        if(token == address(0)) return false;
+        TokenInfo storage t = tokenInfo[tokenList[_tid]];
+        address token = t.token;
+        require(t.active,"!active");
+        require(token != address(0),"!set");
         
         uint256 onstaker = IERC20(token).balanceOf(staker);
         if(onstaker > 0){
@@ -91,44 +93,50 @@ contract ExtraRewardStashTokenRescue {
 
         uint256 amount = IERC20(token).balanceOf(address(this));
         if (amount > 0) {
-            IERC20(token).safeTransfer(rewardDeposit,amount);
-            IRewardDeposit(rewardDeposit).depositNotify(token,amount);
+            if(rewardDeposit != address(0)){
+                IERC20(token).safeApprove(rewardDeposit,0);
+                IERC20(token).safeApprove(rewardDeposit,amount);
+                IRewardDeposit(rewardDeposit).addReward(token,amount);
+            }else{
+                //if reward deposit not set, send directly to treasury address
+                IERC20(token).safeTransfer(treasuryDeposit,amount);
+            }
         }
         return true;
     }
    
 
-    function setDistribution(address _distributor, address _deposit) external{
+    function setDistribution(address _distributor, address _rewardDeposit, address _treasury) external{
         require(IDeposit(operator).owner() == msg.sender, "!owner");
         distributor = _distributor;
-        rewardDeposit = _deposit;
+        rewardDeposit = _rewardDeposit;
+        treasuryDeposit = _treasury;
     }
 
     //register an extra reward token to be handled
-    // (any new incentive that is not directly on curve gauges)
-    function setExtraReward(address _token) external{
+    function setExtraReward(address _token, bool _active) external{
         //owner of booster can set extra rewards
         require(IDeposit(operator).owner() == msg.sender, "!owner");
-        setToken(_token);
+        setToken(_token, _active);
     }
 
-    // function setRewardHook(address _hook) external{
-    //     //owner of booster can set reward hook
-    //     require(IDeposit(operator).owner() == msg.sender, "!owner");
-    //     rewardHook = _hook;
-    // }
-
+    function resetTokenList() external{
+        require(IDeposit(operator).owner() == msg.sender, "!owner");
+        delete tokenList;
+    }
 
     //replace a token on token list
-    function setToken(address _token) internal {
+    function setToken(address _token, bool _active) internal {
         TokenInfo storage t = tokenInfo[_token];
 
         if(t.token == address(0)){
             //set token address
             t.token = _token;
-
+            t.active = true;
             //add token to list of known rewards
             tokenList.push(_token);
+        }else{
+            t.active = _active;
         }
     }
 
@@ -138,7 +146,7 @@ contract ExtraRewardStashTokenRescue {
     }
 
     //send all extra rewards to their reward contracts
-    function processStash() external returns(bool){
+    function processStash() external pure returns(bool){
         return true;
     }
 
