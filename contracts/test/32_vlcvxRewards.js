@@ -88,7 +88,7 @@ contract("Extra rewards for vlcvx", async accounts => {
 
     //set starting rewards
     await spell.approve(rewardDistro.address,spellbalance,{from:deployer});
-    await rewardDistro.addReward(spell.address, web3.utils.toWei("1000000.0", "ether"), 0,{from:deployer});
+    await rewardDistro.addRewardToEpoch(spell.address, web3.utils.toWei("1000000.0", "ether"), 0,{from:deployer});
     await spell.balanceOf(rewardDistro.address).then(a=>console.log("spell on distro: " +a));
 
     await rewardDistro.rewardEpochs(spell.address,0).then(a=>console.log("reward epochs: " +a));
@@ -105,7 +105,7 @@ contract("Extra rewards for vlcvx", async accounts => {
     await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable: " +a));
     await rewardDistro.userClaims(spell.address,userZ).then(a=>console.log("next user claim index: " +a));
 
-    await rewardDistro.addReward(spell.address, web3.utils.toWei("1000000.0", "ether"), 1,{from:deployer});
+    await rewardDistro.addRewardToEpoch(spell.address, web3.utils.toWei("1000000.0", "ether"), 1,{from:deployer});
     console.log("add more rewards for epoch 1");
     await rewardDistro.rewardEpochs(spell.address,1).then(a=>console.log("reward epochs: " +a));
     await rewardDistro.rewardData(spell.address,1).then(a=>console.log("reward data: " +a));
@@ -115,21 +115,26 @@ contract("Extra rewards for vlcvx", async accounts => {
     await rewardDistro.userClaims(spell.address,userZ).then(a=>console.log("next user claim index: " +a));
     await spell.balanceOf(userZ).then(a=>console.log("spell on userZ: " +a));
   
-    await rewardDistro.addReward(spell.address, web3.utils.toWei("1000000.0", "ether"), 2,{from:deployer});
+    await rewardDistro.addRewardToEpoch(spell.address, web3.utils.toWei("1000000.0", "ether"), 2,{from:deployer});
     console.log("added rewards to epoch 2");
     var tx = await rewardDistro.getReward(userZ,spell.address);
     console.log("claimed, gas: " +tx.receipt.gasUsed);
     await rewardDistro.userClaims(spell.address,userZ).then(a=>console.log("next user claim index: " +a));
     await spell.balanceOf(userZ).then(a=>console.log("spell on userZ: " +a));
 
+    await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable: " +a));
     await rewardDistro.methods['addReward(address,uint256)'](spell.address, web3.utils.toWei("1000000.0", "ether"),{from:deployer});
     console.log("add more rewards for current epoch");
     await rewardDistro.rewardEpochs(spell.address,2).then(a=>console.log("reward epochs(2): " +a));
     await rewardDistro.rewardData(spell.address,2).then(a=>console.log("reward data(2): " +a));
     await rewardDistro.rewardData(spell.address,3).then(a=>console.log("reward data(3): " +a));
     // await rewardDistro.forfeitRewards(spell.address,1,{from:userZ,gasPrice:0});
-    // await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable: " +a));
-  
+    await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable (should be 0): " +a));
+    await advanceTime(day*7);
+    await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable (should be 0): " +a));
+    await locker.checkpointEpoch();
+    console.log("checkpoint epoch");
+    await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable (should be positive): " +a));
   });
 });
 

@@ -28,16 +28,18 @@ contract vlCvxExtraRewardDistribution{
     }
 
     //add a reward to a specific epoch
-    function addReward(address _token, uint256 _amount, uint256 _epochIndex) external {
-        //if adding a reward to a specific epoch, make sure it's
-        //a.) an epoch older than the current (in which case use the other addReward)
-        //b.) more recent than the previous reward
-        //this means addReward can only be called once for a specific reward for a specific epoch
-        //  unless its the current epoch, in which case anyone can pile on multiple transactions
-        
+    function addRewardToEpoch(address _token, uint256 _amount, uint256 _epochIndex) external {
         //checkpoint locker
         cvxlocker.checkpointEpoch();
 
+
+        //if adding a reward to a specific epoch, make sure it's
+        //a.) an epoch older than the current (in which case use addReward)
+        //b.) more recent than the previous reward
+        //this means addRewardToEpoch can only be called *once* for a specific reward for a specific epoch
+        //because they will be claimable immediately and amount shouldnt change after claiming begins
+        //
+        //conversely rewards can be piled up with addReward() because claiming is only available to completed epochs
         require(_epochIndex < cvxlocker.epochCount()-1,"!prev epoch");
         uint256 l = rewardEpochs[_token].length;
         require(l == 0 || rewardEpochs[_token][l-1] < _epochIndex, "old epoch");
@@ -45,7 +47,7 @@ contract vlCvxExtraRewardDistribution{
         _addReward(_token,_amount,_epochIndex);
     }
 
-    //add a reward to the current epoch
+    //add a reward to the current epoch. can be called multiple times for the same reward token
     function addReward(address _token, uint256 _amount) external {
         //checkpoint locker
         cvxlocker.checkpointEpoch();
