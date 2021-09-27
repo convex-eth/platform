@@ -8,4 +8,5 @@ interface ILockedCvx{
     function balanceAtEpochOf(uint256 _epoch, address _user) view external returns(uint256 amount);
     function totalSupplyAtEpoch(uint256 _epoch) view external returns(uint256 supply);
     function epochCount() external view returns(uint256);
+    function checkpointEpoch() external;
 }
