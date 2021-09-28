@@ -1,0 +1,77 @@
+{
+    "spell": [
+        {
+            "token": "0x090185f2135308bad17527004364ebcc2d37e5f6",
+            "value": "98822464416685389219575390",
+            "tx": "0xac62da3aae46d31334de6c095b01195cba154a1e9dd71aadda5e01a1b6360f00",
+            "receivedEpoch": 1,
+            "rewardedEpoch": 0
+        },
+        {
+            "token": "0x090185f2135308bad17527004364ebcc2d37e5f6",
+            "value": "68689048806410403113052857",
+            "tx": "0x415e19a6299d413d4e6bef2a4368dcd57770cbee9e0de2be0bf10fa0f2ed322a",
+            "receivedEpoch": 2,
+            "rewardedEpoch": 1
+        },
+        {
+            "token": "0x090185f2135308bad17527004364ebcc2d37e5f6",
+            "value": "92327482731659325850501429",
+            "tx": "0xed84ef571a8e1aa095f5aadbb7b783b93fc8a1faf1b1a48998f75819bd97a6a0",
+            "receivedEpoch": 3,
+            "rewardedEpoch": 2
+        }
+    ],
+    "neutrino": [
+        {
+            "token": "0x090185f2135308bad17527004364ebcc2d37e5f6",
+            "value": "3778279467",
+            "tx": "0xac62da3aae46d31334de6c095b01195cba154a1e9dd71aadda5e01a1b6360f00",
+            "receivedEpoch": 1,
+            "rewardedEpoch": 0,
+            "combinedTxs": [
+                "0x3c816fe8fc33705612e32e03d2bf5a3780a4c10fea9796b09e32ca28de855a22"
+            ]
+        },
+        {
+            "token": "0x090185f2135308bad17527004364ebcc2d37e5f6",
+            "value": "1116012118",
+            "tx": "0x415e19a6299d413d4e6bef2a4368dcd57770cbee9e0de2be0bf10fa0f2ed322a",
+            "receivedEpoch": 2,
+            "rewardedEpoch": 1
+        },
+        {
+            "token": "0x090185f2135308bad17527004364ebcc2d37e5f6",
+            "value": "318755173",
+            "tx": "0xed84ef571a8e1aa095f5aadbb7b783b93fc8a1faf1b1a48998f75819bd97a6a0",
+            "receivedEpoch": 3,
+            "rewardedEpoch": 2
+        }
+    ],
+    "alcx": [
+        {
+            "token": "0x090185f2135308bad17527004364ebcc2d37e5f6",
+            "value": "597450729495968347373",
+            "tx": "0xac62da3aae46d31334de6c095b01195cba154a1e9dd71aadda5e01a1b6360f00",
+            "receivedEpoch": 1,
+            "rewardedEpoch": 0,
+            "combinedTxs": [
+                "0x3c816fe8fc33705612e32e03d2bf5a3780a4c10fea9796b09e32ca28de855a22"
+            ]
+        },
+        {
+            "token": "0x090185f2135308bad17527004364ebcc2d37e5f6",
+            "value": "31740043282647216552",
+            "tx": "0x415e19a6299d413d4e6bef2a4368dcd57770cbee9e0de2be0bf10fa0f2ed322a",
+            "receivedEpoch": 2,
+            "rewardedEpoch": 1
+        },
+        {
+            "token": "0x090185f2135308bad17527004364ebcc2d37e5f6",
+            "value": "174075888506739220560",
+            "tx": "0xed84ef571a8e1aa095f5aadbb7b783b93fc8a1faf1b1a48998f75819bd97a6a0",
+            "receivedEpoch": 3,
+            "rewardedEpoch": 2
+        }
+    ]
+}
