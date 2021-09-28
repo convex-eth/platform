@@ -143,13 +143,7 @@ contract("Rescue tokens from voteProxy", async accounts => {
     console.log("checkpoint epoch");
     await rdeposit.claimableRewards(userZ,spell.address).then(a=>console.log("claimable spell: " +a));
     await rdeposit.claimableRewards(userZ,alcx.address).then(a=>console.log("claimable alcx: " +a));
-  
-    await advanceTime(day*7);
-    await locker.checkpointEpoch();
-    console.log("checkpoint epoch");
-    await rdeposit.claimableRewards(userZ,spell.address).then(a=>console.log("claimable spell: " +a));
-    await rdeposit.claimableRewards(userZ,alcx.address).then(a=>console.log("claimable alcx: " +a));
-  
+
   });
 });
 
