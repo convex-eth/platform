@@ -106,6 +106,10 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         return _tokensymbol;
     }
 
+    function decimals() public view override returns (uint8) {
+        return 18;
+    }
+
     modifier onlyOwner() {
         require(owner == msg.sender, "Ownable: caller is not the owner");
         _;
