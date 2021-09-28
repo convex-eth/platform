@@ -8,7 +8,8 @@ import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 
 
 //Rescue erc20 tokens off the voter proxy
-//can only collect non-LP and non-gauge tokens
+// - can only collect non-LP and non-gauge tokens
+// - should not be set to collect tokens used as incentives in v2 gauges
 
 interface IRewardDeposit {
     function addReward(address _token, uint256 _amount) external;

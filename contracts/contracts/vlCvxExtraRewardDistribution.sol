@@ -7,7 +7,16 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 
 
-//Distribution various rewards to locked cvx holders
+//Distribute various rewards to locked cvx holders
+// - Rewards added are assigned to the previous epoch (it was the previous epoch lockers who deserve today's rewards)
+// - As soon as claiming for a token at an epoch is eligibe, no more tokens should be allowed to be added
+// - To allow multiple txs to add to the same token, rewards added during the current epoch (and assigned to previous) will not
+//     be claimable until the beginning of the next epoch. The "reward assigning phase" must be complete first
+//example: 
+//Current epoch: 10
+//During this week all addReward() calls are assigned to users in epoch 9
+//Users who were locked in epoch 9 can claim once epoch 11 begins
+// -> epoch 10 is the assigning phase for epoch 9, thus we must wait until 10 is complete before claiming 9
 contract vlCvxExtraRewardDistribution {
     using SafeERC20
     for IERC20;
@@ -35,13 +44,13 @@ contract vlCvxExtraRewardDistribution {
 
 
         //if adding a reward to a specific epoch, make sure it's
-        //a.) an epoch older than the current (in which case use addReward)
+        //a.) an epoch older than the previous epoch (in which case use addReward)
         //b.) more recent than the previous reward
         //this means addRewardToEpoch can only be called *once* for a specific reward for a specific epoch
         //because they will be claimable immediately and amount shouldnt change after claiming begins
         //
         //conversely rewards can be piled up with addReward() because claiming is only available to completed epochs
-        require(_epoch < cvxlocker.epochCount() - 1, "!prev epoch");
+        require(_epoch < cvxlocker.epochCount() - 2, "!prev epoch");
         uint256 l = rewardEpochs[_token].length;
         require(l == 0 || rewardEpochs[_token][l - 1] < _epoch, "old epoch");
 
@@ -53,10 +62,10 @@ contract vlCvxExtraRewardDistribution {
         //checkpoint locker
         cvxlocker.checkpointEpoch();
 
-        //current epoch
-        uint256 currentEpoch = cvxlocker.epochCount() - 1;
+        //assign to previous epoch
+        uint256 prevEpoch = cvxlocker.epochCount() - 2;
 
-        _addReward(_token, _amount, currentEpoch);
+        _addReward(_token, _amount, prevEpoch);
     }
 
     function _addReward(address _token, uint256 _amount, uint256 _epoch) internal {
@@ -91,10 +100,11 @@ contract vlCvxExtraRewardDistribution {
     //get all claimable rewards
     function _allClaimableRewards(address _account, address _token) internal view returns(uint256) {
         uint256 epochIndex = userClaims[_token][_account];
-        uint256 currentEpoch = cvxlocker.epochCount() - 1;
+        uint256 prevEpoch = cvxlocker.epochCount() - 2;
         uint256 claimableTokens = 0;
         for (uint256 i = epochIndex; i < rewardEpochs[_token].length; i++) {
-            if (rewardEpochs[_token][i] < currentEpoch) {
+            //only claimable after rewards are "locked in"
+            if (rewardEpochs[_token][i] < prevEpoch) {
                 claimableTokens = claimableTokens.add(_claimableRewards(_account, _token, rewardEpochs[_token][i]));
             }
         }

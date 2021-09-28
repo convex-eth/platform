@@ -47,7 +47,6 @@ contract("Extra rewards for vlcvx", async accounts => {
     let weth = await IERC20.at("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
     let spell = await IERC20.at("0x090185f2135308bad17527004364ebcc2d37e5f6");
 
-
     let userA = accounts[0];
     let userB = accounts[1];
     let userC = accounts[2];
@@ -115,12 +114,12 @@ contract("Extra rewards for vlcvx", async accounts => {
     await rewardDistro.userClaims(spell.address,userZ).then(a=>console.log("next user claim index: " +a));
     await spell.balanceOf(userZ).then(a=>console.log("spell on userZ: " +a));
   
-    await rewardDistro.addRewardToEpoch(spell.address, web3.utils.toWei("1000000.0", "ether"), 2,{from:deployer});
-    console.log("added rewards to epoch 2");
-    var tx = await rewardDistro.getReward(userZ,spell.address);
-    console.log("claimed, gas: " +tx.receipt.gasUsed);
-    await rewardDistro.userClaims(spell.address,userZ).then(a=>console.log("next user claim index: " +a));
-    await spell.balanceOf(userZ).then(a=>console.log("spell on userZ: " +a));
+    // await rewardDistro.addRewardToEpoch(spell.address, web3.utils.toWei("1000000.0", "ether"), 2,{from:deployer});
+    // console.log("added rewards to epoch 2");
+    // var tx = await rewardDistro.getReward(userZ,spell.address);
+    // console.log("claimed, gas: " +tx.receipt.gasUsed);
+    // await rewardDistro.userClaims(spell.address,userZ).then(a=>console.log("next user claim index: " +a));
+    // await spell.balanceOf(userZ).then(a=>console.log("spell on userZ: " +a));
 
     await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable: " +a));
     await rewardDistro.methods['addReward(address,uint256)'](spell.address, web3.utils.toWei("1000000.0", "ether"),{from:deployer});
@@ -130,12 +129,12 @@ contract("Extra rewards for vlcvx", async accounts => {
     await rewardDistro.rewardData(spell.address,3).then(a=>console.log("reward data(3): " +a));
     // await rewardDistro.forfeitRewards(spell.address,1,{from:userZ,gasPrice:0});
     // console.log("forfeit");
-    await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable (should not include epoch 3): " +a));
+    await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable (should not include epoch 2): " +a));
     await advanceTime(day*7);
-    await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable (should not include epoch 3): " +a));
+    await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable (should not include epoch 2): " +a));
     await locker.checkpointEpoch();
     console.log("checkpoint epoch");
-    await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable (should include epoch 3): " +a));
+    await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable (should include epoch 2): " +a));
   });
 });
 
