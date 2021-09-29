@@ -776,7 +776,41 @@
                 }
             ],
             "id": 47
+        },
+        {
+            "lptoken": "0xC4C319E2D4d66CcA4464C0c2B32c9Bd23ebe784e",
+            "token": "",
+            "gauge": "0x12dCD9E8D1577b5E4F066d8e7D404404Ef045342",
+            "crvRewards": "",
+            "stash": "",
+            "swap": "0xC4C319E2D4d66CcA4464C0c2B32c9Bd23ebe784e",
+            "currency": "ETH",
+            "name": "aleth",
+            "id": 48
+        },
+        {
+            "lptoken": "0x3Fb78e61784C9c637D560eDE23Ad57CA1294c14a",
+            "token": "",
+            "gauge": "0xD9277b0D007464eFF133622eC0d42081c93Cef02",
+            "crvRewards": "",
+            "stash": "",
+            "swap": "0x3Fb78e61784C9c637D560eDE23Ad57CA1294c14a",
+            "currency": "EUR",
+            "name": "eurn",
+            "id": 49
+        },
+        {
+            "lptoken": "0x5B3b5DF2BF2B6543f78e053bD91C4Bdd820929f1",
+            "token": "",
+            "gauge": "0x9AF13a7B1f1Bbf1A2B05c6fBF23ac23A9E573b4E",
+            "crvRewards": "",
+            "stash": "",
+            "swap": "0x5B3b5DF2BF2B6543f78e053bD91C4Bdd820929f1",
+            "currency": "USD",
+            "name": "usdm",
+            "id": 50
         }
+
     ],
     "abrapools": [
         {
