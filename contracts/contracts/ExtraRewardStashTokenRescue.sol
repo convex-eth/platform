@@ -29,8 +29,13 @@ contract ExtraRewardStashTokenRescue {
     address public rewardDeposit;
     address public treasuryDeposit;
    
-    //active tokens that can be claimed
-    mapping(address => bool) public activeTokens;
+    //active tokens that can be claimed. tokenaddress -> claimOption
+    mapping(address => uint256) public activeTokens;
+
+    enum Options{
+        SendToRewards,
+        SendToTreasury
+    }
 
     constructor() public {
     }
@@ -48,6 +53,10 @@ contract ExtraRewardStashTokenRescue {
         return "ExtraRewardStashTokenRescue";
     }
 
+    function CheckOption(uint256 _mask, uint256 _flag) internal pure returns(bool){
+        return (_mask & _flag) == _flag;
+    }
+
     //try claiming if there are reward tokens registered
     function claimRewards() external pure returns (bool) {
         return true;
@@ -55,8 +64,7 @@ contract ExtraRewardStashTokenRescue {
 
     function claimRewardToken(address _token) public returns (bool) {
         require(distributor == address(0) || msg.sender == distributor, "!distributor");
-        require(rewardDeposit != address(0) || treasuryDeposit != address(0), "!deposit set");
-        require(activeTokens[_token],"!active");
+        require(activeTokens[_token] > 0,"!active");
         
         uint256 onstaker = IERC20(_token).balanceOf(staker);
         if(onstaker > 0){
@@ -65,11 +73,13 @@ contract ExtraRewardStashTokenRescue {
 
         uint256 amount = IERC20(_token).balanceOf(address(this));
         if (amount > 0) {
-            if(rewardDeposit != address(0)){
+            if(rewardDeposit != address(0) && CheckOption(activeTokens[_token],uint256(Options.SendToRewards))){
                 IRewardDeposit(rewardDeposit).addReward(_token,amount);
+                emit TokenClaimed(_token, rewardDeposit, amount);
             }else{
-                //if reward deposit not set, send directly to treasury address
+                //if reward deposit not set or option set to treasury, send directly to treasury address
                 IERC20(_token).safeTransfer(treasuryDeposit,amount);
+                emit TokenClaimed(_token, treasuryDeposit, amount);
             }
         }
         return true;
@@ -84,16 +94,16 @@ contract ExtraRewardStashTokenRescue {
     }
 
     //register an extra reward token to be handled
-    function setExtraReward(address _token, bool _active) external{
+    function setExtraReward(address _token, uint256 _option) external{
         //owner of booster can set extra rewards
         require(IDeposit(operator).owner() == msg.sender, "!owner");
         
-        activeTokens[_token] = _active;
-        if(_active && rewardDeposit != address(0)){
+        activeTokens[_token] = _option;
+        if(CheckOption(_option,uint256(Options.SendToRewards)) && rewardDeposit != address(0)){
             IERC20(_token).safeApprove(rewardDeposit,0);
             IERC20(_token).safeApprove(rewardDeposit,uint256(-1));
         }
-        emit TokenSet(_token, _active);
+        emit TokenSet(_token, _option);
     }
 
     //pull assigned tokens from staker to stash
@@ -107,5 +117,6 @@ contract ExtraRewardStashTokenRescue {
     }
 
     /* ========== EVENTS ========== */
-    event TokenSet(address indexed _token, bool _active);
+    event TokenSet(address indexed _token, uint256 _option);
+    event TokenClaimed(address indexed _token, address indexed _receiver, uint256 _amount);
 }

@@ -90,31 +90,31 @@ contract("Rescue tokens from voteProxy", async accounts => {
     await rstash.setDistribution(deployer,addressZero,deployer,{from:multisig,gasPrice:0});
     console.log("distribution set to deployer");
 
-    //3. Deploy rewards
+    //4. Deploy rewards
     let rewardDistro = await vlCvxExtraRewardDistribution.new();
     console.log("reward deposit: " +rewardDistro.address);
 
-    //4. set distro
-    await rstash.setDistribution(deployer,rewardDistro.address,addressZero,{from:multisig,gasPrice:0});
+    //multisig 4. set distro (treasury to deployer for now)
+    await rstash.setDistribution(deployer,rewardDistro.address,deployer,{from:multisig,gasPrice:0});
     console.log("distro set");
 
-    //multisig 4. add tokens
+    //multisig 5. add tokens
     let alcx = await IERC20.at("0xdbdb4d16eda451d0503b854cf79d55697f90c8df");
     let spell = await IERC20.at("0x090185f2135308bad17527004364ebcc2d37e5f6");
     let nsbt = await IERC20.at("0x9D79d5B61De59D882ce90125b18F74af650acB93");
     let stkaave = await IERC20.at("0x4da27a545c0c5b758a6ba100e3a049001de870f5");
-
-    await rstash.setExtraReward(alcx.address,true,{from:multisig,gasPrice:0});
-    await rstash.setExtraReward(spell.address,true,{from:multisig,gasPrice:0});
-    await rstash.setExtraReward(nsbt.address,true,{from:multisig,gasPrice:0});
-    await rstash.setExtraReward(stkaave.address,true,{from:multisig,gasPrice:0});
+    //set all to option 1(send to rewards)
+    await rstash.setExtraReward(alcx.address,1,{from:multisig,gasPrice:0});
+    await rstash.setExtraReward(spell.address,1,{from:multisig,gasPrice:0});
+    await rstash.setExtraReward(nsbt.address,1,{from:multisig,gasPrice:0});
+    await rstash.setExtraReward(stkaave.address,1,{from:multisig,gasPrice:0});
     console.log("extra rewards set");
 
-    //6. set distro back to deployer
+    //multisig 6. remove rewards so that tokens get set to treasury as fallback (for now)
     await rstash.setDistribution(deployer,addressZero,deployer,{from:multisig,gasPrice:0});
     console.log("distro set to deployer");
 
-    //7. claim to deployer
+    //5. claim to deployer
     await rstash.claimRewardToken(alcx.address,{from:deployer});
     await rstash.claimRewardToken(spell.address,{from:deployer});
     await rstash.claimRewardToken(nsbt.address,{from:deployer});
@@ -125,18 +125,12 @@ contract("Rescue tokens from voteProxy", async accounts => {
     await alcx.balanceOf(deployer).then(a=>console.log("deployer alcx: "+a));
     await stkaave.balanceOf(deployer).then(a=>console.log("deployer stkaave: "+a));
 
-
-
-    //8. reset reward distro
-    await rstash.setDistribution(deployer,rewardDistro.address,addressZero,{from:multisig,gasPrice:0});
-    console.log("distro set to rewardDistro");
-
-    //9. approve
+    //6. approve
     await alcx.approve(rewardDistro.address,web3.utils.toWei("1000000000.0", "ether"),{from:deployer});
     await spell.approve(rewardDistro.address,web3.utils.toWei("1000000000.0", "ether"),{from:deployer});
     await nsbt.approve(rewardDistro.address,web3.utils.toWei("1000000000.0", "ether"),{from:deployer});
 
-    //10. get rewards for each epoch
+    //7. get rewards for each epoch
     var epochCount = await locker.epochCount();
     epochCount = Number(epochCount)-2;
     console.log("prev epoch: " +epochCount);
@@ -181,7 +175,7 @@ contract("Rescue tokens from voteProxy", async accounts => {
     await spell.balanceOf(rewardDistro.address).then(a=>console.log("rewardDistro.address spell: "+a));
     await nsbt.balanceOf(rewardDistro.address).then(a=>console.log("rewardDistro.address nsbt: "+a));
 
-    //11 send stkaave to arb
+    //8 send stkaave to arb
     var stkBal = await stkaave.balanceOf(deployer);
     await stkaave.balanceOf(contractList.system.arbitratorVault).then(a=>console.log("stk on arbi before: "+a));
     await stkaave.transfer(contractList.system.arbitratorVault,stkBal,{from:deployer});
@@ -192,14 +186,22 @@ contract("Rescue tokens from voteProxy", async accounts => {
     await alcx.balanceOf(deployer).then(a=>console.log("deployer alcx: "+a));
     await stkaave.balanceOf(deployer).then(a=>console.log("deployer stkaave: "+a));
 
-    //multisig 5. return pool manager
+    //multisig 6. set distro to final settings
+    await rstash.setDistribution(deployer,rewardDistro.address,contractList.system.treasury,{from:multisig,gasPrice:0});
+    console.log("distro set to rewardDistro");
+
+    //multisig 7. return pool manager
     await booster.setPoolManager(poolm.address, {from:multisig,gasPrice:0});
     var pm = await booster.poolManager();
     console.log("pool manager returned: " +pm);
 
+    //multisig 8. return stash implementation
+    await sfactory.setImplementation(addressZero,addressZero,contractList.system.stashv3Impl,{from:multisig,gasPrice:0});
+    var simp = await sfactory.v3Implementation();
+    console.log("impl set: " +simp.address);
 
-    //multisig 6.
-    await rstash.setExtraReward(stkaave.address,false,{from:multisig,gasPrice:0});
+    //multisig 9. turn off stkaave from rescue
+    await rstash.setExtraReward(stkaave.address,0,{from:multisig,gasPrice:0});
 
     return;
 
