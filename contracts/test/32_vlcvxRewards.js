@@ -129,12 +129,12 @@ contract("Extra rewards for vlcvx", async accounts => {
     await rewardDistro.rewardData(spell.address,3).then(a=>console.log("reward data(3): " +a));
     // await rewardDistro.forfeitRewards(spell.address,1,{from:userZ,gasPrice:0});
     // console.log("forfeit");
-    await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable (should not include epoch 2): " +a));
+    await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable (should not include latest epoch): " +a));
     await advanceTime(day*7);
-    await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable (should not include epoch 2): " +a));
+    await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable (should not include latest epoch): " +a));
     await locker.checkpointEpoch();
     console.log("checkpoint epoch");
-    await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable (should include epoch 2): " +a));
+    await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable (should include latest epoch): " +a));
   });
 });
 

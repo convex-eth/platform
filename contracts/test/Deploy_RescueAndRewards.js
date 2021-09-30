@@ -198,7 +198,7 @@ contract("Rescue tokens from voteProxy", async accounts => {
     //multisig 8. return stash implementation
     await sfactory.setImplementation(addressZero,addressZero,contractList.system.stashv3Impl,{from:multisig,gasPrice:0});
     var simp = await sfactory.v3Implementation();
-    console.log("impl set: " +simp.address);
+    console.log("impl set: " +simp);
 
     //multisig 9. turn off stkaave from rescue
     await rstash.setExtraReward(stkaave.address,0,{from:multisig,gasPrice:0});

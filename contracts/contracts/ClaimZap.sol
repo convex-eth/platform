@@ -61,12 +61,14 @@ contract ClaimZap{
     address public immutable owner;
 
     enum Options{
-        ClaimCvx,
-        ClaimCvxAndStake,
-        ClaimCvxCrv,
-        LockCrvDeposit,
-        UseAllWalletFunds,
-        LockCvx
+        ClaimCvx, //1
+        ClaimCvxAndStake, //2
+        ClaimCvxCrv, //4
+        ClaimLockedCvx, //8
+        ClaimLockedCvxStake, //16
+        LockCrvDeposit, //32
+        UseAllWalletFunds, //64
+        LockCvx //128
     }
 
     constructor() public {
@@ -95,7 +97,7 @@ contract ClaimZap{
     }
 
     function CheckOption(uint256 _mask, uint256 _flag) internal pure returns(bool){
-        return (_mask & _flag) == _flag;
+        return (_mask & (1<<_flag)) != 0;
     }
 
     function claimRewards(
@@ -150,6 +152,11 @@ contract ClaimZap{
         //claim from cvxCrv rewards
         if(CheckOption(options,uint256(Options.ClaimCvxCrv))){
             IBasicRewards(cvxCrvRewards).getReward(msg.sender,true);
+        }
+
+        //claim from locker
+        if(CheckOption(options,uint256(Options.ClaimLockedCvx))){
+            ILockedCvx(locker).getReward(msg.sender,CheckOption(options,uint256(Options.ClaimLockedCvxStake)));
         }
 
         //reset remove balances if we want to also stake/lock funds already in our wallet
