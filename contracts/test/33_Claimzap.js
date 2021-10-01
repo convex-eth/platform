@@ -136,10 +136,12 @@ contract("Test claim zap", async accounts => {
     await locker.lockedBalanceOf(userZ).then(a=>console.log("locked balance: " +a));
     await locker.claimableRewards(userZ).then(a=>console.log("locked claimableRewards: " +a));
     await rewardDistro.claimableRewards(userZ,spell.address).then(a=>console.log("claimable spell from distro: " +a));
-    // var mask = 2 + 4; //claimcvxstake, claim cvxcrv
-    var mask = 4; //claimcvxstake, claim cvxcrv
-    // await zap.claimRewards([],[],[rewardDistro.address],[spell.address],web3.utils.toWei("100000000000.0", "ether"),1,web3.utils.toWei("100000000000.0", "ether"),0,mask,{from:userZ,gasPrice:0});
-    await zap.claimRewards([],[],[rewardDistro.address],[spell.address],0,1,0,0,mask,{from:userZ,gasPrice:0});
+    var mask = 2 + 4; //claimcvxstake, claim cvxcrv
+    // var mask = 4; //claimcvxstake, claim cvxcrv
+    // mask = 8 + 16;
+    mask = 4 + 128 + 64;
+    await zap.claimRewards([],[],[rewardDistro.address],[spell.address],web3.utils.toWei("100000000000.0", "ether"),0,web3.utils.toWei("100000000000.0", "ether"),0,mask,{from:userZ,gasPrice:0});
+    // await zap.claimRewards([],[],[rewardDistro.address],[spell.address],0,1,0,0,mask,{from:userZ,gasPrice:0});
     console.log("zap'd");
     await cvxcrv.totalSupply().then(a=>console.log("cvxcrv totaly supply: " +a));
     await crv.balanceOf(userZ).then(a=>console.log("userZ crv: " +a));

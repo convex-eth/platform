@@ -179,14 +179,14 @@ contract ClaimZap{
                     //deposit
                     ICvxCrvDeposit(crvDeposit).deposit(crvBalance,CheckOption(options,uint256(Options.LockCrvDeposit)));
                 }
-                //get cvxamount
+                //get cvxcrv amount
                 uint256 cvxCrvBalance = IERC20(cvxCrv).balanceOf(address(this));
                 //stake for msg.sender
                 IBasicRewards(cvxCrvRewards).stakeFor(msg.sender, cvxCrvBalance);
             }
         }
 
-        //stake upto given amount of cvx
+        //stake up to given amount of cvx
         if(depositCvxMaxAmount > 0){
             uint256 cvxBalance = IERC20(cvx).balanceOf(msg.sender).sub(removeCvxBalance);
             cvxBalance = MathUtil.min(cvxBalance, depositCvxMaxAmount);

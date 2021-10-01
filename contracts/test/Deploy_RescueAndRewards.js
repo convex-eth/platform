@@ -25,7 +25,6 @@ const RewardDeposit = artifacts.require("RewardDeposit");
 const vlCvxExtraRewardDistribution = artifacts.require("vlCvxExtraRewardDistribution");
 const CvxLocker = artifacts.require("CvxLocker");
 
-
 contract("Rescue tokens from voteProxy", async accounts => {
   it("should rescue tokens", async () => {
 
@@ -69,6 +68,10 @@ contract("Rescue tokens from voteProxy", async accounts => {
     let rescueToken = await RescueToken.new({from:deployer});
     console.log("rescue token: " +rescueToken.address)
 
+    //3. Deploy rewards
+    let rewardDistro = await vlCvxExtraRewardDistribution.new();
+    console.log("reward deposit: " +rewardDistro.address);
+
     //multisig 1. set stash implementation
     await sfactory.setImplementation(addressZero,addressZero,v3impl.address,{from:multisig,gasPrice:0});
     console.log("impl set");
@@ -79,8 +82,7 @@ contract("Rescue tokens from voteProxy", async accounts => {
     await booster.addPool(rescueToken.address,rescueToken.address,3,{from:multisig,gasPrice:0});
     console.log("pool added");
 
-
-    //3. set stash receiver to deployer
+    //multisig 4. set stash receiver to deployer
     var poolLength = await booster.poolLength();
     var poolInfo = await booster.poolInfo(poolLength-1);
     console.log(poolInfo);
@@ -90,15 +92,11 @@ contract("Rescue tokens from voteProxy", async accounts => {
     await rstash.setDistribution(deployer,addressZero,deployer,{from:multisig,gasPrice:0});
     console.log("distribution set to deployer");
 
-    //4. Deploy rewards
-    let rewardDistro = await vlCvxExtraRewardDistribution.new();
-    console.log("reward deposit: " +rewardDistro.address);
-
-    //multisig 4. set distro (treasury to deployer for now)
+    //multisig 5. set distro (treasury to deployer for now)
     await rstash.setDistribution(deployer,rewardDistro.address,deployer,{from:multisig,gasPrice:0});
     console.log("distro set");
 
-    //multisig 5. add tokens
+    //multisig 6. add tokens
     let alcx = await IERC20.at("0xdbdb4d16eda451d0503b854cf79d55697f90c8df");
     let spell = await IERC20.at("0x090185f2135308bad17527004364ebcc2d37e5f6");
     let nsbt = await IERC20.at("0x9D79d5B61De59D882ce90125b18F74af650acB93");
@@ -107,10 +105,11 @@ contract("Rescue tokens from voteProxy", async accounts => {
     await rstash.setExtraReward(alcx.address,1,{from:multisig,gasPrice:0});
     await rstash.setExtraReward(spell.address,1,{from:multisig,gasPrice:0});
     await rstash.setExtraReward(nsbt.address,1,{from:multisig,gasPrice:0});
-    await rstash.setExtraReward(stkaave.address,1,{from:multisig,gasPrice:0});
+    //stkaave only goes to treasury
+    await rstash.setExtraReward(stkaave.address,2,{from:multisig,gasPrice:0});
     console.log("extra rewards set");
 
-    //multisig 6. remove rewards so that tokens get set to treasury as fallback (for now)
+    //multisig 7. remove rewards so that tokens get set to treasury as fallback (for now)
     await rstash.setDistribution(deployer,addressZero,deployer,{from:multisig,gasPrice:0});
     console.log("distro set to deployer");
 
