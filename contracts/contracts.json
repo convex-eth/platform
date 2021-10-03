@@ -15,7 +15,7 @@
         "poolManager": "0xAE5F315A5b5dD4dBacD38862562a51490E500183",
         "arbitratorVault": "0x25E12482a25CF36EC70fDA2A09C1ED077Fc21616",
         "chef": "0x5F465e9fcfFc217c5849906216581a657cd60605",
-        "claimZap": "0x8cB38a75eCd8572Af23a8D086e9bda96ca521889",
+        "claimZap": "0x92Cf9E5e4D1Dfbf7dA0d2BB3e884a68416a65070",
         "vestedEscrow": "0xe98984aD858075813AdA4261aF47e68A64E28fCC",
         "dropFactory": "0xa1Bc2Cf69D474b39B91665e24E7f2606Ed142991",
         "airdrop": "0x2E088A0A19dda628B4304301d1EA70b114e4AcCd",
@@ -31,9 +31,13 @@
         "lockerStakeProxy": "0xE096ccEc4a1D36F191189Fe61E803d8B2044DFC3",
         "proxyFactory": "0x66807B5598A848602734B82E432dD88DBE13fC8f",
         "stashv3Impl": "0xd7AbC64CAFc30FDd08A42Ea4bC13846be455399C",
-        "masterAbraWrapper": "0x6E7B467b76bC563B1ac0cD9C2dd7465127b30Cc1",
+        "masterAbraWrapper": "0xA0334c20700207Ba4999A5596969fa63EC924eF8",
         "chefTokenTreasury": "0x51854310A2411e682F5C1A23924DD9de79D0342a",
-        "chefRewardHookTreasury": "0x5e2706946c2bE55b038f4a0475cb7b19f5a67897"
+        "chefRewardHookTreasury": "0x5e2706946c2bE55b038f4a0475cb7b19f5a67897",
+        "rescueStashImpl": "0x9dC3de2e9d6963bAb146dC35DC3925ADD0CFc918",
+        "rescueStash": "0x01140351069af98416cC08b16424b9E765436531",
+        "rescueToken": "0xB15fFb543211b558D40160811e5DcBcd7d5aaac9",
+        "vlcvxExtraRewards": "0x8Ed4bbf39E3080b35DA84a13A0D1A2FDcE1e0602"
     },
     "curve":{
         "registry":"0x0000000022D53366457F9d5E68Ec105046FC4383",
