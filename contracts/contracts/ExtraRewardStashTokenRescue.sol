@@ -54,7 +54,7 @@ contract ExtraRewardStashTokenRescue {
     }
 
     function CheckOption(uint256 _mask, uint256 _flag) internal pure returns(bool){
-        return (_mask & _flag) == _flag;
+        return (_mask & (1<<_flag)) != 0;
     }
 
     //try claiming if there are reward tokens registered

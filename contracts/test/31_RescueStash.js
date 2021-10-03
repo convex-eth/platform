@@ -104,14 +104,13 @@ contract("Rescue tokens from voteProxy", async accounts => {
     let rdeposit = await vlCvxExtraRewardDistribution.new();
     console.log("reward deposit: " +rdeposit.address);
 
-    await rstash.setDistribution(deployer,rdeposit.address,addressZero,{from:multisig,gasPrice:0});
-    // await rstash.setDistribution(deployer,addressZero,deployer,{from:multisig,gasPrice:0});
+    await rstash.setDistribution(deployer,rdeposit.address,deployer,{from:multisig,gasPrice:0});
     console.log("distro set");
 
     let alcx = await IERC20.at("0xdbdb4d16eda451d0503b854cf79d55697f90c8df");
     let spell = await IERC20.at("0x090185f2135308bad17527004364ebcc2d37e5f6");
 
-    await rstash.setExtraReward(alcx.address,1,{from:multisig,gasPrice:0}); //alcx
+    await rstash.setExtraReward(alcx.address,2,{from:multisig,gasPrice:0}); //alcx
     await rstash.setExtraReward(spell.address,1,{from:multisig,gasPrice:0}); //spell
     console.log("stash rewards added");
 
