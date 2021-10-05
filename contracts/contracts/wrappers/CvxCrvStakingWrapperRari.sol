@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.6.12;
+pragma experimental ABIEncoderV2;
 
 import "../interfaces/IRewardStaking.sol";
 import "../interfaces/IConvexDeposits.sol";
@@ -25,15 +26,38 @@ contract CvxCrvRari is CvxCrvStakingWrapper {
     using SafeMath
     for uint256;
 
-    //NOTE: the collateralVault (rari's ftoken) MUST be modified to call checkpoint([from,to]) when doing transfers
+    constructor() public{}
 
-    constructor(address _vault)
-    public CvxCrvStakingWrapper(_vault," Rari", "-rari"){}
+    function initialize(address _vault)
+    override external {
+        require(!isInit,"already init");
+        owner = address(0xa3C5A1e09150B75ff251c1a7815A07182c3de2FB); //default to convex multisig
+        emit OwnershipTransferred(address(0), owner);
+
+        _tokenname = "Staked CvxCrv Rari";
+        _tokensymbol = "stkCvxCrv-rari";
+        isShutdown = false;
+        isInit = true;
+        collateralVault = _vault;
+
+        //add rewards
+        addRewards();
+        setApprovals();
+    }
+
+    function setVault(address _vault) external onlyOwner{
+        require(collateralVault == address(0),"!0"); //immutable once set
+        collateralVault = _vault;
+    }
 
     
     function _getDepositedBalance(address _account) internal override view returns(uint256) {
         if (_account == address(0) || _account == collateralVault) {
             return 0;
+        }
+
+        if(collateralVault == address(0)){
+            return balanceOf(_account);
         }
         
         //get underlying balance
@@ -47,7 +71,7 @@ contract CvxCrvRari is CvxCrvStakingWrapper {
         uint256 tSupply = totalSupply();
 
 
-        //MEMO: if ONLY used as colalteral, total supply doesnt have to take into account borrowing
+        //MEMO: if ONLY used as collateral, total supply doesnt have to take into account borrowing
         //get outstanding supply by exchangeRate*supply - cash
         // uint256 exchange = IRariToken(collateralVault).exchangeRateCurrent();
         // uint256 fsupply = IRariToken(collateralVault).totalSupply();

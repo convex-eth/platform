@@ -75,14 +75,15 @@ contract("Test cvxcrv stake wrapper", async accounts => {
     let lib = await CvxMining.new();
     console.log("mining lib at: " +lib.address);
     await CvxCrvStakingWrapper.link("CvxMining", lib.address);
-    let staker = await CvxCrvStakingWrapper.new(addressZero,"","",{from:deployer});
-    // await CvxCrvRari.link("CvxMining", lib.address);
+    let staker = await CvxCrvStakingWrapper.new({from:deployer});
+    await staker.initialize(addressZero,{from:deployer});
     // let staker = await CvxCrvRari.new(addressZero,{from:deployer});
     console.log("staker token: " +staker.address);
+
     await staker.name().then(a=>console.log("name: " +a));
     await staker.symbol().then(a=>console.log("symbol: " +a));
-    await staker.setApprovals();
-    await staker.addRewards({from:deployer});
+    // await staker.setApprovals();
+    // await staker.addRewards({from:deployer});
 
     let rewardCount = await staker.rewardLength();
     for(var i = 0; i < rewardCount; i++){
@@ -99,11 +100,11 @@ contract("Test cvxcrv stake wrapper", async accounts => {
     console.log("deposited into convex for user b");
 
 
-    await staker.deposit(userABalance,userA,{from:userA});
-    console.log("user A deposited")
+    var depositTx = await staker.deposit(userABalance,userA,{from:userA});
+    console.log("user A deposited, gas: " +depositTx.receipt.gasUsed);
     await cvxCrv.balanceOf(userB).then(a=>console.log("user b cvxCrv: " +a));
-    await staker.stake(userBBalance,userB,{from:userB});
-    console.log("user b staked");
+    var stakeTx = await staker.stake(userBBalance,userB,{from:userB});
+    console.log("user b staked, gas: " +stakeTx.receipt.gasUsed);
     await staker.totalSupply().then(a=>console.log("staker supply: " +a));
 
     await staker.balanceOf(userA).then(a=>console.log("user a: " +a));
@@ -183,10 +184,10 @@ contract("Test cvxcrv stake wrapper", async accounts => {
     await staker.withdraw(userABalance,{from:userA});
     await staker.withdraw(0,{from:userB});
     await staker.withdraw(userBBalance,{from:userC});
-    await staker.getReward(userA,{from:userA});
+    var getRewardTx = await staker.getReward(userA,{from:userA});
     await staker.getReward(userB,{from:userB});
     await staker.getReward(userC,{from:userC});
-    console.log("withdrew and claimed all");
+    console.log("withdrew and claimed all, gas: " +getRewardTx.receipt.gasUsed);
 
     console.log("try claim again");
     await staker.getReward(userC,{from:userC});
