@@ -37,7 +37,7 @@
         "rescueStashImpl": "0x9dC3de2e9d6963bAb146dC35DC3925ADD0CFc918",
         "rescueStash": "0x01140351069af98416cC08b16424b9E765436531",
         "rescueToken": "0xB15fFb543211b558D40160811e5DcBcd7d5aaac9",
-        "vlcvxExtraRewards": "0x8Ed4bbf39E3080b35DA84a13A0D1A2FDcE1e0602"
+        "vlcvxExtraRewards": "0xDecc7d761496d30F30b92Bdf764fb8803c79360D"
     },
     "curve":{
         "registry":"0x0000000022D53366457F9d5E68Ec105046FC4383",
@@ -786,36 +786,36 @@
         },
         {
             "lptoken": "0xC4C319E2D4d66CcA4464C0c2B32c9Bd23ebe784e",
-            "token": "",
+            "token": "0x0BF4C896100801cecFF4ad1e742E5227D67EcD7b",
             "gauge": "0x12dCD9E8D1577b5E4F066d8e7D404404Ef045342",
-            "crvRewards": "",
-            "stash": "",
+            "crvRewards": "0x48Bc302d8295FeA1f8c3e7F57D4dDC9981FEE410",
+            "stash": "0xfFA249074F7846Ee072e2068A1DEC44eDD802491",
             "swap": "0xC4C319E2D4d66CcA4464C0c2B32c9Bd23ebe784e",
             "currency": "ETH",
             "name": "aleth",
-            "id": 48
-        },
-        {
-            "lptoken": "0x3Fb78e61784C9c637D560eDE23Ad57CA1294c14a",
-            "token": "",
-            "gauge": "0xD9277b0D007464eFF133622eC0d42081c93Cef02",
-            "crvRewards": "",
-            "stash": "",
-            "swap": "0x3Fb78e61784C9c637D560eDE23Ad57CA1294c14a",
-            "currency": "EUR",
-            "name": "eurn",
             "id": 49
         },
         {
+            "lptoken": "0x3Fb78e61784C9c637D560eDE23Ad57CA1294c14a",
+            "token": "0x3c5208849fa77Aaa98483527f20303cAF25a1Ad8",
+            "gauge": "0xD9277b0D007464eFF133622eC0d42081c93Cef02",
+            "crvRewards": "0x7CDA2a83D29d7Fc2ccb8F7716b5c1c34781aeb12",
+            "stash": "0xb24Ea588066fBEB9610141d4b779d5D9F80A1180",
+            "swap": "0x3Fb78e61784C9c637D560eDE23Ad57CA1294c14a",
+            "currency": "EUR",
+            "name": "eurn",
+            "id": 50
+        },
+        {
             "lptoken": "0x5B3b5DF2BF2B6543f78e053bD91C4Bdd820929f1",
-            "token": "",
+            "token": "0x23e3AAAA5034165cF194F19692b41d801BEB5304",
             "gauge": "0x9AF13a7B1f1Bbf1A2B05c6fBF23ac23A9E573b4E",
-            "crvRewards": "",
-            "stash": "",
+            "crvRewards": "0xA689C00F3fd87dD3871C79C73343cd9F7957377E",
+            "stash": "0x3f2A3f6ab577B562a193C008686fb81b5eEe6586",
             "swap": "0x5B3b5DF2BF2B6543f78e053bD91C4Bdd820929f1",
             "currency": "USD",
             "name": "usdm",
-            "id": 50
+            "id": 51
         }
 
     ],
@@ -827,18 +827,13 @@
         },
         {
             "token": "0x5958A8DB7dfE0CC49382209069b00F54e17929C2",
-            "cauldron": "",
+            "cauldron": "0x4EAeD76C3A388f4a841E9c765560BBe7B3E4B3A0",
             "name": "stk-tricrypto2"
         },
         {
-            "token": "0x7bF98B2569335C022BDAa22ddD20E590a1Fbb0CE",
+            "token": "0xb65ede134521f0efd4e943c835f450137dc6e83e",
             "cauldron": "",
             "name": "stk-ren"
-        },
-        {
-            "token": "0x684dB3c6E9E297774fb1372069098134D2453cE4",
-            "cauldron": "",
-            "name": "stk-alusd"
         }
     ]
 }
