@@ -89,7 +89,8 @@ contract vlCvxExtraRewardDistribution {
 
     //get claimable rewards for a specific token
     function claimableRewards(address _account, address _token) external view returns(uint256) {
-        return _allClaimableRewards(_account, _token);
+        (uint256 rewards,) = _allClaimableRewards(_account, _token);
+        return rewards;
     }
 
     //get claimable rewards for a token at a specific epoch
@@ -98,7 +99,7 @@ contract vlCvxExtraRewardDistribution {
     }
 
     //get all claimable rewards
-    function _allClaimableRewards(address _account, address _token) internal view returns(uint256) {
+    function _allClaimableRewards(address _account, address _token) internal view returns(uint256,uint256) {
         uint256 epochIndex = userClaims[_token][_account];
         uint256 prevEpoch = cvxlocker.epochCount() - 2;
         uint256 claimableTokens = 0;
@@ -106,9 +107,11 @@ contract vlCvxExtraRewardDistribution {
             //only claimable after rewards are "locked in"
             if (rewardEpochs[_token][i] < prevEpoch) {
                 claimableTokens = claimableTokens.add(_claimableRewards(_account, _token, rewardEpochs[_token][i]));
+                //return index user claims should be set to
+                epochIndex = i+1;
             }
         }
-        return claimableTokens;
+        return (claimableTokens, epochIndex);
     }
 
     //get claimable rewards for a token at a specific epoch
@@ -121,11 +124,11 @@ contract vlCvxExtraRewardDistribution {
     //claim rewards for a specific token at a specific epoch
     function getReward(address _account, address _token) public {
         //get claimable tokens
-        uint256 claimableTokens = _allClaimableRewards(_account, _token);
+        (uint256 claimableTokens, uint256 index) = _allClaimableRewards(_account, _token);
 
         if (claimableTokens > 0) {
-            //set claim checkpoint. next claim starts from claimed index+1 so set as length
-            userClaims[_token][_account] = rewardEpochs[_token].length;
+            //set claim checkpoint
+            userClaims[_token][_account] = index;
 
             //send
             IERC20(_token).safeTransfer(_account, claimableTokens);
