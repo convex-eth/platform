@@ -846,5 +846,11 @@
             "cauldron": "",
             "name": "stk-ren"
         }
+    ],
+    "raripools":[
+        {
+            "token": "0x4Fc2A279fFDdDE98cB154F04375E69205156b987",
+            "name": "stk-cvxcrv"
+        }
     ]
 }
