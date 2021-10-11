@@ -816,6 +816,17 @@
             "currency": "USD",
             "name": "usdm",
             "id": 51
+        },
+        {
+            "lptoken": "0x55A8a39bc9694714E2874c1ce77aa1E599461E18",
+            "token": "",
+            "gauge": "0xB518f5e3242393d4eC792BD3f44946A3b98d0E48",
+            "crvRewards": "",
+            "stash": "",
+            "swap": "0x55A8a39bc9694714E2874c1ce77aa1E599461E18",
+            "currency": "USD",
+            "name": "mim-ust",
+            "id": 52
         }
 
     ],
