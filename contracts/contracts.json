@@ -23,6 +23,7 @@
         "cvxCrvCrvSLP": "0x33F6DDAEa2a8a54062E021873bCaEE006CdF4007",
         "chefCvxToken": "0x4223AA5BfD783dEDCC54585cdC1cFE9eA1587C0f",
         "chefcvxCrvToken": "0x83D128b0b661dc79A71790b14A9c96e6191FB565",
+        "chefcvxCrvTokenNew": "0xe79d9a5eF6E19C3f1003f4F27a1423259460f6D0",
         "cvxEthRewarder": "0x9e01aaC4b3e8781a85b21d9d9F848e72Af77B362",
         "cvxCrvCrvRewarder": "0x1FD97b5E5a257B0B9b9A42A96BB8870Cbdd1Eb79",
         "votePrize": "0x9402Ebd77427C4e21Bcc26CeA4C5d332Cbf248D1",
@@ -819,10 +820,10 @@
         },
         {
             "lptoken": "0x55A8a39bc9694714E2874c1ce77aa1E599461E18",
-            "token": "",
+            "token": "0x766A8D4DE01D3eD575CdEf0587Eaf615eCB46726",
             "gauge": "0xB518f5e3242393d4eC792BD3f44946A3b98d0E48",
-            "crvRewards": "",
-            "stash": "",
+            "crvRewards": "0xC62DE533ea77D46f3172516aB6b1000dAf577E89",
+            "stash": "0xa69e5023d5Dc71ec5Bf602A5AC80cb0C5078423E",
             "swap": "0x55A8a39bc9694714E2874c1ce77aa1E599461E18",
             "currency": "USD",
             "name": "mim-ust",
@@ -843,7 +844,7 @@
         },
         {
             "token": "0xb65ede134521f0efd4e943c835f450137dc6e83e",
-            "cauldron": "",
+            "cauldron": "0x35a0Dd182E4bCa59d5931eae13D0A2332fA30321",
             "name": "stk-ren"
         }
     ],
