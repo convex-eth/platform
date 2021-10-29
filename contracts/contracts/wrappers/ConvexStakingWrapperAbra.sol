@@ -16,7 +16,7 @@ contract ConvexStakingWrapperAbra is ConvexStakingWrapper {
     using SafeMath
     for uint256;
 
-    address public cauldron;
+    address[] public cauldrons;
 
     constructor() public{}
 
@@ -33,17 +33,34 @@ contract ConvexStakingWrapperAbra is ConvexStakingWrapper {
         convexToken = _convexToken;
         convexPool = _convexPool;
         convexPoolId = _poolId;
-        cauldron = _vault;
         collateralVault = address(0xF5BCE5077908a1b7370B9ae04AdC565EBd643966);
     
+        if(_vault != address(0)){
+            cauldrons.push(_vault);
+        }
+
         //add rewards
         addRewards();
         setApprovals();
     }
 
+    function cauldronsLength() external view returns (uint256) {
+        return cauldrons.length;
+    }
+
     function setCauldron(address _cauldron) external onlyOwner{
-        require(cauldron == address(0),"!0"); //immutable once set
-        cauldron = _cauldron;
+        //allow settings and changing cauldrons that receive staking rewards.
+        require(_cauldron != address(0), "invalid cauldron");
+
+        //do not allow doubles
+        for(uint256 i = 0; i < cauldrons.length; i++){
+            require(cauldrons[i] != _cauldron, "already added");
+        }
+
+        //IMPORTANT: when adding a cauldron,
+        // it should be added to this list BEFORE anyone starts using it
+        // or else a user may receive more than what they should
+        cauldrons.push(_cauldron);
     }
 
     function _getDepositedBalance(address _account) internal override view returns(uint256) {
@@ -51,14 +68,19 @@ contract ConvexStakingWrapperAbra is ConvexStakingWrapper {
             return 0;
         }
 
-        if(cauldron == address(0)){
+        if(cauldrons.length == 0){
             return balanceOf(_account);
         }
         
-        //get collateral balance
-        uint256 collateral = ICauldron(cauldron).userCollateralShare(_account);
-        collateral = IBentoBox(collateralVault).toAmount(address(this), collateral, false);
+        //add up all shares of all cauldrons
+        uint256 share;
+        for(uint256 i = 0; i < cauldrons.length; i++){
+            share = share.add(ICauldron(cauldrons[i]).userCollateralShare(_account));
+        }
 
+        //convert shares to balance amount via bento box
+        uint256 collateral = IBentoBox(collateralVault).toAmount(address(this), share, false);
+        
         //add to balance of this token
         return balanceOf(_account).add(collateral);
     }
