@@ -75,7 +75,9 @@ contract ConvexStakingWrapperAbra is ConvexStakingWrapper {
         //add up all shares of all cauldrons
         uint256 share;
         for(uint256 i = 0; i < cauldrons.length; i++){
-            share = share.add(ICauldron(cauldrons[i]).userCollateralShare(_account));
+            try ICauldron(cauldrons[i]).userCollateralShare(_account) returns(uint256 _share){
+                share = share.add(_share);
+            }catch{}
         }
 
         //convert shares to balance amount via bento box
