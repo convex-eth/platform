@@ -67,6 +67,11 @@ interface ISPool {
     function claim_rewards(address) external;
 }
 
+interface ICurveGaugeController{
+    function n_gauges() external view returns (uint256);
+    function gauges(uint256) external view returns (address);
+}
+
 interface ICurveGaugeDebug {
     function claim_rewards(address) external;
     function claimable_tokens(address) external view returns (uint256);    
@@ -99,6 +104,7 @@ interface IClaim{
 
 interface IEscro{
     function locked__end(address) external view returns(uint256);
+    function smart_wallet_checker() external view returns(address);
 }
 
 interface ISnxRewards{
