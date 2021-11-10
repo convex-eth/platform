@@ -16,6 +16,7 @@ const IUniswapV2Router01 = artifacts.require("IUniswapV2Router01");
 const Multicaller = artifacts.require("Multicaller");
 const ICrvBribe = artifacts.require("ICrvBribe");
 const IVoting = artifacts.require("IVoting");
+const ICurveGaugeController = artifacts.require("ICurveGaugeController");
 
 contract("check for rewards and claim", async accounts => {
   it("should check for rewards and claim", async () => {
@@ -45,12 +46,23 @@ contract("check for rewards and claim", async accounts => {
     var claimingAddress = contractList.system.voteProxy;
 
     var gaugeRewards = {};
-    var poolList = contractList.pools;
+    // var poolList = contractList.pools;
+    var gaugeList = [];
+
+    let gaugeController = await ICurveGaugeController.at("0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB");
+    let gaugeCount = await gaugeController.n_gauges();
+    console.log("gauge count: " +gaugeCount);
+    for(var i = 0; i < gaugeCount; i++){
+      var g = await gaugeController.gauges(i);
+      console.log("found gauge: " +g);
+      gaugeList.push(g);
+    }
     console.log("getting gauge rewards...");
-    for(var poolId in poolList){
-      var pool = poolList[poolId];
-      var rewards = await bribe.rewards_per_gauge(pool.gauge);
-      gaugeRewards[pool.gauge] = rewards;
+    for(var gauge in gaugeList){
+      //var pool = poolList[poolId];
+      var rewards = await bribe.rewards_per_gauge(gaugeList[gauge]);
+      gaugeRewards[gaugeList[gauge]] = rewards;
+      console.log("gauge " +gaugeList[gauge] +", rewards: " +rewards);
     }
 
 
