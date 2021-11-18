@@ -828,8 +828,94 @@
             "currency": "USD",
             "name": "mim-ust",
             "id": 52
+        },
+        {
+            "lptoken": "0xFbdCA68601f835b27790D98bbb8eC7f05FDEaA9B",
+            "token": "0xb43ed35B5A3a9544BBEd8039c67AB04AD428deEa",
+            "gauge": "0x346C7BB1A7a6A30c8e81c14e90FC2f0FBddc54d8",
+            "crvRewards": "0x4F2b8a15d0Dd58c1eB60bd53e966872828519Cee",
+            "stash": "0x4fd82224bEa0653215A5d6cAec59689Deb018c46",
+            "shutdown": false,
+            "id": 53,
+            "currency": "BTC",
+            "name": "ibbtc"
+        },
+        {
+            "lptoken": "0x3D229E1B4faab62F621eF2F6A610961f7BD7b23B",
+            "token": "0x18F320B124A80ee2FA491e1438CdA771c3d8c84b",
+            "gauge": "0x65CA7Dc5CB661fC58De57B1E1aF404649a27AD35",
+            "crvRewards": "0xb0c1B7b83Baae51284B8BbBa02Ec37742440199d",
+            "stash": "0x6Ffb6C270D2E9AeEd7654eaEe8A39310e2bB508e",
+            "swap": "0x98a7F18d4E56Cfe84E3D081B40001B3d5bD3eB8B",
+            "shutdown": false,
+            "id": 54,
+            "currency": "USD",
+            "name": "eursusd",
+            "isV2": true,
+                "coins": [
+                    "0xdB25f211AB05b1c97D595516F45794528a807ad8",
+                    "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+                ],
+                "coinDecimals": [
+                    2,
+                    6
+                ]
+        },
+        {
+            "lptoken": "0x3b6831c0077a1e44ED0a21841C3bC4dC11bCE833",
+            "token": "0x410ACa1a116cCc718e9A0BDd8080655a52f1FAC4",
+            "gauge": "0x4Fd86Ce7Ecea88F7E0aA78DC12625996Fb3a04bC",
+            "crvRewards": "0xD2B756Af4E345A8657C0656C148aDCD3000C97A4",
+            "stash": "0x03d1e553667F0cf0A4775069DAA5ed8F125308e8",
+            "swap": "0x9838eCcC42659FA8AA7daF2aD134b53984c9427b",
+            "shutdown": false,
+            "id": 55,
+            "currency": "USD",
+            "name": "eurtusd",
+            "isV2": true,
+                "coins": [
+                    "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490",
+                    "0xC581b735A1688071A1746c968e0798D642EDE491"
+                ],
+                "coinDecimals": [
+                    18,
+                    6
+                ]
+        },
+        {
+            "lptoken": "0x87650D7bbfC3A9F10587d7778206671719d9910D",
+            "token": "0xd1daFC25bf672a52eF9c092258389dC2AD078309",
+            "gauge": "0x25f0cE4E2F8dbA112D9b115710AC297F816087CD",
+            "crvRewards": "0x7D536a737C13561e0D2Decf1152a653B4e615158",
+            "stash": "0x899996778C4e0cae5680d76262E44a2a7a5852A1",
+            "shutdown": false,
+            "id": 56,
+            "currency": "USD",
+            "name": "ousd"
+        },
+        {
+            "lptoken": "0xc270b3B858c335B6BA5D5b10e2Da8a09976005ad",
+            "token": "0x918696AB70bF4F9a22497fC73903F3498a885980",
+            "gauge": "0xC95bdf13A08A547E4dD9f29B00aB7fF08C5d093d",
+            "crvRewards": "0x500E169c15961DE8798Edb52e0f88a8662d30EC5",
+            "stash": "0x1aE471f8C3338e826a5f6f47Cdf33b504Da7cD83",
+            "shutdown": false,
+            "id": 57,
+            "currency": "USD",
+            "name": "paxos-dollar"
+        },
+        {
+            "lptoken": "0xBaaa1F5DbA42C3389bDbc2c9D2dE134F5cD0Dc89",
+            "token": "0x88c82d9767CC8AF564Da81dDD10741fa9D875682",
+            "gauge": "0x16C2beE6f55dAB7F494dBa643fF52ef2D47FBA36",
+            "crvRewards": "0x329cb014b562d5d42927cfF0dEdF4c13ab0442EF",
+            "stash": "0x755758DcAa6e8072B541863983ADA9c7BDA7c420",
+            "shutdown": false,
+            "id": 58,
+            "currency": "USD",
+            "name": "d3pool"
         }
-
+    
     ],
     "abrapools": [
         {
@@ -849,7 +935,7 @@
         },
         {
             "token": "0x3Ba207c25A278524e1cC7FaAea950753049072A4",
-            "cauldron": "",
+            "cauldron": "0x257101F20cB7243E2c7129773eD5dBBcef8B34E0",
             "name": "stk-3pool-2"
         }
     ],
