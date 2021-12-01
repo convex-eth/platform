@@ -18,6 +18,7 @@ const ICrvBribe = artifacts.require("ICrvBribe");
 const IVoting = artifacts.require("IVoting");
 const ICurveGaugeController = artifacts.require("ICurveGaugeController");
 
+
 contract("check for rewards and claim", async accounts => {
   it("should check for rewards and claim", async () => {
 
@@ -74,6 +75,8 @@ contract("check for rewards and claim", async accounts => {
         var rewardToken = gaugeRewards[gauge][reward];
         if(rewardToken == "0") continue;
         console.log(" -> reward: " +rewardToken);
+        //force checkpoint
+        await bribe.add_reward_amount(gauge, rewardToken, 0);
         var claimable = await bribe.claimable(claimingAddress, gauge, rewardToken);
         if(claimable != "0"){
           var calldata = bribe.contract.methods.claim_reward(claimingAddress, gauge, rewardToken).encodeABI();
@@ -84,13 +87,32 @@ contract("check for rewards and claim", async accounts => {
       }
     }
 
+    var finalClaims = [
+      "Meta",  //0xa3BeD4E1c75D00fa6f4E5E6922DB7261B5E9AcD2
+      "Spell Token", //0x090185f2135308bad17527004364ebcc2d37e5f6
+      "STASIS EURS Token", //0xdB25f211AB05b1c97D595516F45794528a807ad8
+      "Alchemix", //0xdbdb4d16eda451d0503b854cf79d55697f90c8df
+      "Badger", //0x3472A5A71965499acd81997a54BBA8D852C6E53d
+    ]
+
     console.log("\n\nprecall balances..");
     var calldatalist = []
+    var finalCalldata = [];
     for(var c in claimables){
       calldatalist.push([bribe.address,claimables[c].calldata]);
       var rtoken = await ERC20.at(claimables[c].rewardToken);
       var rname = await rtoken.name();
+      if(finalClaims.includes(rname)){
+        finalCalldata.push([bribe.address,claimables[c].calldata]);
+      }
+      var rdecimals = await rtoken.decimals();
       var rbalance = await rtoken.balanceOf(claimingAddress);
+
+      rdecimals = Number(rdecimals);
+      rbalance = rbalance.toString();
+      rbalance = rbalance.padStart(rdecimals+1,"0");
+      rbalance = [Number(rbalance.substring(0,rbalance.length-rdecimals)).toLocaleString(), ".", rbalance.substring(rbalance.length-rdecimals)].join('');
+
       console.log("token " +rname +",  balance: " +rbalance);
     }
     //console.log(calldatalist);
@@ -103,9 +125,21 @@ contract("check for rewards and claim", async accounts => {
     for(var c in claimables){
       var rtoken = await ERC20.at(claimables[c].rewardToken);
       var rname = await rtoken.name();
+      var rdecimals = await rtoken.decimals();
       var rbalance = await rtoken.balanceOf(claimingAddress);
+
+      rdecimals = Number(rdecimals);
+      rbalance = rbalance.toString();
+      rbalance = rbalance.padStart(rdecimals+1,"0");
+      rbalance = [Number(rbalance.substring(0,rbalance.length-rdecimals)).toLocaleString(), ".", rbalance.substring(rbalance.length-rdecimals)].join('');
+
       console.log("token " +rname +",  balance: " +rbalance);
     }
+
+    console.log("final filtered calldata:");
+    console.log(finalCalldata);
+    var output = multicaller.contract.methods.aggregate(finalCalldata).encodeABI();
+    console.log(output);
   });
 });
 

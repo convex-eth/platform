@@ -910,10 +910,31 @@
             "gauge": "0x16C2beE6f55dAB7F494dBa643fF52ef2D47FBA36",
             "crvRewards": "0x329cb014b562d5d42927cfF0dEdF4c13ab0442EF",
             "stash": "0x755758DcAa6e8072B541863983ADA9c7BDA7c420",
-            "shutdown": false,
             "id": 58,
             "currency": "USD",
             "name": "d3pool"
+        },
+        {
+            "lptoken": "0xCEAF7747579696A2F0bb206a14210e3c9e6fB269",
+            "token": "0x2d2006135e682984a8a2eB74F5C87c2251cC71E9",
+            "gauge": "0xb0f5d00e5916c8b8981e99191A1458704B587b2b",
+            "crvRewards": "0x7e2b9B5244bcFa5108A76D5E7b507CFD5581AD4A",
+            "stash": "0x77Aa721Ba9C1423c5DBce6E0804887eEbD99cd00",
+            "swap": "0xCEAF7747579696A2F0bb206a14210e3c9e6fB269",
+            "id": 59,
+            "currency": "USD",
+            "name": "ust-wormhole"
+        },
+        {
+            "lptoken": "0xb9446c4Ef5EBE66268dA6700D26f96273DE3d571",
+            "token": "0xC98786A97d667Fe67AAe694BD7949813A73f1BF0",
+            "gauge": "0x1E212e054d74ed136256fc5a5DDdB4867c6E003F",
+            "crvRewards": "0x4a9b7eDD67f58654a2c33B587f98c5709AC7d482",
+            "stash": "0x54aD657aEe30c0f954944f639852d50960689Fa4",
+            "swap": "0xb9446c4Ef5EBE66268dA6700D26f96273DE3d571",
+            "id": 60,
+            "currency": "EUR",
+            "name": "3eur"
         }
     
     ],
