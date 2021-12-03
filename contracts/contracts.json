@@ -935,6 +935,17 @@
             "id": 60,
             "currency": "EUR",
             "name": "3eur"
+        },
+        {
+            "lptoken": "0xEd4064f376cB8d68F770FB1Ff088a3d0F3FF5c4d",
+            "token": "0x0Fb8dcdD95e4C48D3dD0eFA4086512f6F8FD4565",
+            "gauge": "0x1cEBdB0856dd985fAe9b8fEa2262469360B8a3a6",
+            "crvRewards": "0x085A2054c51eA5c91dbF7f90d65e728c0f2A270f",
+            "stash": "0x285972e5799cF224c4C6e81E9e47d4ae9EA7CBD3",
+            "swap": "0xEd4064f376cB8d68F770FB1Ff088a3d0F3FF5c4d",
+            "id": 61,
+            "currency": "ETH",
+            "name": "crv-eth"
         }
     
     ],
