@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 
 import "./interfaces/ILockedCvx.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /*
 Admin proxy for locker contract to fix require checks and seal off staking proxy changes
@@ -67,5 +68,10 @@ contract LockerAdmin{
 
     function recoverERC20(address _tokenAddress, uint256 _tokenAmount) external onlyOwner {
         locker.recoverERC20(_tokenAddress, _tokenAmount);
+        transferToken(_tokenAddress, _tokenAmount);
+    }
+
+    function transferToken(address _tokenAddress, uint256 _tokenAmount) public onlyOwner {
+        IERC20(_tokenAddress).transfer(operator, _tokenAmount);
     }
 }
