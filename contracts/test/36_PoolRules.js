@@ -90,7 +90,7 @@ contract("deploy pool manager layer", async accounts => {
     //test shutdown
     console.log("shutdown pool");
     await poolProxy.shutdownPool(poolcount-1).catch(a=>console.log(" -> revert, not owner: " +a))
-    await poolProxy.shutdownPool(poolcount-1,{from:multisig,gasPrice:0})
+    await poolProxy.shutdownPool(poolcount-1,{from:deployer,gasPrice:0})
     console.log("shutdown complete")
     info = await booster.poolInfo(poolcount-1);
     console.log(info);
@@ -98,14 +98,18 @@ contract("deploy pool manager layer", async accounts => {
     //test poolmanager v3
     let poolv3 = await PoolManagerV3.new(poolProxy.address);
     await poolv3.operator().then(a=>console.log("operator: " +a))
-    await poolProxy.setOperator(deployer).catch(a=>console.log(" -> catch set operator attempt: " +a));
-    await poolProxy.setOperator(deployer,{from:multisig, gasPrice:0});
+    await poolv3.setOperator(deployer).catch(a=>console.log(" -> catch set operator attempt: " +a));
+    await poolv3.setOperator(deployer,{from:multisig, gasPrice:0});
     await poolv3.operator().then(a=>console.log("operator: " +a))
 
-    await poolProxy.addPool(lpToken, gauge.address, sVersion, {from:deployer,gasPrice:0});
+    await poolv3.addPool(gauge.address);
 
     var poolcount = await booster.poolLength();
     console.log("pool added via pool manager v3, count: " +poolcount);
+    var info = await booster.poolInfo(poolcount-1);
+    console.log(info);
+
+    await poolv3.shutdownPool(poolcount-1,{from:deployer, gasPrice:0})
     var info = await booster.poolInfo(poolcount-1);
     console.log(info);
   });

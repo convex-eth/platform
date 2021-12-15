@@ -29,10 +29,12 @@ contract PoolManagerProxy{
         _;
     }
 
+    //set owner - only OWNER
     function setOwner(address _owner) external onlyOwner{
         owner = _owner;
     }
 
+    //set operator - only OWNER
     function setOperator(address _operator) external onlyOwner{
         operator = _operator;
     }
@@ -41,8 +43,8 @@ contract PoolManagerProxy{
     // function revertControl() external{
     // }
 
-    //shutdown a pool - only OWNER
-    function shutdownPool(uint256 _pid) external onlyOwner returns(bool){
+    //shutdown a pool - only OPERATOR
+    function shutdownPool(uint256 _pid) external onlyOperator returns(bool){
         IPools(pools).shutdownPool(_pid);
         return true;
     }
