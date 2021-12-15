@@ -14,6 +14,8 @@ const PoolManagerV2 = artifacts.require("PoolManagerV2");
 const PoolManagerProxy = artifacts.require("PoolManagerProxy");
 const ICurveGauge = artifacts.require("ICurveGauge");
 const PoolManagerV3 = artifacts.require("PoolManagerV3");
+const IVoteStarter = artifacts.require("IVoteStarter");
+const IVoting = artifacts.require("IVoting");
 
 
 contract("deploy pool manager layer", async accounts => {
@@ -69,12 +71,22 @@ contract("deploy pool manager layer", async accounts => {
     await poolProxy.owner().then(a=>console.log("owner: " +a));
     await poolProxy.operator().then(a=>console.log("operator: " +a))
 
-
-    //test add pool
     let lpToken = "0x3A283D9c08E8b55966afb64C515f5143cf907611"; //cvx lp
     let badlpToken = "0x1cEBdB0856dd985fAe9b8fEa2262469360B8a3a6"; //crv lp
     let gauge = await ICurveGauge.at("0x7E1444BA99dcdFfE8fBdb42C02F0005D14f13BE1"); //cvx lp gauge
     let sVersion = 3;
+
+    //force cvx pool to gauge controller (may need to edit/remove after real vote goes through)
+    await booster.vote(110,"0xE478de485ad2fe566d49342Cbd03E49ed7DB3356",true,{from:multisig,gasPrice:0});
+    await advanceTime(7 * day);
+    var ownership = await IVoteStarter.at(contractList.curve.voteOwnership);
+    await ownership.executeVote(110);
+    var weightVoting = await IVoting.at(contractList.curve.gaugeController);
+    await weightVoting.vote_for_gauge_weights("0xD9277b0D007464eFF133622eC0d42081c93Cef02",0,{from:deployer,gasPrice:0});
+    await weightVoting.vote_for_gauge_weights(gauge.address,10000,{from:deployer,gasPrice:0});
+    console.log("weight added to pool");
+
+    //test add pool
     console.log("add pool");
     let lpfromGauge = await gauge.lp_token();
     console.log("guage: " +gauge.address +", lptoken: " +lpfromGauge);
@@ -97,19 +109,22 @@ contract("deploy pool manager layer", async accounts => {
 
     //test poolmanager v3
     let poolv3 = await PoolManagerV3.new(poolProxy.address);
-    await poolv3.operator().then(a=>console.log("operator: " +a))
-    await poolv3.setOperator(deployer).catch(a=>console.log(" -> catch set operator attempt: " +a));
-    await poolv3.setOperator(deployer,{from:multisig, gasPrice:0});
-    await poolv3.operator().then(a=>console.log("operator: " +a))
+    console.log("new manager v3 at " +poolv3.address)
+    await poolProxy.operator().then(a=>console.log("proxy operator: " +a))
+    await poolProxy.setOperator(deployer).catch(a=>console.log(" -> catch set operator attempt: " +a));
+    await poolProxy.setOperator(poolv3.address,{from:multisig, gasPrice:0});
+    await poolProxy.operator().then(a=>console.log("proxy operator: " +a))
 
+    //add a new pool (anyone can)
     await poolv3.addPool(gauge.address);
-
     var poolcount = await booster.poolLength();
     console.log("pool added via pool manager v3, count: " +poolcount);
     var info = await booster.poolInfo(poolcount-1);
     console.log(info);
 
-    await poolv3.shutdownPool(poolcount-1,{from:deployer, gasPrice:0})
+    //shutdown pool (only operator of manager)
+    await poolv3.shutdownPool(poolcount-1,{from:deployer, gasPrice:0}).catch(a=>console.log(" -> catch shutdown attempt: " +a));
+    await poolv3.shutdownPool(poolcount-1,{from:multisig, gasPrice:0})
     var info = await booster.poolInfo(poolcount-1);
     console.log(info);
   });
