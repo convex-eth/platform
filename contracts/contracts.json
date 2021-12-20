@@ -12,7 +12,8 @@
         "cvxCrvRewards": "0x3Fe65692bfCD0e6CF84cB1E7d24108E434A7587e",
         "threeCrvRewards": "0x7091dbb7fcbA54569eF1387Ac89Eb2a5C9F6d2EA",
         "cvxRewards": "0xCF50b810E57Ac33B91dCF525C6ddd9881B139332",
-        "poolManager": "0xAE5F315A5b5dD4dBacD38862562a51490E500183",
+        "poolManager": "0x8a849F4074726179f95Ee08C59cAA8F6f21B1E83",
+        "poolManagerProxy": "0x5F47010F230cE1568BeA53a06eBAF528D05c5c1B",
         "arbitratorVault": "0x25E12482a25CF36EC70fDA2A09C1ED077Fc21616",
         "chef": "0x5F465e9fcfFc217c5849906216581a657cd60605",
         "claimZap": "0x92Cf9E5e4D1Dfbf7dA0d2BB3e884a68416a65070",
@@ -943,12 +944,44 @@
             "gauge": "0x1cEBdB0856dd985fAe9b8fEa2262469360B8a3a6",
             "crvRewards": "0x085A2054c51eA5c91dbF7f90d65e728c0f2A270f",
             "stash": "0x285972e5799cF224c4C6e81E9e47d4ae9EA7CBD3",
-            "swap": "0xEd4064f376cB8d68F770FB1Ff088a3d0F3FF5c4d",
+            "swap": "0x8301AE4fc9c624d1D396cbDAa1ed877821D7C511",
             "id": 61,
             "currency": "ETH",
             "name": "crv-eth"
-        }
-    
+        },
+        {
+            "lptoken": "0xAA5A67c256e27A5d80712c51971408db3370927D",
+            "token": "0xb3E8f3D7Ec208a032178880955f6c877479d1FDd",
+            "gauge": "0x8Fa728F393588E8D8dD1ca397E9a710E53fA553a",
+            "crvRewards": "0x835f69e58087E5B6bffEf182fe2bf959Fe253c3c",
+            "stash": "0xE7c811697ac3dd92cb100882dAc5Bd4183Bab747",
+            "swap": "0xAA5A67c256e27A5d80712c51971408db3370927D",
+            "id": 62,
+            "currency": "USD",
+            "name": "dola"
+        },
+        {
+            "lptoken": "0x6BA5b4e438FA0aAf7C1bD179285aF65d13bD3D90",
+            "token": " 0x2937Ef019db60C826Fe6141EB300847f85E66956",
+            "gauge": "0x66ec719045bBD62db5eBB11184c18237D3Cc2E62",
+            "crvRewards": "0x29B91c6CEC4F43aFdb6f6d71FAf1C03d6b712f55",
+            "stash": "0xAEA94fC182b7Fe73E25C0C7954FE1d5f5173C0B9",
+            "swap": "0x6BA5b4e438FA0aAf7C1bD179285aF65d13bD3D90",
+            "id": 63,
+            "currency": "USD",
+            "name": "rai"
+        },
+        {
+            "lptoken": "0x3A283D9c08E8b55966afb64C515f5143cf907611",
+            "token": " 0x0bC857f97c0554d1d0D602b56F2EEcE682016fBA",
+            "gauge": "0x7E1444BA99dcdFfE8fBdb42C02F0005D14f13BE1",
+            "crvRewards": "0xb1Fb0BA0676A1fFA83882c7F4805408bA232C1fA",
+            "stash": "0x679df29F380F1BEc31657cd6a5638aec4AEA3300",
+            "swap": "0xB576491F1E6e5E62f1d8F26062Ee822B40B0E0d4",
+            "id": 64,
+            "currency": "ETH",
+            "name": "cvx-eth"
+        }   
     ],
     "abrapools": [
         {

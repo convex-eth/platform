@@ -45,8 +45,7 @@ contract PoolManagerProxy{
 
     //shutdown a pool - only OPERATOR
     function shutdownPool(uint256 _pid) external onlyOperator returns(bool){
-        IPools(pools).shutdownPool(_pid);
-        return true;
+        return IPools(pools).shutdownPool(_pid);
     }
 
     //add a new pool - only OPERATOR
@@ -64,8 +63,6 @@ contract PoolManagerProxy{
         gaugeExists = IPools(pools).gaugeMap(_lptoken);
         require(!gaugeExists, "already registered lptoken");
 
-        IPools(pools).addPool(_lptoken,_gauge,_stashVersion);
-
-        return true;
+        return IPools(pools).addPool(_lptoken,_gauge,_stashVersion);
     }
 }

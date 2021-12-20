@@ -76,15 +76,10 @@ contract("deploy pool manager layer", async accounts => {
     let gauge = await ICurveGauge.at("0x7E1444BA99dcdFfE8fBdb42C02F0005D14f13BE1"); //cvx lp gauge
     let sVersion = 3;
 
-    //force cvx pool to gauge controller (may need to edit/remove after real vote goes through)
-    await booster.vote(110,"0xE478de485ad2fe566d49342Cbd03E49ed7DB3356",true,{from:multisig,gasPrice:0});
-    await advanceTime(7 * day);
-    var ownership = await IVoteStarter.at(contractList.curve.voteOwnership);
-    await ownership.executeVote(110);
-    var weightVoting = await IVoting.at(contractList.curve.gaugeController);
-    await weightVoting.vote_for_gauge_weights("0xD9277b0D007464eFF133622eC0d42081c93Cef02",0,{from:deployer,gasPrice:0});
-    await weightVoting.vote_for_gauge_weights(gauge.address,10000,{from:deployer,gasPrice:0});
-    console.log("weight added to pool");
+    //shutdown current pool
+    await poolProxy.shutdownPool(64,{from:deployer,gasPrice:0})
+    console.log("shutdown current cvx pool");
+
 
     //test add pool
     console.log("add pool");
