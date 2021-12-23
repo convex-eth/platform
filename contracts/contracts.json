@@ -52,6 +52,12 @@
         "voteParameter":"0xBCfF8B0b9419b9A88c44546519b1e909cF330399",
         "tricryptoPrice": "0xE8b2989276E2Ca8FDEA2268E3551b2b4B2418950"
     },
+    "chefPools":{
+        "2":"sushi cvx-eth",
+        "4":"curve cvxCrv-Crv",
+        "5":"treasury for incentives",
+        "6":"curve cvx-eth"
+    },
     "pools": [
         {
             "lptoken": "0x845838DF265Dcd2c412A1Dc9e959c7d08537f8a2",
@@ -979,6 +985,15 @@
             "stash": "0x679df29F380F1BEc31657cd6a5638aec4AEA3300",
             "swap": "0xB576491F1E6e5E62f1d8F26062Ee822B40B0E0d4",
             "id": 64,
+            "extras": [
+                {
+                    "contract": "0x834B9147Fd23bF131644aBC6e557Daf99C5cDa15",
+                    "token": "0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b",
+                    "chefHook": "0x903C7Aa5fde07E7ef47F5Ea2Ad1ba4BF42B6e5d4",
+                    "chefToken": "0x57706011bcDeabE2D97cB73836D0048FA448FA7E",
+                    "name": "CVX"
+                }
+            ],
             "currency": "ETH",
             "name": "cvx-eth"
         }   
