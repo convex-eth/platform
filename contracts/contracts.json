@@ -972,7 +972,7 @@
             "gauge": "0x66ec719045bBD62db5eBB11184c18237D3Cc2E62",
             "crvRewards": "0x29B91c6CEC4F43aFdb6f6d71FAf1C03d6b712f55",
             "stash": "0xAEA94fC182b7Fe73E25C0C7954FE1d5f5173C0B9",
-            "swap": "0x6BA5b4e438FA0aAf7C1bD179285aF65d13bD3D90",
+            "swap": "0x618788357D0EBd8A37e763ADab3bc575D54c2C7d",
             "id": 63,
             "currency": "USD",
             "name": "rai"
@@ -995,7 +995,7 @@
                 }
             ],
             "currency": "ETH",
-            "name": "cvx-eth"
+            "name": "cvxeth"
         }   
     ],
     "abrapools": [
