@@ -5,9 +5,11 @@ pragma solidity 0.6.12;
 import "./interfaces/ILockedCvx.sol";
 import '@openzeppelin/contracts/utils/Address.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
+import '@openzeppelin/contracts/math/SafeMath.sol';
 
 contract VotingBalanceMax is Ownable{
     using Address for address;
+    using SafeMath for uint256;
 
     address public constant locker = address(0xD18140b4B819b895A3dba5442F959fA44994AF50);
     uint256 public constant rewardsDuration = 86400 * 7;
@@ -64,7 +66,7 @@ contract VotingBalanceMax is Ownable{
             //if end date is already the current epoch,  minus 1 to get the previous
             epochindex -= 1;
         }
-        uint256 balanceAtPrev = ILockedCvx.balanceAtEpochOf(_account,epochindex);
+        uint256 balanceAtPrev = ILockedCvx(locker).balanceAtEpochOf(epochindex, _account);
         uint256 currentBalance = ILockedCvx(locker).balanceOf(_account);
 
         return max(balanceAtPrev, currentBalance);
