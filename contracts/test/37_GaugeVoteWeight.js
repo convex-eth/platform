@@ -76,6 +76,7 @@ contract("check vote balance", async accounts => {
     await locker.lockedBalanceOf(userZ).then(a => console.log("locked coins: " +a))
     await locker.balanceOf(userZ).then(a => console.log("balance via locker: " +a))
     await votebalance.balanceOf(userZ).then(a => console.log("balance via votebalance: " +a))
+    await votebalance.pendingBalanceOf(userZ).then(a => console.log("pending balance: " +a))
     await cvx.balanceOf(userZ).then(a => console.log("balance on wallet: " +a))
 
     await advanceTime(day);
@@ -83,6 +84,7 @@ contract("check vote balance", async accounts => {
     await locker.lockedBalanceOf(userZ).then(a => console.log("locked coins: " +a))
     await locker.balanceOf(userZ).then(a => console.log("balance via locker: " +a))
     await votebalance.balanceOf(userZ).then(a => console.log("balance via votebalance: " +a))
+    await votebalance.pendingBalanceOf(userZ).then(a => console.log("pending balance: " +a))
     await cvx.balanceOf(userZ).then(a => console.log("balance on wallet: " +a))
 
     await locker.processExpiredLocks(true,{from:userZ});
@@ -91,6 +93,7 @@ contract("check vote balance", async accounts => {
     await locker.lockedBalanceOf(userZ).then(a => console.log("locked coins: " +a))
     await locker.balanceOf(userZ).then(a => console.log("balance via locker: " +a))
     await votebalance.balanceOf(userZ).then(a => console.log("balance via votebalance: " +a))
+    await votebalance.pendingBalanceOf(userZ).then(a => console.log("pending balance: " +a))
     await cvx.balanceOf(userZ).then(a => console.log("balance on wallet: " +a))
 
     await advanceTime(day*7);
@@ -98,6 +101,7 @@ contract("check vote balance", async accounts => {
     await locker.lockedBalanceOf(userZ).then(a => console.log("locked coins: " +a))
     await locker.balanceOf(userZ).then(a => console.log("balance via locker: " +a))
     await votebalance.balanceOf(userZ).then(a => console.log("balance via votebalance: " +a))
+    await votebalance.pendingBalanceOf(userZ).then(a => console.log("pending balance: " +a))
     await cvx.balanceOf(userZ).then(a => console.log("balance on wallet: " +a))
   });
 });

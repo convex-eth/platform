@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.6.12;
+pragma experimental ABIEncoderV2;
 
 interface ILockedCvx{
+     struct LockedBalance {
+        uint112 amount;
+        uint112 boosted;
+        uint32 unlockTime;
+    }
+
     function lock(address _account, uint256 _amount, uint256 _spendRatio) external;
     function processExpiredLocks(bool _relock, uint256 _spendRatio, address _withdrawTo) external;
     function getReward(address _account, bool _stake) external;
@@ -12,7 +19,14 @@ interface ILockedCvx{
     function checkpointEpoch() external;
     function balanceOf(address _account) external view returns(uint256);
     function totalSupply() view external returns(uint256 supply);
-
+    function lockedBalances(
+        address _user
+    ) view external returns(
+        uint256 total,
+        uint256 unlockable,
+        uint256 locked,
+        LockedBalance[] memory lockData
+    );
     function addReward(
         address _rewardsToken,
         address _distributor,

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.6.12;
+pragma experimental ABIEncoderV2;
 
 
 import "./interfaces/ILockedCvx.sol";
@@ -13,6 +14,7 @@ contract VotingBalanceMax is Ownable{
 
     address public constant locker = address(0xD18140b4B819b895A3dba5442F959fA44994AF50);
     uint256 public constant rewardsDuration = 86400 * 7;
+    uint256 public constant lockDuration = rewardsDuration * 17;
 
     mapping(address => bool) blockList;
     mapping(address => bool) allowedList;
@@ -70,6 +72,34 @@ contract VotingBalanceMax is Ownable{
         uint256 currentBalance = ILockedCvx(locker).balanceOf(_account);
 
         return max(balanceAtPrev, currentBalance);
+    }
+
+    function pendingBalanceOf(address _account) external view returns(uint256){
+
+        //TODO: move lists to a seperate contract so that a version that
+        //takes the max of current or previous can be used on specific votes only
+        
+        if(useBlock){
+            if(blockList[_account]){
+                return 0;
+            }
+        }
+
+        if(useAllow){
+            if(Address.isContract(_account) && !allowedList[_account]){
+                return 0;
+            }
+        }
+
+        uint256 currentEpochUnlock = block.timestamp.div(rewardsDuration).mul(rewardsDuration).add(lockDuration);
+
+        (,,,ILockedCvx.LockedBalance[] memory balances) = ILockedCvx(locker).lockedBalances(_account);
+        uint256 pending;
+        if(balances[balances.length-1].unlockTime == currentEpochUnlock){
+            pending = balances[balances.length-1].boosted;
+        }
+
+        return pending;
     }
 
     function max(uint256 a, uint256 b) internal pure returns (uint256) {
