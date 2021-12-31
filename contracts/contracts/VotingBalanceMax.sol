@@ -11,11 +11,13 @@ contract VotingBalanceMax{
     using SafeMath for uint256;
 
     address public constant locker = address(0xD18140b4B819b895A3dba5442F959fA44994AF50);
-    address public constant eligiblelist = address(0xD18140b4B819b895A3dba5442F959fA44994AF50);//todo deploy and fill in
+    address public immutable eligiblelist;
     uint256 public constant rewardsDuration = 86400 * 7;
     uint256 public constant lockDuration = rewardsDuration * 17;
 
-    constructor() public {}
+    constructor(address _eligiblelist) public {
+        eligiblelist = _eligiblelist;
+    }
 
     function balanceOf(address _account) external view returns(uint256){
 

@@ -16,6 +16,7 @@ const BasicCvxHolder = artifacts.require("BasicCvxHolder");
 const BaseRewardPool = artifacts.require("BaseRewardPool");
 const VotingBalance = artifacts.require("VotingBalance");
 const VotingBalanceMax = artifacts.require("VotingBalanceMax");
+const VotingEligibility = artifacts.require("VotingEligibility");
 
 
 contract("check vote balance", async accounts => {
@@ -71,7 +72,17 @@ contract("check vote balance", async accounts => {
 
     //deploy
     let locker = await CvxLocker.at(contractList.system.locker);
-    let votebalance = await VotingBalanceMax.new({from:deployer});
+    let voteeligibility = await VotingEligibility.new({from:deployer});
+    var blockAddress = "0xdc71417E173955d100aF4fc9673493Fff244514C";
+    await voteeligibility.isEligible(blockAddress).then(a=>console.log("is eligible? " +a))
+    
+    let votebalance = await VotingBalanceMax.new(voteeligibility.address,{from:deployer});
+
+    await votebalance.balanceOf(blockAddress).then(a=>console.log("block balance: " +a))
+    await voteeligibility.setAccountBlock(blockAddress,true,{from:deployer});
+    await voteeligibility.transferOwnership(multisig,{from:deployer});
+    await voteeligibility.isEligible(blockAddress).then(a=>console.log("is eligible? " +a))
+    await votebalance.balanceOf(blockAddress).then(a=>console.log("block balance: " +a))
 
     await locker.lockedBalanceOf(userZ).then(a => console.log("locked coins: " +a))
     await locker.balanceOf(userZ).then(a => console.log("balance via locker: " +a))
@@ -79,7 +90,7 @@ contract("check vote balance", async accounts => {
     await votebalance.pendingBalanceOf(userZ).then(a => console.log("pending balance: " +a))
     await cvx.balanceOf(userZ).then(a => console.log("balance on wallet: " +a))
 
-    await advanceTime(day);
+    await advanceTime(day*7);
 
     await locker.lockedBalanceOf(userZ).then(a => console.log("locked coins: " +a))
     await locker.balanceOf(userZ).then(a => console.log("balance via locker: " +a))
