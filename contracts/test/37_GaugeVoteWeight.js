@@ -61,28 +61,23 @@ contract("check vote balance", async accounts => {
     }
     const day = 86400;
 
-    //swap for cvx
-    // await weth.sendTransaction({value:web3.utils.toWei("10.0", "ether"),from:deployer});
-    // var wethBalance = await weth.balanceOf(deployer);
-    // console.log("receive weth: " +wethBalance)
-    // await weth.approve(exchange.address,wethBalance,{from:deployer});
-    // await exchange.swapExactTokensForTokens(web3.utils.toWei("10.0", "ether"),0,[weth.address,cvx.address],userA,starttime+3000,{from:deployer});
-    // var cvxbalance = await cvx.balanceOf(userA);
-    // console.log("swapped for cvx(userA): " +cvxbalance);
-
     //deploy
     let locker = await CvxLocker.at(contractList.system.locker);
     let voteeligibility = await VotingEligibility.new({from:deployer});
+    console.log("voteEligibility: " +voteeligibility.address);
     var blockAddress = "0xdc71417E173955d100aF4fc9673493Fff244514C";
     await voteeligibility.isEligible(blockAddress).then(a=>console.log("is eligible? " +a))
     
     let votebalance = await VotingBalanceMax.new(voteeligibility.address,{from:deployer});
+    console.log("votebalance: " +votebalance.address);
 
     await votebalance.balanceOf(blockAddress).then(a=>console.log("block balance: " +a))
     await voteeligibility.setAccountBlock(blockAddress,true,{from:deployer});
     await voteeligibility.transferOwnership(multisig,{from:deployer});
     await voteeligibility.isEligible(blockAddress).then(a=>console.log("is eligible? " +a))
     await votebalance.balanceOf(blockAddress).then(a=>console.log("block balance: " +a))
+
+    return;
 
     await locker.lockedBalanceOf(userZ).then(a => console.log("locked coins: " +a))
     await locker.balanceOf(userZ).then(a => console.log("balance via locker: " +a))
