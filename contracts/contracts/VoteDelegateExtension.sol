@@ -2,11 +2,13 @@
 pragma solidity 0.6.12;
 
 import "./interfaces/IBooster.sol";
+import '@openzeppelin/contracts/math/SafeMath.sol';
 
 /*
 Add a layer to voting to easily apply data packing into vote id, as well as simplify calling functions
 */
 contract VoteDelegateExtension{
+    using SafeMath for uint256;
 
     address public constant voteOwnership = address(0xE478de485ad2fe566d49342Cbd03E49ed7DB3356);
     address public constant voteParameter = address(0xBCfF8B0b9419b9A88c44546519b1e909cF330399);
@@ -57,7 +59,7 @@ contract VoteDelegateExtension{
     }
 
     //revert to booster's owner
-    function revertControl() external{
+    function revertControl() external onlyOwner{
         IBooster(booster).setVoteDelegate(IBooster(booster).owner());
     }
 
@@ -66,18 +68,24 @@ contract VoteDelegateExtension{
         return uint256((_value << _shiftValue) | _base);
     }
 
+    function packData(uint256 _voteId, uint256 _yay, uint256 _nay) public pure returns(uint256){
+        uint256 pack = _encodeData(_yay, 192, 0);
+        pack = _encodeData(_nay,128,pack);
+        pack = _encodeData(_voteId, 0, pack);
+        return pack;
+    }
+
     //Submit a DAO vote (with weights)
     function DaoVoteWithWeights(uint256 _voteId, uint256 _yay, uint256 _nay, bool _isOwnership) external onlyDaoOperator returns(bool){
-        //TODO: maybe just accept a 0~10,000 value and convert to 1e18 for easier input
-
+        //convert 10,000 to 1e18
+        _yay = _yay.mul(1e18).div(10000);
+        _nay = _nay.mul(1e18).div(10000);
         require(_yay.add(_nay) == MAX_VOTE, "!equal max_vote");
 
-        uint256 encode = _encodeData(_yay, 192, 0);
-        encode = _encodeData(_nay,128,encode);
-        encode = _encodeData(_voteId, 0, encode);
+        uint256 data = packData(_voteId, _yay, _nay);
 
         //vote with enocded vote id.  "supported" needs to be false if doing this type
-        return IBooster(booster).vote(encode, _isOwnership ? voteOwnership : voteParameter, false);
+        return IBooster(booster).vote(data, _isOwnership ? voteOwnership : voteParameter, false);
     }
 
     //Submit a DAO vote
