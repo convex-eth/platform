@@ -27,7 +27,8 @@
         "chefcvxCrvTokenNew": "0xe79d9a5eF6E19C3f1003f4F27a1423259460f6D0",
         "cvxEthRewarder": "0x9e01aaC4b3e8781a85b21d9d9F848e72Af77B362",
         "cvxCrvCrvRewarder": "0x1FD97b5E5a257B0B9b9A42A96BB8870Cbdd1Eb79",
-        "votePrize": "0x9402Ebd77427C4e21Bcc26CeA4C5d332Cbf248D1",
+        "votingEligibility": "0xbcE1cBf6816d158E5f5D9713bcCa805E37bBfB0f",
+        "votingBalanceMax": "0x59CcBAABBFCAC52E007A706242C5B81a48179BF2",
         "cvxMining": "0x3c75BFe6FbfDa3A94E7E7E8c2216AFc684dE5343",
         "locker": "0xD18140b4B819b895A3dba5442F959fA44994AF50",
         "lockerStakeProxy": "0xE096ccEc4a1D36F191189Fe61E803d8B2044DFC3",
@@ -972,7 +973,7 @@
             "gauge": "0x66ec719045bBD62db5eBB11184c18237D3Cc2E62",
             "crvRewards": "0x29B91c6CEC4F43aFdb6f6d71FAf1C03d6b712f55",
             "stash": "0xAEA94fC182b7Fe73E25C0C7954FE1d5f5173C0B9",
-            "swap": "0x6BA5b4e438FA0aAf7C1bD179285aF65d13bD3D90",
+            "swap": "0x618788357D0EBd8A37e763ADab3bc575D54c2C7d",
             "id": 63,
             "currency": "USD",
             "name": "rai"
@@ -995,7 +996,7 @@
                 }
             ],
             "currency": "ETH",
-            "name": "cvx-eth"
+            "name": "cvxeth"
         }   
     ],
     "abrapools": [
