@@ -3,7 +3,7 @@ const fs = require('fs');
 const MerkleTree = require('./helpers/merkleTree');
 var jsonfile = require('jsonfile');
 
-var droplist = jsonfile.readFileSync('../airdrop/eps/2022_01_06/drop_proofs.json');
+var droplist = jsonfile.readFileSync('../airdrop/eps/2022_01_13/drop_proofs.json');
 var contractList = jsonfile.readFileSync('./contracts.json');
 
 const IERC20 = artifacts.require("IERC20");
@@ -66,7 +66,8 @@ contract("Airdrop Test", async accounts => {
     // let airdrop = await MerkleAirdrop.at("0x03cbDC39a41b0D8d192BaC8E2f92c73Feacc938E");//week 31
     // let airdrop = await MerkleAirdrop.at("0xCC093A6E8082aDf38Bb70D9b0aC761c666ff03F4");//week 32
     // let airdrop = await MerkleAirdrop.at("0xEa6672757f5D11237EAAf978Da09eC619Ff4e63F");//week 33
-    let airdrop = await MerkleAirdrop.at("0x337465264408D0289F9fE4B39277cE62CECa3E01");//week 34
+    // let airdrop = await MerkleAirdrop.at("0x337465264408D0289F9fE4B39277cE62CECa3E01");//week 34
+    let airdrop = await MerkleAirdrop.at("0x7eB841876ca7b41e5c5b9E40718214e9Bf8c8186");//week 35
     console.log("airdrop at: " +airdrop.address);
 
     // //set reward token
