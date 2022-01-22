@@ -158,8 +158,8 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
                     reward_remaining: 0
                 })
             );
-            registeredRewards[crv] = 0;
-            registeredRewards[cvx] = 1;
+            registeredRewards[crv] = 1; //mark registered at index+1
+            registeredRewards[cvx] = 2; //mark registered at index+1
         }
 
         uint256 extraCount = IRewardStaking(mainPool).extraRewardsLength();
@@ -180,7 +180,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
                         reward_remaining: 0
                     })
                 );
-                registeredRewards[extraToken] = rewards.length - 1;
+                registeredRewards[extraToken] = rewards.length; //mark registered at index+1
             }
         }
     }
