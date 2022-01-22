@@ -46,6 +46,8 @@ contract("Test stake wrapper", async accounts => {
     let userA = accounts[0];
     let userB = accounts[1];
     let userC = accounts[2];
+    let userF = accounts[9];
+    await web3.eth.sendTransaction({from:userF, to:deployer, value:web3.utils.toWei("80.0", "ether") });
 
     let starttime = await time.latest();
     await weth.sendTransaction({value:web3.utils.toWei("10.0", "ether"),from:deployer});
@@ -84,8 +86,8 @@ contract("Test stake wrapper", async accounts => {
     await staker.curveToken().then(a=>console.log("curve token: " +a));
     await staker.convexToken().then(a=>console.log("convex token: " +a));
     // await staker.setCauldron("0x806e16ec797c69afa8590A55723CE4CC1b54050E",{from:deployer});
-    var cauldronaddress =  await staker.cauldron()
-    console.log("cauldron: " +cauldronaddress);
+    // var cauldronaddress =  await staker.cauldrons(1)
+    // console.log("cauldron: " +cauldronaddress);
 
     let rewardCount = await staker.rewardLength();
     for(var i = 0; i < rewardCount; i++){

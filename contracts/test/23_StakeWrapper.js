@@ -44,6 +44,8 @@ contract("Test stake wrapper", async accounts => {
     let userA = accounts[0];
     let userB = accounts[1];
     let userC = accounts[2];
+    let userF = accounts[9];
+    await web3.eth.sendTransaction({from:userF, to:deployer, value:web3.utils.toWei("80.0", "ether") });
 
     let starttime = await time.latest();
     await weth.sendTransaction({value:web3.utils.toWei("10.0", "ether"),from:deployer});
@@ -72,7 +74,8 @@ contract("Test stake wrapper", async accounts => {
     let lib = await CvxMining.at(contractList.system.cvxMining);
     console.log("mining lib at: " +lib.address);
     await ConvexStakingWrapper.link("CvxMining", lib.address);
-    let staker = await ConvexStakingWrapper.new(curveAave.address,convexAave.address,convexAaveRewards.address, aavepool, addressZero, " Test", "tst", {from:deployer});
+    let staker = await ConvexStakingWrapper.new();
+    await staker.initialize(curveAave.address,convexAave.address,convexAaveRewards.address, aavepool, addressZero, {from:deployer});
     console.log("staker token: " +staker.address);
     await staker.name().then(a=>console.log("name: " +a));
     await staker.symbol().then(a=>console.log("symbol: " +a));
