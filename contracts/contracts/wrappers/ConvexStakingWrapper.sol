@@ -40,11 +40,6 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         mapping(address => uint256) claimable_reward;
     }
 
-    // uint256 public cvx_reward_integral;
-    // uint256 public cvx_reward_remaining;
-    // mapping(address => uint256) public cvx_reward_integral_for;
-    // mapping(address => uint256) public cvx_claimable_reward;
-
     //constants/immutables
     address public constant convexBooster = address(0xF403C135812408BFbE8713b5A23a04b3D48AAE31);
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
@@ -54,6 +49,8 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     address public convexPool;
     uint256 public convexPoolId;
     address public collateralVault;
+    uint256 private constant CRV_INDEX = 0;
+    uint256 private constant CVX_INDEX = 1;
 
     //rewards
     RewardType[] public rewards;
@@ -158,18 +155,17 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
                     reward_remaining: 0
                 })
             );
-            registeredRewards[crv] = 1; //mark registered at index+1
-            registeredRewards[cvx] = 2; //mark registered at index+1
+            registeredRewards[crv] = CRV_INDEX+1; //mark registered at index+1
+            registeredRewards[cvx] = CVX_INDEX+1; //mark registered at index+1
         }
 
         uint256 extraCount = IRewardStaking(mainPool).extraRewardsLength();
-        uint256 startIndex = rewards.length - 2;
-        for (uint256 i = startIndex; i < extraCount; i++) {
+        for (uint256 i = 0; i < extraCount; i++) {
             address extraPool = IRewardStaking(mainPool).extraRewards(i);
             address extraToken = IRewardStaking(extraPool).rewardToken();
             if(extraToken == cvx){
                 //update cvx reward pool address
-                rewards[1].reward_pool = extraPool;
+                rewards[CVX_INDEX].reward_pool = extraPool;
             }else if(registeredRewards[extraToken] == 0){
                 //add new token to list
                 rewards.push(
@@ -315,8 +311,8 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
 
             //calc cvx minted from crv here and add to cvx claimables (index 1)
             if(reward.reward_token == crv){
-                claimable[1].amount = claimable[1].amount.add(CvxMining.ConvertCrvToCvx(newlyClaimable));
-                claimable[1].token = cvx;
+                claimable[CVX_INDEX].amount = claimable[CVX_INDEX].amount.add(CvxMining.ConvertCrvToCvx(newlyClaimable));
+                claimable[CVX_INDEX].token = cvx;
             }
         }
         return claimable;
