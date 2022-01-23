@@ -291,7 +291,10 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
             RewardType storage reward = rewards[i];
 
             if(reward.reward_pool == address(0)){
-                //skip - cvx reward may not have a reward pool yet
+                //cvx reward may not have a reward pool yet
+                //so just add whats already been checkpointed
+                claimable[i].amount = claimable[i].amount.add(reward.claimable_reward[_account]);
+                claimable[i].token = reward.reward_token;
                 continue;
             }
 
