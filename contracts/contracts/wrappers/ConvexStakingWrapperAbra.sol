@@ -23,7 +23,7 @@ contract ConvexStakingWrapperAbra is ConvexStakingWrapper {
     function initialize(address _curveToken, address _convexToken, address _convexPool, uint256 _poolId, address _vault)
     override external {
         require(!isInit,"already init");
-        owner = address(0xa3C5A1e09150B75ff251c1a7815A07182c3de2FB); //default to convex multisig
+        owner = msg.sender;
         emit OwnershipTransferred(address(0), owner);
         _tokenname = string(abi.encodePacked("Staked ", ERC20(_convexToken).name(), " Abra" ));
         _tokensymbol = string(abi.encodePacked("stk", ERC20(_convexToken).symbol(), "-abra"));
