@@ -344,6 +344,39 @@ contract("deploy pool manager layer", async accounts => {
     await booster.setOwner(boosterowner.address, {from:multisig, gasPrice:0});
     console.log("insert booster owner")
 
+    await boosterowner.transferOwnership(deployer, {from:multisig, gasPrice:0});
+    await boosterowner.pendingowner().then(a=>console.log("pendingowner: " +a))
+    await boosterowner.acceptOwnership({from:deployer});
+    await boosterowner.owner().then(a=>console.log("owner: "+a))
+    await boosterowner.pendingowner().then(a=>console.log("pendingowner: " +a))
+    await boosterowner.transferOwnership(multisig, {from:multisig, gasPrice:0}).catch(a=>console.log("not owner: " +a));
+    await boosterowner.transferOwnership(multisig, {from:deployer, gasPrice:0})
+    await boosterowner.pendingowner().then(a=>console.log("pendingowner: " +a))
+    await boosterowner.acceptOwnership({from:deployer}).catch(a=>console.log("wrong pending owner: "+a));
+    await boosterowner.acceptOwnership({from:multisig, gasPrice:0});
+    await boosterowner.owner().then(a=>console.log("owner: "+a))
+    await boosterowner.pendingowner().then(a=>console.log("pendingowner: " +a))
+
+    await booster.stashFactory().then(a=>console.log("stash factory: " +a))
+    await boosterowner.setFactories(addressZero, addressZero, addressZero).catch(a=>console.log("not owner: " +a))
+    await boosterowner.setFactories(addressZero, addressZero, addressZero,{from:multisig, gasPrice:0})
+    await booster.stashFactory().then(a=>console.log("stash factory: " +a))
+
+    await booster.rewardArbitrator().then(a=>console.log("rewardArbitrator: " +a))
+    await boosterowner.setArbitrator(addressZero).catch(a=>console.log("not owner: " +a))
+    await boosterowner.setArbitrator(addressZero,{from:multisig, gasPrice:0})
+    await booster.rewardArbitrator().then(a=>console.log("rewardArbitrator: " +a))
+
+    await booster.feeManager().then(a=>console.log("feeManager: " +a))
+    await boosterowner.setFeeManager(addressZero).catch(a=>console.log("not owner: " +a))
+    await boosterowner.setFeeManager(addressZero,{from:multisig, gasPrice:0})
+    await booster.feeManager().then(a=>console.log("feeManager: " +a))
+
+    await booster.setVoteDelegate().then(a=>console.log("feeManager: " +a))
+    await boosterowner.setVoteDelegate(addressZero).catch(a=>console.log("not owner: " +a))
+    await boosterowner.setVoteDelegate(addressZero,{from:multisig, gasPrice:0})
+    await booster.voteDelegate().then(a=>console.log("feeManager: " +a))
+
     console.log("try full shutdown")
     await boosterowner.shutdownSystem({from:multisig, gasPrice:0}).catch(a=>console.log("revert shutdown -> pool mgr not shut down: " +a));
     await boosterowner.queueForceShutdown({from:multisig, gasPrice:0}).catch(a=>console.log("revert queue -> pool mgr not shut down: " +a));

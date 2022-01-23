@@ -77,10 +77,6 @@ contract BoosterOwner{
         emit AcceptedOwnership(owner);
     }
 
-    // function setOwner(address _owner) external onlyOwner{
-    //     IOwner(booster).setOwner(_owner);
-    // }
-
     function setFactories(address _rfactory, address _sfactory, address _tfactory) external onlyOwner{
         IOwner(booster).setFactories(_rfactory, _sfactory, _tfactory);
     }
@@ -92,10 +88,6 @@ contract BoosterOwner{
     function setFeeManager(address _feeM) external onlyOwner{
         IOwner(booster).setFeeManager(_feeM);
     }
-
-    // function setRewardContracts(address _rewards, address _stakerRewards) external onlyOwner{
-    //     IOwner(booster).setRewardContracts(_rewards, _stakerRewards);   
-    // }
 
     function setVoteDelegate(address _voteDelegate) external onlyOwner{
         IOwner(booster).setVoteDelegate(_voteDelegate);
