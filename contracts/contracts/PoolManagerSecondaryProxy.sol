@@ -22,14 +22,10 @@ contract PoolManagerSecondaryProxy{
 
     mapping(address => bool) public usedMap;
 
-    constructor(address[] memory usedList) public {
+    constructor() public {
         //default to multisig
         owner = address(0xa3C5A1e09150B75ff251c1a7815A07182c3de2FB);
         operator = msg.sender;
-
-        for(uint i=0; i < usedList.length; i++){
-            usedMap[usedList[i]] = true;
-        }
     }
 
     modifier onlyOwner() {
@@ -50,6 +46,13 @@ contract PoolManagerSecondaryProxy{
     //set operator - only OWNER
     function setOperator(address _operator) external onlyOwner{
         operator = _operator;
+    }
+
+    //manual set an address to used state
+    function setUsedAddress(address[] memory usedList) external onlyOwner{
+        for(uint i=0; i < usedList.length; i++){
+            usedMap[usedList[i]] = true;
+        }
     }
 
     //shutdown pool management and disallow new pools. change is immutable

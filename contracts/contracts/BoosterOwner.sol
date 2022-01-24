@@ -12,6 +12,7 @@ interface IOwner {
     function poolInfo(uint256) external view returns(address,address,address,address,address,bool);
     function setVoteDelegate(address _voteDelegate) external;
     function setFeeManager(address _feeM) external;
+    function setOwner(address _owner) external;
 
     //rescue
     function setDistribution(address _distributor, address _rewardDeposit, address _treasury) external;
@@ -43,6 +44,7 @@ contract BoosterOwner{
     address public immutable poolManager;
     address public owner;
     address public pendingowner;
+    bool public isSealed;
 
     uint256 public constant FORCE_DELAY = 30 days;
 
@@ -53,6 +55,7 @@ contract BoosterOwner{
     event ShutdownExecuted();
     event TransferOwnership(address pendingOwner);
     event AcceptedOwnership(address newOwner);
+    event OwnershipSealed();
 
     constructor(address _poolManager) public {
         //default to multisig
@@ -75,6 +78,19 @@ contract BoosterOwner{
         owner = pendingowner;
         pendingowner = address(0);
         emit AcceptedOwnership(owner);
+    }
+
+    function sealOwnership() external onlyOwner{
+        isSealed = true;
+        emit OwnershipSealed();
+    }
+
+    function setBoosterOwner() external onlyOwner{
+        //allow reverting ownership until sealed
+        require(!isSealed, "ownership sealed");
+
+        //transfer booster ownership to this owner
+        IOwner(booster).setOwner(owner);
     }
 
     function setFactories(address _rfactory, address _sfactory, address _tfactory) external onlyOwner{

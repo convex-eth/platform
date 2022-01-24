@@ -20,6 +20,10 @@ const IVoting = artifacts.require("IVoting");
 const FakeGauge = artifacts.require("FakeGauge");
 const IGaugeController = artifacts.require("IGaugeController");
 const BoosterOwner = artifacts.require("BoosterOwner");
+const VoteDelegateExtension = artifacts.require("VoteDelegateExtension");
+const ExtraRewardStashTokenRescue = artifacts.require("ExtraRewardStashTokenRescue");
+const ExtraRewardStashV3 = artifacts.require("ExtraRewardStashV3");
+const StashFactoryV2 = artifacts.require("StashFactoryV2");
 
 
 const unlockAccount = async (address) => {
@@ -231,10 +235,12 @@ contract("deploy pool manager layer", async accounts => {
     ]
 
     console.log(usedList);
+    console.log("used address count: " +usedList.length);
     
     //deploy
-    let poolSecondary = await PoolManagerSecondaryProxy.new(usedList);
+    let poolSecondary = await PoolManagerSecondaryProxy.new();
     console.log("poolManagerSecondaryProxy: " +poolSecondary.address);
+    await poolSecondary.setUsedAddress(usedList,{from:multisig, gasPrice:0});
     let poolManager = await PoolManagerV3.new(poolSecondary.address);
     console.log("poolManager: " +poolManager.address);
 
@@ -342,7 +348,7 @@ contract("deploy pool manager layer", async accounts => {
 
     let boosterowner = await BoosterOwner.new(poolSecondary.address);
     await booster.setOwner(boosterowner.address, {from:multisig, gasPrice:0});
-    console.log("insert booster owner")
+    console.log("insert booster owner: " +boosterowner.address)
 
     await boosterowner.transferOwnership(deployer, {from:multisig, gasPrice:0});
     await boosterowner.pendingowner().then(a=>console.log("pendingowner: " +a))
@@ -368,14 +374,61 @@ contract("deploy pool manager layer", async accounts => {
     await booster.rewardArbitrator().then(a=>console.log("rewardArbitrator: " +a))
 
     await booster.feeManager().then(a=>console.log("feeManager: " +a))
+    await booster.setFeeManager(boosterowner.address,{from:multisig,gasPrice:0});
+    await booster.feeManager().then(a=>console.log("feeManager set to boosterowner: " +a))
     await boosterowner.setFeeManager(addressZero).catch(a=>console.log("not owner: " +a))
     await boosterowner.setFeeManager(addressZero,{from:multisig, gasPrice:0})
     await booster.feeManager().then(a=>console.log("feeManager: " +a))
 
-    await booster.setVoteDelegate().then(a=>console.log("feeManager: " +a))
+    await booster.voteDelegate().then(a=>console.log("voteDelegate: " +a))
+    let votedel = await VoteDelegateExtension.at(contractList.system.voteExtension);
+    await votedel.revertControl({from:multisig,gasPrice:0})
+    await booster.voteDelegate().then(a=>console.log("voteDelegate: " +a))
     await boosterowner.setVoteDelegate(addressZero).catch(a=>console.log("not owner: " +a))
     await boosterowner.setVoteDelegate(addressZero,{from:multisig, gasPrice:0})
-    await booster.voteDelegate().then(a=>console.log("feeManager: " +a))
+    await booster.voteDelegate().then(a=>console.log("voteDelegate: " +a))
+
+    await booster.owner().then(a=>console.log("booster owner: " +a))
+    await boosterowner.setBoosterOwner({from:multisig,gasPrice:0});
+    await booster.owner().then(a=>console.log("booster owner: " +a))
+    await booster.setOwner(boosterowner.address,{from:multisig,gasPrice:0});
+    await booster.owner().then(a=>console.log("booster owner: " +a))
+    await boosterowner.sealOwnership({from:multisig, gasPrice:0});
+    await boosterowner.setBoosterOwner({from:multisig,gasPrice:0}).catch(a=>console.log("ownership sealed: " +a));
+
+    let rescue = await ExtraRewardStashTokenRescue.at(contractList.system.rescueStash);
+
+    await rescue.distributor().then(a=>console.log("distributor: " +a))
+    await rescue.rewardDeposit().then(a=>console.log("rewardDeposit: " +a))
+    await rescue.treasuryDeposit().then(a=>console.log("treasuryDeposit: " +a))
+    await boosterowner.setRescueTokenDistribution(addressZero, addressZero, addressZero).catch(a=>console.log("ownership fail: "+a));
+    await boosterowner.setRescueTokenDistribution(addressZero, addressZero, addressZero, {from:multisig, gasPrice:0});
+    await rescue.distributor().then(a=>console.log("distributor: " +a))
+    await rescue.rewardDeposit().then(a=>console.log("rewardDeposit: " +a))
+    await rescue.treasuryDeposit().then(a=>console.log("treasuryDeposit: " +a))
+
+    let ldo = "0x5a98fcbea516cf06857215779fd812ca3bef1b32";
+    await rescue.activeTokens(ldo).then(a=>console.log("ldo settings: " +a))
+    await boosterowner.setRescueTokenReward(ldo, 2).catch(a=>console.log("ownership fail: "+a));
+    await boosterowner.setRescueTokenReward(ldo, 2, {from:multisig, gasPrice:0});
+    await rescue.activeTokens(ldo).then(a=>console.log("ldo settings: " +a))
+
+    let somestash = await ExtraRewardStashV3.at("0xb24Ea588066fBEB9610141d4b779d5D9F80A1180");
+    await somestash.tokenCount().then(a=>console.log("stash token count: "+a))
+    await boosterowner.setStashExtraReward(somestash.address, contractList.system.cvx).catch(a=>console.log("ownership fail: "+a));
+    await boosterowner.setStashExtraReward(somestash.address, contractList.system.cvx, {from:multisig, gasPrice:0});
+    await somestash.tokenCount().then(a=>console.log("stash token count: "+a))
+
+    await somestash.rewardHook().then(a=>console.log("stash rewardHook: "+a))
+    await boosterowner.setStashRewardHook(somestash.address, deployer).catch(a=>console.log("ownership fail: "+a));
+    await boosterowner.setStashRewardHook(somestash.address, deployer, {from:multisig, gasPrice:0});
+    await somestash.rewardHook().then(a=>console.log("stash rewardHook: "+a))
+
+    let sfactory = await StashFactoryV2.at(contractList.system.sFactory);
+    await sfactory.v3Implementation().then(a=>console.log("stash impl v3: " +a));
+    await boosterowner.setStashFactoryImplementation(addressZero, addressZero, addressZero).catch(a=>console.log("ownership fail: "+a));
+    await boosterowner.setStashFactoryImplementation(addressZero, addressZero, addressZero, {from:multisig, gasPrice:0});
+    await sfactory.v3Implementation().then(a=>console.log("stash impl v3: " +a));
 
     console.log("try full shutdown")
     await boosterowner.shutdownSystem({from:multisig, gasPrice:0}).catch(a=>console.log("revert shutdown -> pool mgr not shut down: " +a));
@@ -393,6 +446,7 @@ contract("deploy pool manager layer", async accounts => {
     await advanceTime(day * 30);
     await boosterowner.forceShutdownSystem({from:multisig, gasPrice:0});
     console.log("shutdown complete")
+
   });
 });
 
