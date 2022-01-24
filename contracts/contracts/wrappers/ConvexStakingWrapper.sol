@@ -236,7 +236,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         }
 
         //update remaining reward here since balance could have changed if claiming
-        if(bal !=  reward.reward_remaining){
+        if(bal != reward.reward_remaining){
             reward.reward_remaining = uint128(bal);
         }
     }
@@ -313,7 +313,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
             claimable[i].token = reward.reward_token;
 
             //calc cvx minted from crv here and add to cvx claimables (index 1)
-            if(reward.reward_token == crv){
+            if(i == CRV_INDEX){
                 claimable[CVX_INDEX].amount = claimable[CVX_INDEX].amount.add(CvxMining.ConvertCrvToCvx(newlyClaimable));
                 claimable[CVX_INDEX].token = cvx;
             }
