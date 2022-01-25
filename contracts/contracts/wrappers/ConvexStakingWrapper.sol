@@ -312,9 +312,16 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
             claimable[i].amount = claimable[i].amount.add(reward.claimable_reward[_account].add(newlyClaimable));
             claimable[i].token = reward.reward_token;
 
-            //calc cvx minted from crv here and add to cvx claimables (index 1)
+            //calc cvx minted from crv and add to cvx claimables
+            //note: crv is always index 0 so will always run before cvx
             if(i == CRV_INDEX){
-                claimable[CVX_INDEX].amount = claimable[CVX_INDEX].amount.add(CvxMining.ConvertCrvToCvx(newlyClaimable));
+                //because someone can call claim for the pool outside of checkpoints, need to recalculate crv without the local balance
+                I = reward.reward_integral;
+                if (supply > 0) {
+                    I = I + IRewardStaking(reward.reward_pool).earned(address(this)).mul(1e20).div(supply);
+                }
+                newlyClaimable = _getDepositedBalance(_account).mul(I.sub(reward.reward_integral_for[_account])).div(1e20);
+                claimable[CVX_INDEX].amount = CvxMining.ConvertCrvToCvx(newlyClaimable);
                 claimable[CVX_INDEX].token = cvx;
             }
         }
