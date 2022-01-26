@@ -39,7 +39,7 @@
         "lockerAdmin": "0x98e28afB9c11aa979aE754E1Ea2e9877Cb0D418C",
         "proxyFactory": "0x66807B5598A848602734B82E432dD88DBE13fC8f",
         "stashv3Impl": "0xd7AbC64CAFc30FDd08A42Ea4bC13846be455399C",
-        "masterAbraWrapper": "0x8B66dd4006563616af40dF90C61b499787ec17a4",
+        "masterAbraWrapper": "0xD379454E9f28302A3bbE92b271605cbEA5aEa0A2",
         "chefTokenTreasury": "0x51854310A2411e682F5C1A23924DD9de79D0342a",
         "chefRewardHookTreasury": "0x5e2706946c2bE55b038f4a0475cb7b19f5a67897",
         "rescueStashImpl": "0x9dC3de2e9d6963bAb146dC35DC3925ADD0CFc918",
