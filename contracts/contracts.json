@@ -55,13 +55,16 @@
         "vecrv":"0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2",
         "voteOwnership":"0xE478de485ad2fe566d49342Cbd03E49ed7DB3356",
         "voteParameter":"0xBCfF8B0b9419b9A88c44546519b1e909cF330399",
-        "tricryptoPrice": "0xE8b2989276E2Ca8FDEA2268E3551b2b4B2418950"
+        "tricryptoPrice": "0xE8b2989276E2Ca8FDEA2268E3551b2b4B2418950",
+        "crosschainGaugeFactory": "0xabC000d88f23Bb45525E447528DBF656A9D55bf5",
+        "veOracle": "0x44c7a35Ecb0Cf37A3d6FB38b4085D9328658E01d"
     },
     "chefPools":{
         "2":"sushi cvx-eth",
         "4":"curve cvxCrv-Crv",
         "5":"treasury for incentives",
-        "6":"curve cvx-eth"
+        "6":"curve cvx-eth",
+        "7":"curve cvxFxs-fxs"
     },
     "pools": [
         {
@@ -1001,7 +1004,32 @@
             ],
             "currency": "ETH",
             "name": "cvxeth"
-        }   
+        },
+        {
+            "lptoken": "0xF3A43307DcAFa93275993862Aae628fCB50dC768",
+            "token": "0xCB6D873f7BbE57584a9b08380901Dc200Be7CE74",
+            "gauge": "0xAB1927160EC7414C6Fa71763E2a9f3D107c126dd",
+            "crvRewards": "0xf27AFAD0142393e4b3E5510aBc5fe3743Ad669Cb",
+            "stash": "0x4f3AD55D7b884CDC48ADD1e2451A13af17887F26",
+            "swap": "0xd658A338613198204DCa1143Ac3F01A722b5d94A",
+            "id": 72,
+            "extras": [
+                {
+                    "contract": "0xE2585F27bf5aaB7756f626D6444eD5Fc9154e606",
+                    "token": "0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b",
+                    "chefHook": "0x0f29b765be2DE395cb6b10D9Ead46975057B51eD",
+                    "chefToken": "0x33A3446DbdA1aeaFDC16c17AAffc77Aa020a7efA",
+                    "name": "CVX"
+                },
+                {
+                    "contract": "0x28120D9D49dBAeb5E34D6B809b842684C482EF27",
+                    "token": "0x3432B6A60D23Ca0dFCa7761B7ab56459D9C964D0",
+                    "name": "FXS"
+                }
+            ],
+            "currency": "ETH",
+            "name": "cvxfxs"
+        }  
     ],
     "abrapools": [
         {

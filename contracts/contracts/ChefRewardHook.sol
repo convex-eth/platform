@@ -21,6 +21,10 @@ contract ChefRewardHook is IRewardHook{
 
     bool public isInit;
 
+    //address to call for other reward pulls
+    address public rewardHook;
+    address public owner = address(0xa3C5A1e09150B75ff251c1a7815A07182c3de2FB);
+
     constructor() public {}
 
     function init(address _distributor, uint256 _pid, IERC20 dummyToken) external {
@@ -35,6 +39,12 @@ contract ChefRewardHook is IRewardHook{
         dummyToken.approve(chef, balance);
         IChef(chef).deposit(pid, balance);
     }
+
+    function setRewardHook(address _hook) external{
+        require(msg.sender == owner, "!auth");
+
+        rewardHook = _hook;
+    }
     
     function onRewardClaim() override external{
         require(msg.sender == distributor,"!auth");
@@ -44,6 +54,11 @@ contract ChefRewardHook is IRewardHook{
         uint256 bal = rewardToken.balanceOf(address(this));
         if(bal > 0){
             rewardToken.safeTransfer(distributor,bal);
+        }
+
+        if(rewardHook != address(0)){
+            try IRewardHook(rewardHook).onRewardClaim(){
+            }catch{}
         }
     }
 
