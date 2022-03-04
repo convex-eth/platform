@@ -23,18 +23,27 @@ contract vlCvxExtraRewardDistribution {
     using BoringMath
     for uint256;
 
-    ILockedCvx public constant cvxlocker = ILockedCvx(0xD18140b4B819b895A3dba5442F959fA44994AF50);
+    ILockedCvx public immutable cvxlocker;
     uint256 public constant rewardsDuration = 86400 * 7;
 
     mapping(address => mapping(uint256 => uint256)) public rewardData; // token -> epoch -> amount
     mapping(address => uint256[]) public rewardEpochs; // token -> epochList
     mapping(address => mapping(address => uint256)) public userClaims; //token -> account -> last claimed epoch index
 
-    constructor() public {}
+    constructor(address _locker) public {
+        cvxlocker = ILockedCvx(_locker);
+    }
 
 
     function rewardEpochsCount(address _token) external view returns(uint256) {
         return rewardEpochs[_token].length;
+    }
+
+    function previousEpoch() internal view returns(uint256){
+        //count - 1 = next
+        //count - 2 = current
+        //count - 3 = prev
+        return cvxlocker.epochCount() - 3;
     }
 
     //add a reward to a specific epoch
@@ -50,7 +59,7 @@ contract vlCvxExtraRewardDistribution {
         //because they will be claimable immediately and amount shouldnt change after claiming begins
         //
         //conversely rewards can be piled up with addReward() because claiming is only available to completed epochs
-        require(_epoch < cvxlocker.epochCount() - 2, "!prev epoch");
+        require(_epoch < previousEpoch(), "!prev epoch");
         uint256 l = rewardEpochs[_token].length;
         require(l == 0 || rewardEpochs[_token][l - 1] < _epoch, "old epoch");
 
@@ -63,7 +72,7 @@ contract vlCvxExtraRewardDistribution {
         cvxlocker.checkpointEpoch();
 
         //assign to previous epoch
-        uint256 prevEpoch = cvxlocker.epochCount() - 2;
+        uint256 prevEpoch = previousEpoch();
 
         _addReward(_token, _amount, prevEpoch);
     }
@@ -101,8 +110,8 @@ contract vlCvxExtraRewardDistribution {
     //get all claimable rewards
     function _allClaimableRewards(address _account, address _token) internal view returns(uint256,uint256) {
         uint256 epochIndex = userClaims[_token][_account];
-        uint256 prevEpoch = cvxlocker.epochCount() - 2;
-        uint256 claimableTokens = 0;
+        uint256 prevEpoch = previousEpoch();
+        uint256 claimableTokens;
         for (uint256 i = epochIndex; i < rewardEpochs[_token].length; i++) {
             //only claimable after rewards are "locked in"
             if (rewardEpochs[_token][i] < prevEpoch) {
@@ -139,10 +148,33 @@ contract vlCvxExtraRewardDistribution {
     }
 
     //claim multiple tokens
-    function getRewards(address _account, address[] calldata _tokens) external {
+    //also allow fast forwarding claim index to save on gas
+    // _claimIndex[] should be all 0s if no fast forwarding required
+    function getRewards(address _account, address[] calldata _tokens, uint256[] calldata _claimIndex) external {
         for(uint i = 0; i < _tokens.length; i++){
+            if(_claimIndex[i] > 0){
+                setClaimIndex(_tokens[i], _claimIndex[i]);
+            }
             getReward(_account, _tokens[i]);
         }
+    }
+
+    //get next claimable index. can use this to call setClaimIndex() to reduce gas costs if there
+    //is a large number of epochs between current index and getNextClaimableIndex()
+    function getNextClaimableIndex(address _account, address _token) external view returns(uint256){
+        uint256 epochIndex = userClaims[_token][_account];
+        uint256 prevEpoch = previousEpoch();
+        for (uint256 i = epochIndex; i < rewardEpochs[_token].length; i++) {
+            //only claimable after rewards are "locked in"
+            if (rewardEpochs[_token][i] < prevEpoch) {
+                if(_claimableRewards(_account, _token, rewardEpochs[_token][i]) > 0){
+                    //return index user claims should be set to
+                    return i;
+                }
+            }
+        }
+
+        return 0;
     }
 
     //Because claims cycle through all periods that a specific reward was given
@@ -151,19 +183,19 @@ contract vlCvxExtraRewardDistribution {
     //This would result in a 2mil gas checkpoint.(about 20k gas * 52 weeks * 2 years)
     //
     //allow a user to set their claimed index forward without claiming rewards
-    function forfeitRewards(address _token, uint256 _index) external {
-        require(_index > 0 && _index < rewardEpochs[_token].length-1, "!past");
+    function setClaimIndex(address _token, uint256 _index) public {
+        require(_index > 0 && _index < rewardEpochs[_token].length, "!past");
         require(_index >= userClaims[_token][msg.sender], "already claimed");
 
-        //set claim checkpoint. next claim starts from index+1
-        userClaims[_token][msg.sender] = _index + 1;
+        //set claim checkpoint. next claim starts from index
+        userClaims[_token][msg.sender] = _index;
 
-        emit RewardForfeited(msg.sender, _token, _index);
+        emit ForcedClaimIndex(msg.sender, _token, _index);
     }
 
 
     /* ========== EVENTS ========== */
     event RewardAdded(address indexed _token, uint256 indexed _epoch, uint256 _reward);
     event RewardPaid(address indexed _user, address indexed _rewardsToken, uint256 _reward);
-    event RewardForfeited(address indexed _user, address indexed _rewardsToken, uint256 _index);
+    event ForcedClaimIndex(address indexed _user, address indexed _rewardsToken, uint256 _index);
 }

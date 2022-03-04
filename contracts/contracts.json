@@ -19,7 +19,7 @@
         "poolManagerSecondaryProxy": "0xD20904e5916113D11414F083229e9C8C6F91D1e1",
         "arbitratorVault": "0x25E12482a25CF36EC70fDA2A09C1ED077Fc21616",
         "chef": "0x5F465e9fcfFc217c5849906216581a657cd60605",
-        "claimZap": "0x92Cf9E5e4D1Dfbf7dA0d2BB3e884a68416a65070",
+        "claimZap": "0xDd49A93FDcae579AE50B4b9923325e9e335ec82B",
         "vestedEscrow": "0xe98984aD858075813AdA4261aF47e68A64E28fCC",
         "dropFactory": "0xa1Bc2Cf69D474b39B91665e24E7f2606Ed142991",
         "airdrop": "0x2E088A0A19dda628B4304301d1EA70b114e4AcCd",
@@ -34,8 +34,10 @@
         "votingEligibility": "0xbcE1cBf6816d158E5f5D9713bcCa805E37bBfB0f",
         "votingBalanceMax": "0x59CcBAABBFCAC52E007A706242C5B81a48179BF2",
         "cvxMining": "0x3c75BFe6FbfDa3A94E7E7E8c2216AFc684dE5343",
-        "locker": "0xD18140b4B819b895A3dba5442F959fA44994AF50",
-        "lockerStakeProxy": "0xE096ccEc4a1D36F191189Fe61E803d8B2044DFC3",
+        "lockerOLD": "0xD18140b4B819b895A3dba5442F959fA44994AF50",
+        "locker": "0x72a19342e8F1838460eBFCCEf09F6585e32db86E",
+        "lockerStakeProxyOLD": "0xE096ccEc4a1D36F191189Fe61E803d8B2044DFC3",
+        "lockerStakeProxy": "0xb5BBC863BAFE5006c68613B89130812a7b586A4e",
         "lockerAdmin": "0x98e28afB9c11aa979aE754E1Ea2e9877Cb0D418C",
         "proxyFactory": "0x66807B5598A848602734B82E432dD88DBE13fC8f",
         "stashv3Impl": "0xd7AbC64CAFc30FDd08A42Ea4bC13846be455399C",
@@ -45,7 +47,8 @@
         "rescueStashImpl": "0x9dC3de2e9d6963bAb146dC35DC3925ADD0CFc918",
         "rescueStash": "0x01140351069af98416cC08b16424b9E765436531",
         "rescueToken": "0xB15fFb543211b558D40160811e5DcBcd7d5aaac9",
-        "vlcvxExtraRewards": "0xDecc7d761496d30F30b92Bdf764fb8803c79360D"
+        "vlcvxExtraRewardsOLD": "0xDecc7d761496d30F30b92Bdf764fb8803c79360D",
+        "vlcvxExtraRewards": "0xe68677a267a0d61d81Bc08Ca991A4f5F5b89f572"
     },
     "curve":{
         "registry":"0x0000000022D53366457F9d5E68Ec105046FC4383",

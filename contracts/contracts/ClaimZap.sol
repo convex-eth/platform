@@ -56,7 +56,7 @@ contract ClaimZap{
 
     address public constant exchange = address(0x9D0464996170c6B9e75eED71c68B99dDEDf279e8);//curve
 
-    address public constant locker = address(0xD18140b4B819b895A3dba5442F959fA44994AF50);
+    address public constant locker = address(0x72a19342e8F1838460eBFCCEf09F6585e32db86E);
 
     address public immutable owner;
 
