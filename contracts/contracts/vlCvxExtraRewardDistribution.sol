@@ -147,18 +147,6 @@ contract vlCvxExtraRewardDistribution {
         }
     }
 
-    //claim multiple tokens
-    //also allow fast forwarding claim index to save on gas
-    // _claimIndex[] should be all 0s if no fast forwarding required
-    function getRewards(address _account, address[] calldata _tokens, uint256[] calldata _claimIndex) external {
-        for(uint i = 0; i < _tokens.length; i++){
-            if(_claimIndex[i] > 0){
-                setClaimIndex(_tokens[i], _claimIndex[i]);
-            }
-            getReward(_account, _tokens[i]);
-        }
-    }
-
     //get next claimable index. can use this to call setClaimIndex() to reduce gas costs if there
     //is a large number of epochs between current index and getNextClaimableIndex()
     function getNextClaimableIndex(address _account, address _token) external view returns(uint256){
@@ -183,7 +171,7 @@ contract vlCvxExtraRewardDistribution {
     //This would result in a 2mil gas checkpoint.(about 20k gas * 52 weeks * 2 years)
     //
     //allow a user to set their claimed index forward without claiming rewards
-    function setClaimIndex(address _token, uint256 _index) public {
+    function setClaimIndex(address _token, uint256 _index) external {
         require(_index > 0 && _index < rewardEpochs[_token].length, "!past");
         require(_index >= userClaims[_token][msg.sender], "already claimed");
 
