@@ -63,10 +63,10 @@ contract BasicCvxHolder{
         cvxlocker.lock(address(this),_amount,_spendRatio);
     }
 
-    function processExpiredLocks(bool _relock, uint256 _spendRatio) external{
+    function processExpiredLocks(bool _relock) external{
         require(msg.sender == operator, "!auth");
 
-        cvxlocker.processExpiredLocks(_relock, _spendRatio, address(this));
+        cvxlocker.processExpiredLocks(_relock);
     }
 
     function processRewards() external{
