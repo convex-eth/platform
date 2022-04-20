@@ -1,0 +1,17 @@
+{
+  "name": "proposaldecode",
+  "version": "1.0.0",
+  "description": "",
+  "main": "proposalDecode.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "big-number": "^2.0.0",
+    "ethers": "^5.6.4",
+    "fs": "0.0.1-security",
+    "jsonfile": "^6.1.0"
+  }
+}
