@@ -1,10 +1,10 @@
 const fs = require('fs');
 const { ethers } = require("ethers");
 const jsonfile = require('jsonfile');
-const { ARAGON_VOTING, ARGAON_AGENT, GAUGE_CONTROLLER, SIDE_GAUGE_FACTORY } = require('./abi');
+const { ARAGON_VOTING, ARGAON_AGENT, GAUGE_CONTROLLER, SIDE_GAUGE_FACTORY, OWNER_PROXY } = require('./abi');
 var BN = require('big-number');
-const config = jsonfile.readFileSync('./config.json');
 
+const config = jsonfile.readFileSync('./config.json');
 
 /*
 Decode proposal data and check for valid gauges
@@ -103,6 +103,16 @@ function gaugeType(type){
     return "Unknown Type " +type;
 }
 
+function addressName(address){
+    if(address.toLowerCase() == "0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB".toLowerCase() ){
+        return "Curve Gauge Controller"
+    }
+    if(address.toLowerCase() == "0x2EF1Bc1961d3209E5743C91cd3fBfa0d08656bC3".toLowerCase() ){
+        return "Curve Owner Proxy"
+    }
+    return "Unknown " +address
+}
+
 const isValidGauge = async(address) => {
     const VALID_BYTECODE = [
         '0x363d3d373d3d3d363d73dc892358d55d5ae1ec47a531130d62151eba36e55af43d82803e903d91602b57fd5bf3',
@@ -123,10 +133,10 @@ const isValidGauge = async(address) => {
 const decodeGaugeControllerData = async (calldata) => {
     // console.log("gauge calldata: " +calldata)
     var scriptbytes = hexStringToByte(calldata);
-    var calldataFunction = scriptbytes.slice(0,4);
+    var calldataFunction = scriptbytes.slice(1,5);
     // console.log("function: " +byteToHexString(calldataFunction))
     var report = "";
-    if(byteToHexString(calldataFunction) == "0018dfe9"){
+    if(byteToHexString(calldataFunction) == "18dfe921"){
         let iface = new ethers.utils.Interface(GAUGE_CONTROLLER)
         report += "Function: AddGauge\n";
         var dec = iface.decodeFunctionData("add_gauge(address,int128,uint256)",calldata);
@@ -136,6 +146,32 @@ const decodeGaugeControllerData = async (calldata) => {
 
         var isvalid = await isValidGauge(dec.addr) +"\n";
         report += "Is official gauge? " +isvalid;
+    }else{
+        report += "Function Unknown: " +byteToHexString(calldataFunction) +"\n";
+        report += "Calldata: " +calldata +"\n";
+    }
+    return report;
+}
+
+const decodeOwnerProxyData = async (calldata) => {
+    // console.log("calldata: " +calldata)
+    var scriptbytes = hexStringToByte(calldata);
+    var calldataFunction = scriptbytes.slice(1,5);
+    // console.log("function: " +byteToHexString(calldataFunction))
+    var report = "";
+    let iface = new ethers.utils.Interface(OWNER_PROXY)
+
+    if(byteToHexString(calldataFunction) == "4344ce71"){    
+        report += "Function: set_killed\n";
+        var dec = iface.decodeFunctionData("set_killed(address,bool)",calldata);
+        report += "Gauge: " +dec[0] +" " +etherscan(dec[0]) +"\n";
+        report += "Is Killed? " +dec[1] +"\n";
+    }else if(byteToHexString(calldataFunction) == "9d4a4380"){    
+        report += "Function: ramp_A\n";
+        var dec = iface.decodeFunctionData("ramp_A(address,uint256,uint256)",calldata);
+        report += "Gauge: " +dec[0] +" " +etherscan(dec[0]) +"\n";
+        report += "Future A: " +dec[1] +"\n";
+        report += "Future Time: " +dec[2] +"\n";
     }else{
         report += "Function Unknown: " +byteToHexString(calldataFunction) +"\n";
         report += "Calldata: " +calldata +"\n";
@@ -168,11 +204,14 @@ const decodeProposal = async (vote_id) => {
         var dec = iface.decodeFunctionData("execute(address,uint256,bytes)",cdstring);
         // console.log("decoded calldata: " +dec);
 
-        if(dec[0] == "0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB"){
-            report += "To: Gauge Controller\n";
+        if(dec[0] == "0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB"){ //gauge controller
+            report += "To: "+addressName(dec[0]) +"\n";
             report += await decodeGaugeControllerData(dec[2]);
+        }else if(dec[0] == "0x2EF1Bc1961d3209E5743C91cd3fBfa0d08656bC3"){ //factory owner proxy
+            report += "To: "+addressName(dec[0]) +"\n";
+            report += await decodeOwnerProxyData(dec[2]);
         }else{
-            report += "To: Unkown " +dec[0] +" " +etherscan(dec[0]) +"\n";
+            report += "To: " +addressName(dec[0]) +" " +etherscan(dec[0]) +"\n";
             report += "Calldata: " +dec[2] + "\n";
         }
 
@@ -189,7 +228,7 @@ const main = async () => {
     const cmdArgs = process.argv.slice(2);
     var proposal = cmdArgs[0];
     console.log("decoding proposal " +proposal)
- 	var report = await decodeProposal(proposal);
+    var report = await decodeProposal(proposal);
     console.log(report);
 }
 
