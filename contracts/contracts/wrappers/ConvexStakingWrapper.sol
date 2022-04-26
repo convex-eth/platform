@@ -218,6 +218,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
             //do not give rewards to address 0
             if (_accounts[u] == address(0)) continue;
             if (_accounts[u] == collateralVault) continue;
+            if(_isClaim && u != 0) continue; //only update/claim for first address and use second as forwarding
 
             uint userI = reward.reward_integral_for[_accounts[u]];
             if(_isClaim || userI < reward.reward_integral){
@@ -225,7 +226,10 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
                     uint256 receiveable = reward.claimable_reward[_accounts[u]].add(_balances[u].mul( uint256(reward.reward_integral).sub(userI)).div(1e20));
                     if(receiveable > 0){
                         reward.claimable_reward[_accounts[u]] = 0;
-                        IERC20(reward.reward_token).safeTransfer(_accounts[u], receiveable);
+                        //cheat for gas savings by transfering to the second index in accounts list
+                        //if claiming only the 0 index will update so 1 index can hold forwarding info
+                        //guaranteed to have an address in u+1 so no need to check
+                        IERC20(reward.reward_token).safeTransfer(_accounts[u+1], receiveable);
                         bal = bal.sub(receiveable);
                     }
                 }else{
@@ -330,7 +334,13 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
 
     function getReward(address _account) external {
         //claim directly in checkpoint logic to save a bit of gas
-        _checkpointAndClaim([_account, address(0)]);
+        _checkpointAndClaim([_account, _account]);
+    }
+
+    function getReward(address _account, address _forwardTo) external {
+        //claim directly in checkpoint logic to save a bit of gas
+        //pack forwardTo into account array to save gas so that a proxy etc doesnt have to double transfer
+        _checkpointAndClaim([_account,_forwardTo]);
     }
 
     //deposit a curve token
