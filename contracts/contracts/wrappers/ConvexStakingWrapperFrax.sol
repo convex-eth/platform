@@ -10,7 +10,7 @@ interface IFraxFarm {
 
 //Staking wrapper for Frax Finance platform
 //use convex LP positions as collateral while still receiving rewards
-contract ConvexStakingWrapperAbra is ConvexStakingWrapper {
+contract ConvexStakingWrapperFrax is ConvexStakingWrapper {
     using SafeERC20
     for IERC20;
     using Address
