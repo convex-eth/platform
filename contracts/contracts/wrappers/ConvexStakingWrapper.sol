@@ -241,7 +241,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         }
     }
 
-    function _checkpoint(address[2] memory _accounts) internal {
+    function _checkpoint(address[2] memory _accounts) internal nonReentrant{
         //if shutdown, no longer checkpoint in case there are problems
         if(isShutdown) return;
 
@@ -258,7 +258,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         }
     }
 
-    function _checkpointAndClaim(address[2] memory _accounts) internal {
+    function _checkpointAndClaim(address[2] memory _accounts) internal nonReentrant{
 
         uint256 supply = _getTotalSupply();
         uint256[2] memory depositedBalance;
