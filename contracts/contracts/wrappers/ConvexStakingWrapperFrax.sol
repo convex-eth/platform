@@ -56,7 +56,9 @@ contract ConvexStakingWrapperFrax is ConvexStakingWrapper {
 
         uint256 collateral;
         if(collateralVault != address(0)){
-           collateral = IFraxFarm(collateralVault).lockedLiquidityOf(address(this));
+           collateral = IFraxFarm(collateralVault).lockedLiquidityOf(_account);
         }
+
+        return balanceOf(_account).add(collateral);
     }
 }
