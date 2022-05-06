@@ -49,7 +49,7 @@
         "rescueToken": "0xB15fFb543211b558D40160811e5DcBcd7d5aaac9",
         "vlcvxExtraRewardsOLD": "0xDecc7d761496d30F30b92Bdf764fb8803c79360D",
         "vlcvxExtraRewards": "0x9B622f2c40b80EF5efb14c2B2239511FfBFaB702",
-        "masterFraxWrapper": "0xa6f93cd2cb774EC46ec8De0AEc43d7406ABc0413"
+        "masterFraxWrapper": "0xA74A725F143C9b4cc139929b6Df67405f8eC9AAe"
     },
     "curve":{
         "registry":"0x0000000022D53366457F9d5E68Ec105046FC4383",
