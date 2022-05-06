@@ -44,7 +44,7 @@ contract ConvexStakingWrapperFrax is ConvexStakingWrapper {
     }
 
     function setVault(address _vault) external onlyOwner{
-        require(collateralVault != address(0), "already set");
+        require(collateralVault == address(0), "already set");
 
         collateralVault = _vault;
     }
