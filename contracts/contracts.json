@@ -1021,7 +1021,7 @@
                 {
                     "contract": "0xE2585F27bf5aaB7756f626D6444eD5Fc9154e606",
                     "token": "0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b",
-                    "fxsHook": "0x63aD87c49D0D915998A10c50a54bBa3dac1Ba175",
+                    "fxsHook": "0xb32eace5d3c2bD7625E00D63203A6Ff0Bf638Cbc",
                     "chefHook": "0x0f29b765be2DE395cb6b10D9Ead46975057B51eD",
                     "chefToken": "0x33A3446DbdA1aeaFDC16c17AAffc77Aa020a7efA",
                     "name": "CVX"
