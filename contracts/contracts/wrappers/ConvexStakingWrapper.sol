@@ -338,13 +338,14 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     }
 
     function getReward(address _account, address _forwardTo) external {
+        require(msg.sender == _account, "!self");
         //claim directly in checkpoint logic to save a bit of gas
         //pack forwardTo into account array to save gas so that a proxy etc doesnt have to double transfer
         _checkpointAndClaim([_account,_forwardTo]);
     }
 
     //deposit a curve token
-    function deposit(uint256 _amount, address _to) external nonReentrant {
+    function deposit(uint256 _amount, address _to) external {
         require(!isShutdown, "shutdown");
 
         //dont need to call checkpoint since _mint() will
@@ -359,7 +360,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     }
 
     //stake a convex token
-    function stake(uint256 _amount, address _to) external nonReentrant {
+    function stake(uint256 _amount, address _to) external {
         require(!isShutdown, "shutdown");
 
         //dont need to call checkpoint since _mint() will
@@ -374,7 +375,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     }
 
     //withdraw to convex deposit token
-    function withdraw(uint256 _amount) external nonReentrant {
+    function withdraw(uint256 _amount) external {
 
         //dont need to call checkpoint since _burn() will
 
@@ -388,7 +389,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     }
 
     //withdraw to underlying curve lp token
-    function withdrawAndUnwrap(uint256 _amount) external nonReentrant {
+    function withdrawAndUnwrap(uint256 _amount) external {
         
         //dont need to call checkpoint since _burn() will
 
