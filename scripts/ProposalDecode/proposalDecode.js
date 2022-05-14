@@ -30,6 +30,10 @@ const proposalAddress = "0xe478de485ad2fe566d49342cbd03e49ed7db3356";
 const proposalContract = new ethers.Contract(proposalAddress, ARAGON_VOTING, provider);
 const proposalInstance = proposalContract.connect(provider);
 
+const proposalParameterAddress = "0xBCfF8B0b9419b9A88c44546519b1e909cF330399";
+const proposalParameterContract = new ethers.Contract(proposalParameterAddress, ARAGON_VOTING, provider);
+const proposalParameterInstance = proposalParameterContract.connect(provider);
+
 const sideGaugeFactoryContract = new ethers.Contract("0xabC000d88f23Bb45525E447528DBF656A9D55bf5", SIDE_GAUGE_FACTORY, provider);
 const sideGaugeFactoryInstance = sideGaugeFactoryContract.connect(provider);
 
@@ -179,8 +183,13 @@ const decodeOwnerProxyData = async (calldata) => {
     return report;
 }
 
-const decodeProposal = async (vote_id) => {
-    var votedata = await proposalInstance.getVote(vote_id);
+const decodeProposal = async (vote_id, isOwnership) => {
+    var votedata;
+    if(isOwnership){
+        votedata = await proposalInstance.getVote(vote_id);
+    }else{
+        votedata = await proposalParameterInstance.getVote(vote_id);
+    }
     var script = votedata.script;
 
     // console.log(script);
@@ -227,8 +236,9 @@ const main = async () => {
 
     const cmdArgs = process.argv.slice(2);
     var proposal = cmdArgs[0];
-    console.log("decoding proposal " +proposal)
-    var report = await decodeProposal(proposal);
+    var isOwnership = cmdArgs[1] != "false";
+    console.log("decoding proposal " +proposal +", isOwnership? " +isOwnership)
+    var report = await decodeProposal(proposal,isOwnership);
     console.log(report);
 }
 
