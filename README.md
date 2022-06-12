@@ -75,7 +75,7 @@ If you are using VS Code you can follow the steps below:
 ### Linux
 1. Create folder ```.vscode``` in root of this directory
 2. Create file ```settings.json``` in ```.vscode```
-3. Add the following into ```settings.json``` and replace < username > with your username (Must have [Openzeppelin][https://docs.openzeppelin.com/cli/2.6/getting-started] installed on machine):
+3. Add the following into ```settings.json``` and replace < username > with your username (Must have [Openzeppelin](https://docs.openzeppelin.com/cli/2.6/getting-started]) installed on machine):
 ```
 {
 	"solidity.compileUsingRemoteVersion": "v0.6.12+commit.27d51765",
