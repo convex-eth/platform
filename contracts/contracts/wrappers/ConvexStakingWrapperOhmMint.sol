@@ -131,7 +131,7 @@ contract ConvexStakingWrapperOhmMint is ERC20, ReentrancyGuard, IERC4626 {
         }
     }
 
-    function stakedOhm() external returns(uint256 ohmAmount){
+    function stakedOhm() external view returns(uint256 ohmAmount){
         uint256 stakedLpTokens = totalAssets();
         uint256 totalLpTokens = IERC20(curveToken).totalSupply();
         uint256 ohmInCurvePool = IERC20(ohm).balanceOf(curveSwap);
