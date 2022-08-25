@@ -12,23 +12,19 @@ contract VotingBalanceV2Gauges{
     uint256 public constant rewardsDuration = 86400 * 7;
     uint256 public constant lockDuration = rewardsDuration * 17;
 
-    bool public UseOldLocker = true;
-    address public constant owner = address(0xa3C5A1e09150B75ff251c1a7815A07182c3de2FB);
-
     constructor() public {
     }
 
-    function setUseOldLocker(bool _use) external{
-        require(msg.sender == owner, "!auth");
-
-        UseOldLocker = _use;
+    function max(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a >= b ? a : b;
     }
 
     function balanceOf(address _account) external view returns(uint256){
 
         //compute to find previous epoch
         uint256 currentEpoch = block.timestamp / rewardsDuration * rewardsDuration;
-        uint256 epochindex = ILockedCvx(locker).epochCount() - 1;
+        uint256 latestindex = ILockedCvx(locker).epochCount() - 1;
+        uint256 epochindex = latestindex;
 
         //there may or may not have been a checkpoint in the new epoch
         //thus get date of latest epoch and compare to block.timestamp
@@ -53,26 +49,8 @@ contract VotingBalanceV2Gauges{
 
         //get balances of previous epoch
         uint256 balanceAtPrev = ILockedCvx(locker).balanceAtEpochOf(epochindex, _account);
-
-        //get pending
-        uint256 pending = ILockedCvx(locker).pendingLockAtEpochOf(epochindex, _account);
-
-        //if using old locker for grace period
-        if(UseOldLocker){
-            //check if tokens have not been withdrawn yet
-            if(ILockedCvx(oldlocker).lockedBalanceOf(_account) > 0){
-                uint256 eindex = ILockedCvx(oldlocker).epochCount() - 1;
-                (, uint32 _edate) = ILockedCvx(oldlocker).epochs(eindex);
-                if(_edate >= currentEpoch){
-                    //if end date is already the current epoch,  minus 1 to get the previous
-                    eindex--;
-                }
-                //add to current balance
-                pending += ILockedCvx(oldlocker).balanceAtEpochOf(eindex, _account);
-            }
-        }
-
-        return balanceAtPrev + pending;
+        uint256 balanceAtCurrent = ILockedCvx(locker).balanceAtEpochOf( latestindex>epochindex ? epochindex+1 : epochindex, _account);
+        return max(balanceAtPrev , balanceAtCurrent);
     }
 
     function totalSupply() view external returns(uint256){
