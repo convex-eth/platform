@@ -16,7 +16,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 //Ohm pool wrapper to allow Olympus to mint and sync into a curve pool
 
 //Based on Curve.fi's gauge wrapper implementations at https://github.com/curvefi/curve-dao-contracts/tree/master/contracts/gauges/wrappers
-contract ConvexStakingWrapperOhmMint is ERC20, ReentrancyGuard, IERC4626 {
+contract ConvexStakingWrapperOhmSync is ERC20, ReentrancyGuard, IERC4626 {
     using SafeERC20
     for IERC20;
     using SafeMath
@@ -225,6 +225,23 @@ contract ConvexStakingWrapperOhmMint is ERC20, ReentrancyGuard, IERC4626 {
         }
     }
 
+    //stake a convex token via amount
+    function stake(uint256 _amount, address _receiver) external returns (uint256 shares){
+        require(!isShutdown, "shutdown");
+
+        //dont need to call checkpoint since _mint() will
+
+        if (_amount > 0) {
+            shares = convertToShares(_amount);
+            if(shares > 0){
+                _mint(_receiver, shares);
+                IERC20(convexToken).safeTransferFrom(msg.sender, address(this), _amount);
+                IRewardStaking(convexPool).stake(_amount);
+                emit Deposit(msg.sender, _receiver, _amount, shares);
+            }
+        }
+    }
+
 
     //withdraw to curve lp token via shares
     function redeem(uint256 _shares) external returns (uint256 assets){
@@ -259,6 +276,11 @@ contract ConvexStakingWrapperOhmMint is ERC20, ReentrancyGuard, IERC4626 {
             IERC20(curveToken).safeTransfer(_receiver, _amount);
             emit Withdraw(msg.sender, _receiver, msg.sender, shares, _amount);
         }
+    }
+
+    //mimic other convex wrappers to keep the same interface
+    function withdrawAndUnwrap(uint256 _amount) external returns(uint256 shares){
+        shares = withdraw(_amount, msg.sender, msg.sender);
     }
 
 
