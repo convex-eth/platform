@@ -13,7 +13,8 @@ import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 
-//Ohm pool wrapper to allow Olympus to mint and sync into a curve pool
+//Ohm pool wrapper to allow Olympus to mint and sync into a curve pool.
+
 
 //Based on Curve.fi's gauge wrapper implementations at https://github.com/curvefi/curve-dao-contracts/tree/master/contracts/gauges/wrappers
 contract ConvexStakingWrapperOhmSync is ERC20, ReentrancyGuard, IERC4626 {
@@ -131,6 +132,7 @@ contract ConvexStakingWrapperOhmSync is ERC20, ReentrancyGuard, IERC4626 {
         }
     }
 
+    //helper function that returns how much Ohm is held by this wrapper
     function stakedOhm() external view returns(uint256 ohmAmount){
         uint256 stakedLpTokens = totalAssets();
         uint256 totalLpTokens = IERC20(curveToken).totalSupply();
@@ -172,22 +174,22 @@ contract ConvexStakingWrapperOhmSync is ERC20, ReentrancyGuard, IERC4626 {
         return uint256(-1);
     }
     function previewDeposit(uint256 _amount) external override view returns (uint256){
-        return _amount;
+        return convertToAssets(_amount);
     }
     function previewMint(uint256 _shares) external override view returns (uint256){
-        return _shares;
+        return convertToShares(_shares);
     }
     function maxWithdraw(address _owner) external override view returns (uint256){
         return uint256(-1);
     }
     function previewWithdraw(uint256 _amount) external override view returns (uint256){
-        return _amount;
+        return convertToShares(_amount);
     }
     function maxRedeem(address _owner) external override view returns (uint256){
         return uint256(-1);
     }
     function previewRedeem(uint256 _shares) external override view returns (uint256){
-        return _shares;
+        return convertToAssets(_shares);
     }
 
     //deposit curve lp tokens via shares
