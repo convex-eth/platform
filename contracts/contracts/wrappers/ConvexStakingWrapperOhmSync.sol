@@ -49,6 +49,7 @@ contract ConvexStakingWrapperOhmSync is ERC20, ReentrancyGuard, IERC4626 {
     uint256 public constant convexPoolId = 92;
     uint256 private constant CRV_INDEX = 0;
     uint256 private constant CVX_INDEX = 1;
+    uint256 public constant minimumInitialDeposit = 1e9;
 
     //rewards
     RewardType[] public rewards;
@@ -56,6 +57,7 @@ contract ConvexStakingWrapperOhmSync is ERC20, ReentrancyGuard, IERC4626 {
 
     //management
     bool public isShutdown;
+    bool public isBypassCheckpoints;
     address public owner;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
@@ -112,10 +114,19 @@ contract ConvexStakingWrapperOhmSync is ERC20, ReentrancyGuard, IERC4626 {
         owner = address(0);
     }
 
+    //disallow new deposits
     function shutdown() external onlyOwner {
         isShutdown = true;
     }
 
+    //turn off checkpointing and deposits
+    //This is used if some reward related issue is blocking withdrawing or transfers
+    //with no checkpointing, rewards will not be able to be claimed
+    //This is solely meant as an emergency withdraw mechanic
+    function shutdownNoCheckpoints() external onlyOwner {
+        isShutdown = true;
+        isBypassCheckpoints = true;
+    }
 
     ///  special management ///
     function sync() external{
@@ -129,6 +140,8 @@ contract ConvexStakingWrapperOhmSync is ERC20, ReentrancyGuard, IERC4626 {
 
             //deposit
             IConvexDeposits(convexBooster).deposit(convexPoolId, lpbal, true);
+
+            emit Deposit(address(0), address(0), lpbal, 0);
         }
     }
 
@@ -160,6 +173,7 @@ contract ConvexStakingWrapperOhmSync is ERC20, ReentrancyGuard, IERC4626 {
             shares = (_assets.mul(totalSupply())).div(totalAssets());
         }
     }
+
     function convertToAssets(uint256 _shares) public override view returns (uint256 assets){
         if(totalSupply() > 0){
             assets = (totalAssets().mul(_shares)).div(totalSupply());
@@ -167,28 +181,55 @@ contract ConvexStakingWrapperOhmSync is ERC20, ReentrancyGuard, IERC4626 {
             assets = _shares;
         }
     }
+
+    function convertToSharesRoundUp(uint256 _assets) internal view returns (uint256 shares){
+        if (totalSupply() == 0) {
+            shares = _assets;
+        } else {
+            shares = (_assets.mul(totalSupply())).div(totalAssets());
+            if ( shares.mul(totalAssets()).div(totalSupply()) < _assets) {
+                shares = shares.add(1);
+            }
+        }
+    }
+
+    function convertToAssetsRoundUp(uint256 _shares) internal view returns (uint256 assets){
+        if(totalSupply() > 0){
+            assets = (totalAssets().mul(_shares)).div(totalSupply());
+            if ( assets.mul(totalSupply()).div(totalAssets()) < _shares) {
+                assets = assets.add(1);
+            }
+        }else{
+            assets = _shares;
+        }
+    }
+
     function maxDeposit(address _receiver) external override view returns (uint256){
+        if(isShutdown) return 0;
+
         return uint256(-1);
     }
     function maxMint(address _receiver) external override view returns (uint256){
+        if(isShutdown) return 0;
+
         return uint256(-1);
     }
-    function previewDeposit(uint256 _amount) external override view returns (uint256){
-        return convertToAssets(_amount);
-    }
-    function previewMint(uint256 _shares) external override view returns (uint256){
-        return convertToShares(_shares);
-    }
-    function maxWithdraw(address _owner) external override view returns (uint256){
-        return uint256(-1);
-    }
-    function previewWithdraw(uint256 _amount) external override view returns (uint256){
+    function previewDeposit(uint256 _amount) public override view returns (uint256){
         return convertToShares(_amount);
     }
-    function maxRedeem(address _owner) external override view returns (uint256){
-        return uint256(-1);
+    function previewMint(uint256 _shares) public override view returns (uint256){
+        return convertToAssetsRoundUp(_shares); //round up
     }
-    function previewRedeem(uint256 _shares) external override view returns (uint256){
+    function maxWithdraw(address _owner) external override view returns (uint256){
+        return convertToAssets(balanceOf(_owner));
+    }
+    function previewWithdraw(uint256 _amount) public override view returns (uint256){
+        return convertToSharesRoundUp(_amount); //round up
+    }
+    function maxRedeem(address _owner) external override view returns (uint256){
+        return balanceOf(_owner);
+    }
+    function previewRedeem(uint256 _shares) public override view returns (uint256){
         return convertToAssets(_shares);
     }
 
@@ -199,7 +240,10 @@ contract ConvexStakingWrapperOhmSync is ERC20, ReentrancyGuard, IERC4626 {
         //dont need to call checkpoint since _mint() will
 
         if (_shares > 0) {
-            assets = convertToAssets(_shares);
+            if(totalSupply() == 0){
+                require(_shares >= minimumInitialDeposit, "!min init dep");
+            }
+            assets = previewMint(_shares);
             if(assets > 0){
                 _mint(_receiver, _shares);
                 IERC20(curveToken).safeTransferFrom(msg.sender, address(this), assets);
@@ -217,7 +261,10 @@ contract ConvexStakingWrapperOhmSync is ERC20, ReentrancyGuard, IERC4626 {
         //dont need to call checkpoint since _mint() will
 
         if (_amount > 0) {
-            shares = convertToShares(_amount);
+            if(totalSupply() == 0){
+                require(_amount >= minimumInitialDeposit, "!min init dep");
+            }
+            shares = previewDeposit(_amount);
             if(shares > 0){
                 _mint(_receiver, shares);
                 IERC20(curveToken).safeTransferFrom(msg.sender, address(this), _amount);
@@ -234,7 +281,10 @@ contract ConvexStakingWrapperOhmSync is ERC20, ReentrancyGuard, IERC4626 {
         //dont need to call checkpoint since _mint() will
 
         if (_amount > 0) {
-            shares = convertToShares(_amount);
+            if(totalSupply() == 0){
+                require(_amount >= minimumInitialDeposit, "!min init dep");
+            }
+            shares = previewDeposit(_amount);
             if(shares > 0){
                 _mint(_receiver, shares);
                 IERC20(convexToken).safeTransferFrom(msg.sender, address(this), _amount);
@@ -254,7 +304,7 @@ contract ConvexStakingWrapperOhmSync is ERC20, ReentrancyGuard, IERC4626 {
         //dont need to call checkpoint since _burn() will
 
         if (_shares > 0) {
-            assets = convertToAssets(_shares);
+            assets = previewRedeem(_shares);
             _burn(msg.sender, _shares);
             IRewardStaking(convexPool).withdrawAndUnwrap(assets, false);
             IERC20(curveToken).safeTransfer(_receiver, assets);
@@ -272,7 +322,7 @@ contract ConvexStakingWrapperOhmSync is ERC20, ReentrancyGuard, IERC4626 {
         //dont need to call checkpoint since _burn() will
 
         if (_amount > 0) {
-            shares = convertToShares(_amount);
+            shares = previewWithdraw(_amount);
             _burn(msg.sender, shares);
             IRewardStaking(convexPool).withdrawAndUnwrap(_amount, false);
             IERC20(curveToken).safeTransfer(_receiver, _amount);
@@ -360,7 +410,7 @@ contract ConvexStakingWrapperOhmSync is ERC20, ReentrancyGuard, IERC4626 {
         // uint256 d_reward = bal.sub(reward.reward_remaining);
 
         if (_supply > 0 && bal.sub(reward.reward_remaining) > 0) {
-            reward.reward_integral = reward.reward_integral + uint128(bal.sub(reward.reward_remaining).mul(1e20).div(_supply));
+            reward.reward_integral = uint128( uint256(reward.reward_integral).add( bal.sub(reward.reward_remaining).mul(1e20).div(_supply) ) );
         }
 
         //update user integrals
@@ -396,8 +446,8 @@ contract ConvexStakingWrapperOhmSync is ERC20, ReentrancyGuard, IERC4626 {
     }
 
     function _checkpoint(address[2] memory _accounts) internal nonReentrant{
-        //if shutdown, no longer checkpoint in case there are problems
-        if(isShutdown) return;
+        //if isBypassCheckpoints, no longer checkpoint in case there are problems
+        if(isBypassCheckpoints) return;
 
         uint256 supply = _getTotalSupply();
         uint256[2] memory depositedBalance;
@@ -413,6 +463,8 @@ contract ConvexStakingWrapperOhmSync is ERC20, ReentrancyGuard, IERC4626 {
     }
 
     function _checkpointAndClaim(address[2] memory _accounts) internal nonReentrant{
+        //if isBypassCheckpoints, no longer checkpoint in case there are problems
+        if(isBypassCheckpoints) return;
 
         uint256 supply = _getTotalSupply();
         uint256[2] memory depositedBalance;
