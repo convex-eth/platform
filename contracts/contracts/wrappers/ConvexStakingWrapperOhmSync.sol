@@ -493,6 +493,11 @@ contract ConvexStakingWrapperOhmSync is ERC20, ReentrancyGuard, IERC4626 {
         uint256 rewardCount = rewards.length;
         claimable = new EarnedData[](rewardCount);
 
+        //if checkpoints are disabled, rewards are too.
+        if(isBypassCheckpoints){
+            return claimable;
+        }
+
         for (uint256 i = 0; i < rewardCount; i++) {
             RewardType storage reward = rewards[i];
 
