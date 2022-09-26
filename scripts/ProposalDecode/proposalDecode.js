@@ -114,6 +114,9 @@ function addressName(address){
     if(address.toLowerCase() == "0x2EF1Bc1961d3209E5743C91cd3fBfa0d08656bC3".toLowerCase() ){
         return "Curve Owner Proxy"
     }
+    if(address.toLowerCase() == "0x5a8fdC979ba9b6179916404414F7BA4D8B77C8A1".toLowerCase() ){
+        return "Curve Crypto Owner Proxy"
+    }
     return "Unknown " +address
 }
 
@@ -217,6 +220,9 @@ const decodeProposal = async (vote_id, isOwnership) => {
             report += "To: "+addressName(dec[0]) +"\n";
             report += await decodeGaugeControllerData(dec[2]);
         }else if(dec[0] == "0x2EF1Bc1961d3209E5743C91cd3fBfa0d08656bC3"){ //factory owner proxy
+            report += "To: "+addressName(dec[0]) +"\n";
+            report += await decodeOwnerProxyData(dec[2]);
+        }else if(dec[0] == "0x5a8fdC979ba9b6179916404414F7BA4D8B77C8A1"){ //crypto factory owner proxy
             report += "To: "+addressName(dec[0]) +"\n";
             report += await decodeOwnerProxyData(dec[2]);
         }else{
