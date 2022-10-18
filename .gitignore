@@ -4,3 +4,4 @@ stats.json
 contracts/build
 contracts/.secret
 contracts/.etherscanApi
+contracts/.api_keys
