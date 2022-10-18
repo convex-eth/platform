@@ -5,9 +5,9 @@ pragma experimental ABIEncoderV2;
 import "../interfaces/IRewardStaking.sol";
 import "../interfaces/IConvexDeposits.sol";
 import "../interfaces/CvxMining.sol";
+import "../interfaces/IBooster.sol";
 import '@openzeppelin/contracts/math/SafeMath.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import '@openzeppelin/contracts/utils/Address.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
@@ -21,8 +21,6 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     using SafeERC20
     for IERC20;
-    using Address
-    for address;
     using SafeMath
     for uint256;
 
@@ -75,21 +73,24 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         ){
     }
 
-    function initialize(address _curveToken, address _convexToken, address _convexPool, uint256 _poolId, address _vault)
+    function initialize(uint256 _poolId)
     virtual external {
         require(!isInit,"already init");
         owner = msg.sender;
         emit OwnershipTransferred(address(0), owner);
 
-        _tokenname = string(abi.encodePacked("Staked ", ERC20(_convexToken).name() ));
-        _tokensymbol = string(abi.encodePacked("stk", ERC20(_convexToken).symbol()));
+        (address _lptoken, address _token, , address _rewards, , ) = IBooster(convexBooster).poolInfo(_poolId);
+        curveToken = _lptoken;
+        convexToken = _token;
+        convexPool = _rewards;
+        convexPoolId = _poolId;
+
+        _tokenname = string(abi.encodePacked("Staked ", ERC20(_token).name() ));
+        _tokensymbol = string(abi.encodePacked("stk", ERC20(_token).symbol()));
         isShutdown = false;
         isInit = true;
-        curveToken = _curveToken;
-        convexToken = _convexToken;
-        convexPool = _convexPool;
-        convexPoolId = _poolId;
-        collateralVault = _vault;
+
+        // collateralVault = _vault;
 
         //add rewards
         addRewards();
@@ -256,6 +257,8 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         
         IRewardStaking(convexPool).getReward(address(this), true);
 
+        _claimExtras();
+
         uint256 rewardCount = rewards.length;
         for (uint256 i = 0; i < rewardCount; i++) {
            _calcRewardIntegral(i,_accounts,depositedBalance,supply,false);
@@ -270,14 +273,20 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         
         IRewardStaking(convexPool).getReward(address(this), true);
 
+        _claimExtras();
+
         uint256 rewardCount = rewards.length;
         for (uint256 i = 0; i < rewardCount; i++) {
            _calcRewardIntegral(i,_accounts,depositedBalance,supply,true);
         }
     }
 
-    function user_checkpoint(address[2] calldata _accounts) external returns(bool) {
-        _checkpoint([_accounts[0], _accounts[1]]);
+    function _claimExtras() internal virtual{
+
+    }
+
+    function user_checkpoint(address _account) external returns(bool) {
+        _checkpoint([_account, address(0)]);
         return true;
     }
 
@@ -285,7 +294,19 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         return _getDepositedBalance(_account);
     }
 
-    function earned(address _account) external view returns(EarnedData[] memory claimable) {
+    //run earned as a mutable function to claim everything before calculating earned rewards
+    function earned(address _account) external returns(EarnedData[] memory claimable) {
+        IRewardStaking(convexPool).getReward(address(this), true);
+        _claimExtras();
+        return _earned(_account);
+    }
+
+    //run earned as a non-mutative function that may not claim everything, but should report standard convex rewards
+    function earnedView(address _account) external view returns(EarnedData[] memory claimable) {
+        return _earned(_account);
+    }
+
+    function _earned(address _account) internal view returns(EarnedData[] memory claimable) {
         uint256 supply = _getTotalSupply();
         // uint256 depositedBalance = _getDepositedBalance(_account);
         uint256 rewardCount = rewards.length;

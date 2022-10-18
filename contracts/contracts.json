@@ -1,5 +1,7 @@
 {
     "system": {
+        "deployer": "0x947B7742C403f20e5FaCcDAc5E092C943E7D0277",
+        "multisig": "0xa3C5A1e09150B75ff251c1a7815A07182c3de2FB",
         "voteProxy": "0x989AEb4d175e16225E39E87d0D97A3360524AD80",
         "treasury": "0x1389388d01708118b497f59521f6943Be2541bb7",
         "cvx": "0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B",
@@ -53,7 +55,8 @@
     },
     "curve":{
         "registry":"0x0000000022D53366457F9d5E68Ec105046FC4383",
-        "poolFactory":"0xB9fC157394Af804a3578134A6585C0dc9cc990d4",
+        "stablePoolFactory":"0xB9fC157394Af804a3578134A6585C0dc9cc990d4",
+        "cryptoPoolFactory":"0xF18056Bbd320E96A48e3Fbf8bC061322531aac99",
         "gaugeController":"0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB",
         "crv":"0xD533a949740bb3306d119CC777fa900bA034cd52",
         "vecrv":"0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2",

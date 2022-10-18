@@ -478,8 +478,8 @@ contract ConvexStakingWrapperOhmSync is ERC20, ReentrancyGuard, IERC4626 {
         }
     }
 
-    function user_checkpoint(address[2] calldata _accounts) external returns(bool) {
-        _checkpoint([_accounts[0], _accounts[1]]);
+    function user_checkpoint(address _account) external returns(bool) {
+        _checkpoint([_account, address(0)]);
         return true;
     }
 

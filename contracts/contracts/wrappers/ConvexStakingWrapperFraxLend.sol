@@ -3,18 +3,23 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import "./ConvexStakingWrapper.sol";
+import "../interfaces/IBooster.sol";
+import "../interfaces/IRewardHook.sol";
 
-interface IFraxFarm {
-    function lockedLiquidityOf(address account) external view returns (uint256 amount);
+interface IFraxLend {
+    function userCollateralBalance(address account) external view returns (uint256 amount);
 }
 
-//Staking wrapper for Frax Finance platform
+//Staking wrapper for Frax Finance's FraxLend platform
 //use convex LP positions as collateral while still receiving rewards
-contract ConvexStakingWrapperFrax is ConvexStakingWrapper {
+contract ConvexStakingWrapperFraxLend is ConvexStakingWrapper {
     using SafeERC20
     for IERC20;
     using SafeMath
     for uint256;
+
+    
+    address public rewardHook;
 
     constructor() public{}
 
@@ -30,14 +35,10 @@ contract ConvexStakingWrapperFrax is ConvexStakingWrapper {
         convexPool = _rewards;
         convexPoolId = _poolId;
 
-        _tokenname = string(abi.encodePacked("Staked ", ERC20(_token).name(), " Frax" ));
-        _tokensymbol = string(abi.encodePacked("stk", ERC20(_token).symbol(), "-frax"));
+        _tokenname = string(abi.encodePacked("Staked ", ERC20(_token).name(), " FraxLend" ));
+        _tokensymbol = string(abi.encodePacked("stk", ERC20(_token).symbol(), "-fraxlend"));
         isShutdown = false;
         isInit = true;
-
-        //set vault later
-        // collateralVault = _vault;
-
 
         //add rewards
         addRewards();
@@ -50,6 +51,10 @@ contract ConvexStakingWrapperFrax is ConvexStakingWrapper {
         collateralVault = _vault;
     }
 
+    function setHook(address _hook) external onlyOwner{
+        rewardHook = _hook;
+    }
+
     function _getDepositedBalance(address _account) internal override view returns(uint256) {
         if (_account == address(0) || _account == collateralVault) {
             return 0;
@@ -57,9 +62,17 @@ contract ConvexStakingWrapperFrax is ConvexStakingWrapper {
 
         uint256 collateral;
         if(collateralVault != address(0)){
-           collateral = IFraxFarm(collateralVault).lockedLiquidityOf(_account);
+           collateral = IFraxLend(collateralVault).userCollateralBalance(_account);
         }
 
         return balanceOf(_account).add(collateral);
     }
+
+    function _claimExtras() internal override{
+        if(rewardHook != address(0)){
+            try IRewardHook(rewardHook).onRewardClaim(){
+            }catch{}
+        }
+    }
+
 }
