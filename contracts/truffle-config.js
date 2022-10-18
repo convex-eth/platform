@@ -19,9 +19,8 @@
  */
 
 const HDWalletProvider = require('@truffle/hdwallet-provider');
-const fs = require('fs');
-const mnemonic = fs.readFileSync(".secret").toString().trim();
-const etherscanAPI = fs.readFileSync(".etherscanApi").toString().trim();
+var jsonfile = require('jsonfile');
+var api_keys = jsonfile.readFileSync('./.api_keys');
 
 module.exports = {
   /**
@@ -35,60 +34,48 @@ module.exports = {
    */
 
   networks: {
-    // Useful for testing. The `development` name is special - truffle uses it by default
-    // if it's defined here and no other network is specified at the command line.
-    // You should run a client (like ganache-cli, geth or parity) in a separate terminal
-    // tab if you use this network and you must also set the `host`, `port` and `network_id`
-    // options below to some value.
-    //
-    // development: {
-    //  host: "127.0.0.1",     // Localhost (default: none)
-    //  port: 8545,            // Standard Ethereum port (default: none)
-    //  network_id: "*",       // Any network (default: none)
-    // },
-    // Another network with more advanced options...
-    // advanced: {
-    // port: 8777,             // Custom port
-    // network_id: 1342,       // Custom network
-    // gas: 8500000,           // Gas sent with each transaction (default: ~6700000)
-    // gasPrice: 20000000000,  // 20 gwei (in wei) (default: 100 gwei)
-    // from: <address>,        // Account to send txs from (default: accounts[0])
-    // websocket: true        // Enable EventEmitter interface for web3 (default: false)
-    // },
-    // Useful for deploying to a public network.
-    // NB: It's important to wrap the provider as a function.
     mainnet: {
-	    provider: () => new HDWalletProvider(mnemonic, `https://mainnet.infura.io/v3/<PRJ_ID>`),
-	    network_id: 1, 
-		gas: 6721975,
-		gasPrice: 120000000000
+      provider: () => new HDWalletProvider(api_keys.mnemonic, api_keys.provider_mainnet),
+      network_id: 1, 
+      gas: 6721975,
+      gasPrice: 25000000000
     },
-    // Useful for private networks
-    // private: {
-    // provider: () => new HDWalletProvider(mnemonic, `https://network.io`),
-    // network_id: 2111,   // This network is yours, in the cloud.
-    // production: true    // Treats this network as if it was a public net. (default: false)
-    // }
+    bsc: {
+      provider: () => new HDWalletProvider(mnemonic, `https://bsc-dataseed.binance.org`),
+      network_id: 56,
+      confirmations: 20,
+      timeoutBlocks: 200,
+      skipDryRun: true,
+      gas: 6721975,
+      gasPrice: 10000000000
+    },
+    debugbsc: {
+      host: "127.0.0.1",
+      port: 8545,
+      network_id: "56",
+      gas: 6721975,
+      gasPrice: 100000000000
+    },
     ganachecli: {
       host: "127.0.0.1",
       port: 8545,
       network_id: "1",
       gas: 6721975,
-      gasPrice: 120000000000
+      gasPrice: 100000000000
     },
     uitest: {
       host: "127.0.0.1",
       port: 8545,
       network_id: "1",
       gas: 6721975,
-      gasPrice: 120000000000
+      gasPrice: 100000000000
     },
     debug: {
       host: "127.0.0.1",
       port: 8545,
       network_id: "1",
       gas: 6721975,
-      gasPrice: 120000000000
+      gasPrice: 250000000000
     },
   },
 
@@ -116,6 +103,6 @@ module.exports = {
     'truffle-plugin-verify'
   ],
   api_keys: {
-    etherscan: etherscanAPI
+    etherscan: api_keys.etherscan
   }
 };
