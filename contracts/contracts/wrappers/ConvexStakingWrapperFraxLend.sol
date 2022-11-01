@@ -51,6 +51,25 @@ contract ConvexStakingWrapperFraxLend is ConvexStakingWrapper {
         collateralVault = _vault;
     }
 
+    function addTokenReward(address _token) public onlyOwner {
+        //check if already registered
+        if(registeredRewards[_token] == 0){
+            //add new token to list
+            rewards.push(
+                RewardType({
+                    reward_token: _token,
+                    reward_pool: address(0),
+                    reward_integral: 0,
+                    reward_remaining: 0
+                })
+            );
+            //add to registered map
+            registeredRewards[_token] = rewards.length; //mark registered at index+1
+            //send to self to warmup state
+            IERC20(_token).transfer(address(this),0);   
+        }
+    }
+
     function setHook(address _hook) external onlyOwner{
         rewardHook = _hook;
     }
