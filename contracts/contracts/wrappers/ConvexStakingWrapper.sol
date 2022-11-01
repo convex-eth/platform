@@ -158,6 +158,10 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
             );
             registeredRewards[crv] = CRV_INDEX+1; //mark registered at index+1
             registeredRewards[cvx] = CVX_INDEX+1; //mark registered at index+1
+            //send to self to warmup state
+            IERC20(crv).transfer(address(this),0);
+            //send to self to warmup state
+            IERC20(cvx).transfer(address(this),0);
         }
 
         uint256 extraCount = IRewardStaking(mainPool).extraRewardsLength();
@@ -281,8 +285,9 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         }
     }
 
+    //claim any rewards not part of the convex pool
     function _claimExtras() internal virtual{
-
+        //override and add external reward claiming
     }
 
     function user_checkpoint(address _account) external returns(bool) {
@@ -315,18 +320,15 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         for (uint256 i = 0; i < rewardCount; i++) {
             RewardType storage reward = rewards[i];
 
-            if(reward.reward_pool == address(0)){
-                //cvx reward may not have a reward pool yet
-                //so just add whats already been checkpointed
-                claimable[i].amount = claimable[i].amount.add(reward.claimable_reward[_account]);
-                claimable[i].token = reward.reward_token;
-                continue;
-            }
-
             //change in reward is current balance - remaining reward + earned
             uint256 bal = IERC20(reward.reward_token).balanceOf(address(this));
             uint256 d_reward = bal.sub(reward.reward_remaining);
-            d_reward = d_reward.add(IRewardStaking(reward.reward_pool).earned(address(this)));
+
+            //some rewards (like minted cvx) may not have a reward pool directly on the convex pool so check if it exists
+            if(reward.reward_pool != address(0)){
+                //add earned from the convex reward pool for the given token
+                d_reward = d_reward.add(IRewardStaking(reward.reward_pool).earned(address(this)));
+            }
 
             uint256 I = reward.reward_integral;
             if (supply > 0) {
