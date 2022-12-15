@@ -16,7 +16,7 @@
         "threeCrvRewards": "0x7091dbb7fcbA54569eF1387Ac89Eb2a5C9F6d2EA",
         "vecrvFeeClaimer": "0x4940896E635eA177F1095009Be9eE9Ef02f15d0C",
         "cvxRewards": "0xCF50b810E57Ac33B91dCF525C6ddd9881B139332",
-        "poolManager": "0xD1f9b3de42420A295C33c07aa5C9e04eDC6a4447",
+        "poolManager": "0x0e4E9D97440182EA72D988d48eB9b156a0c02e11",
         "poolManagerProxy": "0x5F47010F230cE1568BeA53a06eBAF528D05c5c1B",
         "poolManagerSecondaryProxy": "0xD20904e5916113D11414F083229e9C8C6F91D1e1",
         "arbitratorVault": "0x25E12482a25CF36EC70fDA2A09C1ED077Fc21616",
