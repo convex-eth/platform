@@ -4,7 +4,6 @@ pragma experimental ABIEncoderV2;
 
 import "./ConvexStakingWrapper.sol";
 import "../interfaces/IBooster.sol";
-import "../interfaces/IRewardHook.sol";
 
 interface IFraxLend {
     function userCollateralBalance(address account) external view returns (uint256 amount);
@@ -19,8 +18,6 @@ contract ConvexStakingWrapperFraxLend is ConvexStakingWrapper {
     for uint256;
 
     
-    address public rewardHook;
-
     constructor() public{}
 
     function initialize(uint256 _poolId)
@@ -51,29 +48,6 @@ contract ConvexStakingWrapperFraxLend is ConvexStakingWrapper {
         collateralVault = _vault;
     }
 
-    function addTokenReward(address _token) public onlyOwner {
-        //check if already registered
-        if(registeredRewards[_token] == 0){
-            //add new token to list
-            rewards.push(
-                RewardType({
-                    reward_token: _token,
-                    reward_pool: address(0),
-                    reward_integral: 0,
-                    reward_remaining: 0
-                })
-            );
-            //add to registered map
-            registeredRewards[_token] = rewards.length; //mark registered at index+1
-            //send to self to warmup state
-            IERC20(_token).transfer(address(this),0);   
-        }
-    }
-
-    function setHook(address _hook) external onlyOwner{
-        rewardHook = _hook;
-    }
-
     function _getDepositedBalance(address _account) internal override view returns(uint256) {
         if (_account == address(0) || _account == collateralVault) {
             return 0;
@@ -85,13 +59,6 @@ contract ConvexStakingWrapperFraxLend is ConvexStakingWrapper {
         }
 
         return balanceOf(_account).add(collateral);
-    }
-
-    function _claimExtras() internal override{
-        if(rewardHook != address(0)){
-            try IRewardHook(rewardHook).onRewardClaim(){
-            }catch{}
-        }
     }
 
 }
