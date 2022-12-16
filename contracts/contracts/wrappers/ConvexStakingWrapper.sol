@@ -487,7 +487,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         emit Withdrawn(msg.sender, _amount, true);
     }
 
-    function _beforeTokenTransfer(address _from, address _to, uint256 _amount) internal override nonReentrant{
+    function _beforeTokenTransfer(address _from, address _to, uint256 _amount) internal override {
         _checkpoint([_from, _to]);
     }
 }
