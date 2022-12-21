@@ -177,7 +177,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
                 //add new token to list
                 rewards.push(
                     RewardType({
-                        reward_token: IRewardStaking(extraPool).rewardToken(),
+                        reward_token: extraToken,
                         reward_pool: extraPool,
                         reward_integral: 0,
                         reward_remaining: 0
@@ -263,10 +263,10 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
          if(reward.reward_token == address(0)){
             return;
          }
+
         //get difference in balance and remaining rewards
         //getReward is unguarded so we use reward_remaining to keep track of how much was actually claimed
         uint256 bal = IERC20(reward.reward_token).balanceOf(address(this));
-        // uint256 d_reward = bal.sub(reward.reward_remaining);
 
         if (_supply > 0 && bal.sub(reward.reward_remaining) > 0) {
             reward.reward_integral = reward.reward_integral + uint128(bal.sub(reward.reward_remaining).mul(1e20).div(_supply));
@@ -371,7 +371,6 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
 
     function _earned(address _account) internal view returns(EarnedData[] memory claimable) {
         uint256 supply = _getTotalSupply();
-        // uint256 depositedBalance = _getDepositedBalance(_account);
         uint256 rewardCount = rewards.length;
         claimable = new EarnedData[](rewardCount);
 

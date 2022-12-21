@@ -12,12 +12,9 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-// import "@openzeppelin/contracts/access/Ownable.sol";
 
 
-//Example of a tokenize a convex staked position.
-//if used as collateral some modifications will be needed to fit the specific platform
-//other considerations: might be worth refactoring to use earned() during checkpoints instead of claiming rewards each time
+//Wrapper for staked cvxcrv that allows other incentives to be added
 
 //Based on Curve.fi's gauge wrapper implementations at https://github.com/curvefi/curve-dao-contracts/tree/master/contracts/gauges/wrappers
 contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
@@ -40,20 +37,12 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
         mapping(address => uint256) claimable_reward;
     }
 
-    uint256 public cvx_reward_integral;
-    uint256 public cvx_reward_remaining;
-    mapping(address => uint256) public cvx_reward_integral_for;
-    mapping(address => uint256) public cvx_claimable_reward;
-
     //constants/immutables
     address public constant crvDepositor = address(0x8014595F2AB54cD7c604B00E9fb932176fDc86Ae);
     address public constant cvxCrvStaking = address(0x3Fe65692bfCD0e6CF84cB1E7d24108E434A7587e);
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
     address public constant cvx = address(0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B);
     address public constant cvxCrv = address(0x62B9c7356A2Dc64a1969e19C23e4f579F9810Aa7);
-
-    //collateral vault
-    address public collateralVault;
 
     //rewards
     uint256 private constant CRV_INDEX = 0;
@@ -67,11 +56,11 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
     bool public isInit;
     address public owner;
 
-    string internal _tokenname;
-    string internal _tokensymbol;
+    // string internal _tokenname;
+    // string internal _tokensymbol;
 
-    event Deposited(address indexed _user, address indexed _account, uint256 _amount, bool _wrapped);
-    event Withdrawn(address indexed _user, uint256 _amount, bool _unwrapped);
+    event Deposited(address indexed _user, address indexed _account, uint256 _amount, bool _isCrv);
+    event Withdrawn(address indexed _user, uint256 _amount);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event RewardInvalidated(address _rewardToken);
 
@@ -80,32 +69,14 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
             "Staked CvxCrv",
             "stkCvxCrv"
         ){
-    }
 
-    function initialize(address _vault)
-    virtual external {
-        require(!isInit,"already init");
         owner = address(0xa3C5A1e09150B75ff251c1a7815A07182c3de2FB); //default to convex multisig
         emit OwnershipTransferred(address(0), owner);
 
-        _tokenname = "Staked CvxCrv";
-        _tokensymbol = "stkCvxCrv";
-        isShutdown = false;
-        isInit = true;
-        collateralVault = _vault;
-
-        //add rewards
         addRewards();
         setApprovals();
     }
 
-    function name() public view override returns (string memory) {
-        return _tokenname;
-    }
-
-    function symbol() public view override returns (string memory) {
-        return _tokensymbol;
-    }
 
     function decimals() public view override returns (uint8) {
         return 18;
@@ -173,7 +144,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
             if(registeredRewards[extraToken] == 0){
                 rewards.push(
                     RewardType({
-                        reward_token: IRewardStaking(extraPool).rewardToken(),
+                        reward_token: extraToken,
                         reward_pool: extraPool,
                         reward_integral: 0,
                         reward_remaining: 0
@@ -238,29 +209,13 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
         return rewards.length;
     }
 
-    function _getDepositedBalance(address _account) internal virtual view returns(uint256) {
-        if (_account == address(0) || _account == collateralVault) {
-            return 0;
-        }
-        
-        //override and add any balance needed (deposited balance)
-
-        return balanceOf(_account);
-    }
-
-    function _getTotalSupply() internal virtual view returns(uint256){
-
-        //override and add any supply needed (interest based growth)
-
-        return totalSupply();
-    }
-
 
     function _calcRewardIntegral(uint256 _index, address[2] memory _accounts, uint256[2] memory _balances, uint256 _supply, bool _isClaim) internal{
          RewardType storage reward = rewards[_index];
          if(reward.reward_token == address(0)){
             return;
          }
+
         //get difference in balance and remaining rewards
         //getReward is unguarded so we use reward_remaining to keep track of how much was actually claimed
         uint256 bal = IERC20(reward.reward_token).balanceOf(address(this));
@@ -274,7 +229,6 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
         for (uint256 u = 0; u < _accounts.length; u++) {
             //do not give rewards to address 0
             if (_accounts[u] == address(0)) continue;
-            if (_accounts[u] == collateralVault) continue;
             if(_isClaim && u != 0) continue; //only update/claim for first address and use second as forwarding
 
             uint userI = reward.reward_integral_for[_accounts[u]];
@@ -306,10 +260,10 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
         //if shutdown, no longer checkpoint in case there are problems
         if(isShutdown) return;
 
-        uint256 supply = _getTotalSupply();
+        uint256 supply = totalSupply();
         uint256[2] memory depositedBalance;
-        depositedBalance[0] = _getDepositedBalance(_accounts[0]);
-        depositedBalance[1] = _getDepositedBalance(_accounts[1]);
+        depositedBalance[0] = balanceOf(_accounts[0]);
+        depositedBalance[1] = balanceOf(_accounts[1]);
         
         IRewardStaking(cvxCrvStaking).getReward(address(this), true);
 
@@ -319,14 +273,13 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
         for (uint256 i = 0; i < rewardCount; i++) {
            _calcRewardIntegral(i,_accounts,depositedBalance,supply,false);
         }
-        // _calcCvxIntegral(_accounts,depositedBalance,supply,false);
     }
 
     function _checkpointAndClaim(address[2] memory _accounts) internal {
 
-        uint256 supply = _getTotalSupply();
+        uint256 supply = totalSupply();
         uint256[2] memory depositedBalance;
-        depositedBalance[0] = _getDepositedBalance(_accounts[0]); //only do first slot
+        depositedBalance[0] = balanceOf(_accounts[0]); //only do first slot
         
         IRewardStaking(cvxCrvStaking).getReward(address(this), true);
 
@@ -336,12 +289,11 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
         for (uint256 i = 0; i < rewardCount; i++) {
            _calcRewardIntegral(i,_accounts,depositedBalance,supply,true);
         }
-        // _calcCvxIntegral(_accounts,depositedBalance,supply,true);
     }
 
     //claim any rewards not part of the convex pool
-    function _claimExtras() internal virtual{
-        //override and add any external reward claiming
+    function _claimExtras() internal {
+        //claim via hook if exists
         if(rewardHook != address(0)){
             try IRewardHook(rewardHook).onRewardClaim(){
             }catch{}
@@ -352,11 +304,6 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
         _checkpoint([_accounts[0], _accounts[1]]);
         return true;
     }
-
-    function totalBalanceOf(address _account) external view returns(uint256){
-        return _getDepositedBalance(_account);
-    }
-
 
     //run earned as a mutable function to claim everything before calculating earned rewards
     function earned(address _account) external returns(EarnedData[] memory claimable) {
@@ -371,8 +318,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
     }
 
     function _earned(address _account) internal view returns(EarnedData[] memory claimable) {
-        uint256 supply = _getTotalSupply();
-        // uint256 depositedBalance = _getDepositedBalance(_account);
+        uint256 supply = totalSupply();
         uint256 rewardCount = rewards.length;
         claimable = new EarnedData[](rewardCount);
 
@@ -397,7 +343,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
                 I = I + d_reward.mul(1e20).div(supply);
             }
 
-            uint256 newlyClaimable = _getDepositedBalance(_account).mul(I.sub(reward.reward_integral_for[_account])).div(1e20);
+            uint256 newlyClaimable = balanceOf(_account).mul(I.sub(reward.reward_integral_for[_account])).div(1e20);
             claimable[i].amount = claimable[i].amount.add(reward.claimable_reward[_account].add(newlyClaimable));
             claimable[i].token = reward.reward_token;
 
@@ -409,7 +355,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
                 if (supply > 0) {
                     I = I + IRewardStaking(reward.reward_pool).earned(address(this)).mul(1e20).div(supply);
                 }
-                newlyClaimable = _getDepositedBalance(_account).mul(I.sub(reward.reward_integral_for[_account])).div(1e20);
+                newlyClaimable = balanceOf(_account).mul(I.sub(reward.reward_integral_for[_account])).div(1e20);
                 claimable[CVX_INDEX].amount = CvxMining.ConvertCrvToCvx(newlyClaimable);
                 claimable[CVX_INDEX].token = cvx;
             }
@@ -429,7 +375,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
         _checkpointAndClaim([_account,_forwardTo]);
     }
 
-    //deposit a curve token
+    //deposit vanilla crv
     function deposit(uint256 _amount, address _to) external nonReentrant {
         require(!isShutdown, "shutdown");
 
@@ -444,8 +390,8 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
         emit Deposited(msg.sender, _to, _amount, true);
     }
 
-    //stake a convex token
-    function stake(uint256 _amount, address _to) external nonReentrant {
+    //stake cvxcrv
+    function stake(uint256 _amount, address _to) public nonReentrant {
         require(!isShutdown, "shutdown");
 
         //dont need to call checkpoint since _mint() will
@@ -459,6 +405,11 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
         emit Deposited(msg.sender, _to, _amount, false);
     }
 
+    //backwards compatibility for other systems (note: amount and address reversed)
+    function stakeFor(address _to, uint256 _amount) external {
+        stake(_amount, _to);
+    }
+
     //withdraw to convex deposit token
     function withdraw(uint256 _amount) external nonReentrant {
         
@@ -470,7 +421,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
             IERC20(cvxCrv).safeTransfer(msg.sender, _amount);
         }
 
-        emit Withdrawn(msg.sender, _amount, false);
+        emit Withdrawn(msg.sender, _amount);
     }
 
     function _beforeTokenTransfer(address _from, address _to, uint256 _amount) internal override {
