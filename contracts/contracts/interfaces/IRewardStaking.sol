@@ -13,4 +13,6 @@ interface IRewardStaking {
     function extraRewards(uint256 _pid) external view returns (address);
     function rewardToken() external view returns (address);
     function balanceOf(address _account) external view returns (uint256);
+    function rewardRate() external view returns(uint256);
+    function totalSupply() external view returns(uint256);
 }
