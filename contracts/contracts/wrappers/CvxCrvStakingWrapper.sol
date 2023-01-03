@@ -368,9 +368,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
 
     //run earned as a mutable function to claim everything before calculating earned rewards
     function earned(address _account) external returns(EarnedData[] memory claimable) {
-        // IRewardStaking(cvxCrvStaking).getReward(address(this), true);
-        // _claimExtras();
-         _checkpoint([_account, address(0)]);
+        _checkpoint([_account, address(0)]);
         return _earned(_account);
     }
 
@@ -383,43 +381,12 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
 
         for (uint256 i = 0; i < rewardCount; i++) {
             RewardType storage reward = rewards[i];
+
+            //skip invalidated rewards
             if(reward.reward_token == address(0)){
                 continue;
             }
-
-            // //calc supply weight
-            // uint256 supply = totalSupply();
-            // if(reward.reward_group == 0){
-            //     //use inverse (supplyWeight can never be more than supply)
-            //     supply = (supply - supplyWeight);
-            // }else{
-            //     //use supplyWeight
-            //     supply = supplyWeight;
-            // }
-
-            // uint256 I = reward.reward_integral;
-            // if (supply > 0) {
-            //     //change in reward is current balance - remaining reward
-            //     uint256 bal = IERC20(reward.reward_token).balanceOf(address(this));
-            //     // uint256 d_reward = bal.sub(reward.reward_remaining);
-            //     I = I + bal.sub(reward.reward_remaining).mul(1e20).div(supply);
-            // }
-
-
-            // //adjust user balance based on reward group
-            // uint256 userb = balanceOf(_account);
-            // if(reward.reward_group == 0){
-            //     //use userRewardWeight inverse: weight of 0 should be full reward group 0
-            //     userb = userb * (WEIGHT_PRECISION - userRewardWeight[_account]) / WEIGHT_PRECISION;
-            // }else{
-            //     //use userRewardWeight: weight of 10,000 should be full reward group 1
-            //     userb = userb * userRewardWeight[_account] / WEIGHT_PRECISION;
-            // }
-
-            // uint256 newlyClaimable = userb.mul(I.sub(reward.reward_integral_for[_account])).div(1e20);
-            // claimable[i].amount = claimable[i].amount.add(reward.claimable_reward[_account].add(newlyClaimable));
-            // claimable[i].token = reward.reward_token;
-        
+    
             claimable[i].amount = reward.claimable_reward[_account];
             claimable[i].token = reward.reward_token;
         }
