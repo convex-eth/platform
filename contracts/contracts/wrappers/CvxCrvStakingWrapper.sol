@@ -159,8 +159,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
         }
 
         uint256 extraCount = IRewardStaking(cvxCrvStaking).extraRewardsLength();
-        uint256 startIndex = rewards.length - 1;
-        for (uint256 i = startIndex; i < extraCount; i++) {
+        for (uint256 i = 0; i < extraCount; i++) {
             address extraPool = IRewardStaking(cvxCrvStaking).extraRewards(i);
             address extraToken = IRewardStaking(extraPool).rewardToken();
             if(registeredRewards[extraToken] == 0){
@@ -377,7 +376,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
     //because we are doing a mutative earned(), we can just simulate claiming and look at the difference
     //thus no need to look at each reward contract's claimable tokens or cvx minting equations etc
     function _earned(address _account) internal view returns(EarnedData[] memory claimable) {
-        uint256 supply = totalSupply();
+        
         uint256 rewardCount = rewards.length;
         claimable = new EarnedData[](rewardCount);
 
@@ -387,16 +386,36 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
                 continue;
             }
 
-            //change in reward is current balance - remaining reward
-            uint256 bal = IERC20(reward.reward_token).balanceOf(address(this));
-            uint256 d_reward = bal.sub(reward.reward_remaining);
+            //calc supply weight
+            uint256 supply = totalSupply();
+            if(reward.reward_group == 0){
+                //use inverse (supplyWeight can never be more than supply)
+                supply = (supply - supplyWeight);
+            }else{
+                //use supplyWeight
+                supply = supplyWeight;
+            }
 
             uint256 I = reward.reward_integral;
             if (supply > 0) {
-                I = I + d_reward.mul(1e20).div(supply);
+                //change in reward is current balance - remaining reward
+                uint256 bal = IERC20(reward.reward_token).balanceOf(address(this));
+                // uint256 d_reward = bal.sub(reward.reward_remaining);
+                I = I + bal.sub(reward.reward_remaining).mul(1e20).div(supply);
             }
 
-            uint256 newlyClaimable = balanceOf(_account).mul(I.sub(reward.reward_integral_for[_account])).div(1e20);
+
+            //adjust user balance based on reward group
+            uint256 userb = balanceOf(_account);
+            if(reward.reward_group == 0){
+                //use userRewardWeight inverse: weight of 0 should be full reward group 0
+                userb = userb * (WEIGHT_PRECISION - userRewardWeight[_account]) / WEIGHT_PRECISION;
+            }else{
+                //use userRewardWeight: weight of 10,000 should be full reward group 1
+                userb = userb * userRewardWeight[_account] / WEIGHT_PRECISION;
+            }
+
+            uint256 newlyClaimable = userb.mul(I.sub(reward.reward_integral_for[_account])).div(1e20);
             claimable[i].amount = claimable[i].amount.add(reward.claimable_reward[_account].add(newlyClaimable));
             claimable[i].token = reward.reward_token;
         }
@@ -471,7 +490,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
         if (_amount > 0) {
             //remove prev supply weight before changing balance
             uint256 sweight = supplyWeight;
-            sweight -= balanceOf(msg.sender) * userRewardWeight[msg.sender] / WEIGHT_PRECISION;
+            sweight -= balanceOf(_to) * userRewardWeight[_to] / WEIGHT_PRECISION;
 
             //deposit
             _mint(_to, _amount);
@@ -479,7 +498,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
             IConvexDeposits(crvDepositor).deposit(_amount, false, cvxCrvStaking);
 
             //re-add supply weight after balance has been changed
-            sweight += balanceOf(msg.sender) * userRewardWeight[msg.sender] / WEIGHT_PRECISION;
+            sweight += balanceOf(_to) * userRewardWeight[_to] / WEIGHT_PRECISION;
             supplyWeight = sweight;
         }
 
@@ -495,7 +514,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
         if (_amount > 0) {
             //remove prev supply weight before changing balance
             uint256 sweight = supplyWeight;
-            sweight -= balanceOf(msg.sender) * userRewardWeight[msg.sender] / WEIGHT_PRECISION;
+            sweight -= balanceOf(_to) * userRewardWeight[_to] / WEIGHT_PRECISION;
 
             //deposit
             _mint(_to, _amount);
@@ -503,7 +522,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
             IRewardStaking(cvxCrvStaking).stake(_amount);
 
             //re-add supply weight after balance has been changed
-            sweight += balanceOf(msg.sender) * userRewardWeight[msg.sender] / WEIGHT_PRECISION;
+            sweight += balanceOf(_to) * userRewardWeight[_to] / WEIGHT_PRECISION;
             supplyWeight = sweight;
         }
 

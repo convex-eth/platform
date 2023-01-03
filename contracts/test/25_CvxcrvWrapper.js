@@ -135,6 +135,7 @@ contract("Test cvxcrv stake wrapper", async accounts => {
     let booster = await Booster.at(contractList.system.booster);
     let voteproxy = await CurveVoterProxy.at(contractList.system.voteProxy);
     let crvDeposit = await CrvDepositor.at(contractList.system.crvDepositor);
+    let vanillacvxCrv = await BaseRewardPool.at(contractList.system.cvxCrvRewards);
     let cvx = await ConvexToken.at(contractList.system.cvx);
     let crv = await IERC20.at("0xD533a949740bb3306d119CC777fa900bA034cd52");
     let threeCrv = await IERC20.at("0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490");
@@ -164,6 +165,7 @@ contract("Test cvxcrv stake wrapper", async accounts => {
     await unlockAccount(crvescrow);
     await crv.transfer(userA,web3.utils.toWei("100000.0", "ether"),{from:crvescrow,gasPrice:0});
     await crv.transfer(userB,web3.utils.toWei("100000.0", "ether"),{from:crvescrow,gasPrice:0});
+    await crv.transfer(deployer,web3.utils.toWei("100000.0", "ether"),{from:crvescrow,gasPrice:0});
 
     var crvbalance = await crv.balanceOf(userA);
     console.log("crv: " +crvbalance);
@@ -186,28 +188,55 @@ contract("Test cvxcrv stake wrapper", async accounts => {
     await crv.approve(staker.address,crvbalance,{from:userA});
     await crv.approve(crvDeposit.address,crvbalance,{from:userB});
     await cvxCrv.approve(staker.address,crvbalance,{from:userB});
-    console.log("approved booster and staker");
+    console.log("approved depositor and staker");
+
+    await staker.setRewardWeight(10000,{from:userB});
+    console.log("set user b weight")
+
     await crvDeposit.deposit(crvbalance,false,addressZero,{from:userB});
+    // await crvDeposit.deposit(crvbalance,false,staker.address,{from:userB});
     console.log("deposited into convex for user b");
 
 
     var depositTx = await staker.deposit(crvbalance,userA,{from:userA});
     console.log("user A deposited, gas: " +depositTx.receipt.gasUsed);
-    await cvxCrv.balanceOf(userB).then(a=>console.log("user b cvxCrv: " +a));
+
+
+    // await cvxCrv.balanceOf(userB).then(a=>console.log("user b cvxCrv: " +a));
     var stakeTx = await staker.stake(crvbalance,userB,{from:userB});
     console.log("user b staked, gas: " +stakeTx.receipt.gasUsed);
-    await staker.totalSupply().then(a=>console.log("staker supply: " +a));
+
 
     await staker.balanceOf(userA).then(a=>console.log("user a: " +a));
     await staker.balanceOf(userB).then(a=>console.log("user b: " +a));
-
     await staker.userRewardWeight(userA).then(a=>console.log("user a weight: " +a))
-    await staker.userRewardWeight(userB).then(a=>console.log("user a weight: " +a))
+    await staker.userRewardWeight(userB).then(a=>console.log("user b weight: " +a))
     await staker.totalSupply().then(a=>console.log("totalSupply: " +a))
     await staker.supplyWeight().then(a=>console.log("supplyWeight: " +a))
+    await staker.userRewardBalance(userA,0).then(a=>console.log("userRewardBalance(a,0): " +a));
+    await staker.userRewardBalance(userA,1).then(a=>console.log("userRewardBalance(a,1): " +a));
+    await staker.userRewardBalance(userB,0).then(a=>console.log("userRewardBalance(b,0): " +a));
+    await staker.userRewardBalance(userB,1).then(a=>console.log("userRewardBalance(b,0): " +a));
+    await staker.rewardSupply(0).then(a=>console.log("rewardSupply(0): " +a))
+    await staker.rewardSupply(1).then(a=>console.log("rewardSupply(1): " +a))
+
+    
 
     await staker.earned.call(userA).then(a=>console.log("user a earned: " +a));
     await staker.earned.call(userB).then(a=>console.log("user b earned: " +a));
+
+    await advanceTime(86400);
+
+    console.log("======");
+    await staker.earned.call(userA).then(a=>console.log("user a earned: " +a ));
+    await crv.balanceOf(userA).then(a=>console.log("user a wallet crv: " +a));
+    await cvx.balanceOf(userA).then(a=>console.log("user a wallet cvx: " +a));
+    await threeCrv.balanceOf(userA).then(a=>console.log("user a wallet threeCrv: " +a));
+    console.log("-----");
+    await staker.earned.call(userB).then(a=>console.log("user b earned: " +a ));
+    await crv.balanceOf(userB).then(a=>console.log("user b wallet crv: " +a));
+    await cvx.balanceOf(userB).then(a=>console.log("user b wallet cvx: " +a));
+    await threeCrv.balanceOf(userB).then(a=>console.log("user b wallet threeCrv: " +a));
 
     await advanceTime(86400);
 
@@ -308,6 +337,33 @@ contract("Test cvxcrv stake wrapper", async accounts => {
     await crv.balanceOf(staker.address).then(a=>console.log("remaining crv: " +a));
     await cvx.balanceOf(staker.address).then(a=>console.log("remaining cvx: " +a));
     await threeCrv.balanceOf(staker.address).then(a=>console.log("remaining threeCrv: " +a));
+
+
+    //reclaim
+    console.log(">>> reclaim check <<<");
+    await crv.approve(crvDeposit.address,crvbalance,{from:deployer});
+    console.log("approved depositor");
+    await crvDeposit.deposit(crvbalance,false,addressZero,{from:deployer});
+    console.log("mint cvxcrv");
+
+    await cvxCrv.approve(vanillacvxCrv.address,crvbalance,{from:deployer});
+    await vanillacvxCrv.stakeFor(staker.address, crvbalance, {from:deployer});
+
+    await staker.totalSupply().then(a=>console.log("totalSupply: " +a));
+    await vanillacvxCrv.balanceOf(staker.address).then(a=>console.log("staked supply: " +a));
+
+    await staker.reclaim({from:multisig,gasPrice:0}).catch(a=>console.log("revert reclaim before shutdown: " +a));
+
+    await staker.shutdown({from:multisig,gasPrice:0});
+    await staker.isShutdown().then(a=>console.log("isShutdown? " +a));
+
+    await cvxCrv.balanceOf(contractList.system.treasury).then(a=>console.log("treasury cvxCrv: " +a));
+    await staker.reclaim({from:multisig,gasPrice:0});
+    console.log("reclaim called");
+    await cvxCrv.balanceOf(contractList.system.treasury).then(a=>console.log("treasury cvxCrv: " +a));
+
+    await staker.totalSupply().then(a=>console.log("totalSupply: " +a));
+    await vanillacvxCrv.balanceOf(staker.address).then(a=>console.log("staked supply: " +a));
 
   });
 });
