@@ -6,6 +6,7 @@ import "./interfaces/IStakingWrapper.sol";
 import "./interfaces/IRewardHookExtended.sol";
 import "./interfaces/IExtraRewardPool.sol";
 import "./interfaces/IRewardStaking.sol";
+import "./interfaces/ICvxCrvStaking.sol";
 
 
 /*
@@ -20,7 +21,7 @@ contract CvxCrvUtilities{
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
     address public constant cvx = address(0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B);
     address public constant cvxMining = address(0x3c75BFe6FbfDa3A94E7E7E8c2216AFc684dE5343);
-
+    uint256 private constant WEIGHT_PRECISION = 10000;
 
     address public immutable stkcvxcrv;
 
@@ -44,7 +45,10 @@ contract CvxCrvUtilities{
         uint256 wrappedStakedBalance = IRewardStaking(cvxCrvStaking).balanceOf(stkcvxcrv);
 
         // multiply reward rates by wrapper supply and wrapped staked balance
-        uint256 wrappedRatio = wrapperSupply * 1e18 / wrappedStakedBalance;
+        uint256 wrappedRatio = 1e18;
+        if(wrappedStakedBalance > 0){
+            wrapperSupply * 1e18 / wrappedStakedBalance;
+        }
 
         //get reward count
         uint256 extraCount = IRewardStaking(cvxCrvStaking).extraRewardsLength();
@@ -59,22 +63,53 @@ contract CvxCrvUtilities{
             address extraToken = IRewardStaking(extraPool).rewardToken();
             uint256 rate = IRewardStaking(extraPool).rewardRate();
 
-            //rate per 1 staked cvxcrv
-            rate = rate * 1e18 / stakedSupply;
+            uint256 rindex = ICvxCrvStaking(stkcvxcrv).registeredRewards(extraToken);
+            (,uint8 group,,) = ICvxCrvStaking(stkcvxcrv).rewards(rindex);
 
-            //boosted rate of wrapper
+            uint256 groupSupply = ICvxCrvStaking(stkcvxcrv).rewardSupply(group);
+
+            //rate per 1 staked cvxcrv
+            if(stakedSupply > 0){
+                rate = rate * 1e18 / stakedSupply;
+            }
+
+            //rate per 1 wrapped staked cvxcrv
             rate = rate * wrappedRatio / 1e18;
 
-            //add minted cvx for crv -> cvx = CvxMining.ConvertCrvToCvx(crv);
+            //rate per 1 weighted supply of given reward group
+            if(groupSupply > 0){
+                rate = rate * wrapperSupply / groupSupply;
+            }
+
+            tokens[i] = extraToken;
+            rates[i] = rate;
+
+            //add minted cvx for crv
             if(extraToken == crv){
-                //put cvx in last slot
+                //put minted cvx in last slot (there could be two cvx slots, one for direct rewards and one for mints)
                 tokens[extraCount] = cvx;
                 rates[extraCount] = ICvxMining(cvxMining).ConvertCrvToCvx(rate);
             }
         }
     }
 
-     function externalRewardContracts() public view returns (address[] memory rewardContracts) {
+    function accountRewardRates(address _account) public view returns (address[] memory tokens, uint256[] memory rates) {
+        (address[] memory tokens, uint256[] memory rates) = mainRewardRates();
+        uint256 userWeight = ICvxCrvStaking(stkcvxcrv).userRewardWeight(_account);
+
+        for(uint256 i = 0; i < tokens.length; i++){
+            uint256 rindex = ICvxCrvStaking(stkcvxcrv).registeredRewards(tokens[i]);
+            (,uint8 group,,) = ICvxCrvStaking(stkcvxcrv).rewards(rindex);
+
+            if(group == 0){
+                rates[i] = rates[i] * (WEIGHT_PRECISION - userWeight) / WEIGHT_PRECISION;
+            }else{
+                rates[i] = rates[i] * userWeight / WEIGHT_PRECISION;
+            }
+        }
+    }
+
+    function externalRewardContracts() public view returns (address[] memory rewardContracts) {
         //get reward hook
         address hook = IStakingWrapper(stkcvxcrv).rewardHook();
 
