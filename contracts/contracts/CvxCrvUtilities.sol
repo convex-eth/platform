@@ -32,7 +32,7 @@ contract CvxCrvUtilities{
 
     //get reward rates for each token based on weighted reward group supply and wrapper's boosted cvxcrv rates
     //%return = rate * timeFrame * price of reward / price of LP / 1e18
-    function mainRewardRates() public view returns (address[] memory tokens, uint256[] memory rates) {
+    function mainRewardRates() public view returns (address[] memory tokens, uint256[] memory rates, uint256[] memory groups) {
 
         //get staked supply
         uint256 stakedSupply = IRewardStaking(cvxCrvStaking).totalSupply();
@@ -55,6 +55,7 @@ contract CvxCrvUtilities{
         //add 1 for cvx
         tokens = new address[](extraCount + 1);
         rates = new uint256[](extraCount + 1);
+        groups = new uint256[](extraCount + 1);
 
         //loop through all vanilla staked cvxcrv reward contracts
         for (uint256 i = 0; i < extraCount; i++) {
@@ -82,6 +83,7 @@ contract CvxCrvUtilities{
 
             tokens[i] = extraToken;
             rates[i] = rate;
+            groups[i] = group;
 
             //add minted cvx for crv
             if(extraToken == crv){
@@ -93,8 +95,8 @@ contract CvxCrvUtilities{
     }
 
     //get reward rates for a specific account taking into account their personal weighting
-    function accountRewardRates(address _account) public view returns (address[] memory tokens, uint256[] memory rates) {
-        (address[] memory tokens, uint256[] memory rates) = mainRewardRates();
+    function accountRewardRates(address _account) public view returns (address[] memory tokens, uint256[] memory rates, uint256[] memory groups) {
+        (address[] memory tokens, uint256[] memory rates, uint256[] memory groups) = mainRewardRates();
         uint256 userWeight = ICvxCrvStaking(stkcvxcrv).userRewardWeight(_account);
 
         for(uint256 i = 0; i < tokens.length; i++){
