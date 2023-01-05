@@ -30,9 +30,8 @@ contract CvxCrvUtilities{
     }
 
 
-    //get boosted reward rate of user at a specific staking contract
-    //returns amount user receives per second based on weight/liq ratio
-    //%return = userBoostedRewardRate * timeFrame * price of reward / price of LP / 1e18
+    //get reward rates for each token based on weighted reward group supply and wrapper's boosted cvxcrv rates
+    //%return = rate * timeFrame * price of reward / price of LP / 1e18
     function mainRewardRates() public view returns (address[] memory tokens, uint256[] memory rates) {
 
         //get staked supply
@@ -93,6 +92,7 @@ contract CvxCrvUtilities{
         }
     }
 
+    //get reward rates for a specific account taking into account their personal weighting
     function accountRewardRates(address _account) public view returns (address[] memory tokens, uint256[] memory rates) {
         (address[] memory tokens, uint256[] memory rates) = mainRewardRates();
         uint256 userWeight = ICvxCrvStaking(stkcvxcrv).userRewardWeight(_account);
