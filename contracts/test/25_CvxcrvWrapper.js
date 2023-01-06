@@ -15,7 +15,8 @@ const ICurveAavePool = artifacts.require("ICurveAavePool");
 const IExchange = artifacts.require("IExchange");
 const IUniswapV2Router01 = artifacts.require("IUniswapV2Router01");
 const CvxMining = artifacts.require("CvxMining");
-const CvxCrvRari = artifacts.require("CvxCrvRari");
+const ICurveRegistry = artifacts.require("ICurveRegistry");
+const DebugRegistry = artifacts.require("DebugRegistry");
 
 // const unlockAccount = async (address) => {
 //   return new Promise((resolve, reject) => {
@@ -187,7 +188,7 @@ contract("Test cvxcrv stake wrapper", async accounts => {
     await staker.symbol().then(a=>console.log("symbol: " +a));
     await staker.decimals().then(a=>console.log("decimals: " +a));
 
-    let rewardCount = await staker.rewardLength();
+    var rewardCount = await staker.rewardLength();
     for(var i = 0; i < rewardCount; i++){
       var rInfo = await staker.rewards(i);
       console.log("rewards " +i +": " +JSON.stringify(rInfo));
@@ -403,6 +404,38 @@ contract("Test cvxcrv stake wrapper", async accounts => {
     await cvx.balanceOf(staker.address).then(a=>console.log("remaining cvx: " +a));
     await threeCrv.balanceOf(staker.address).then(a=>console.log("remaining threeCrv: " +a));
 
+
+
+    //add new token
+    var curvereg = await ICurveRegistry.at("0x0000000022D53366457F9d5E68Ec105046FC4383");
+    var curveregOwner = "0xEdf2C58E16Cc606Da1977e79E1e69e79C54fe242";
+    await unlockAccount(curveregOwner);
+
+    var debugreg = await DebugRegistry.new();
+    var debugtoken = await debugreg.token();
+    await curvereg.set_address(4,debugreg.address,{from:curveregOwner,gasPrice:0});
+    console.log("set new reg address, token: " +debugtoken);
+
+    await booster.setFeeInfo({from:multisig,gasPrice:0});
+    console.log("setFeeInfo() called");
+
+    await staker.addRewards();
+    console.log("addRewards()");
+
+    var rewardCount = await staker.rewardLength();
+    for(var i = 0; i < rewardCount; i++){
+      var rInfo = await staker.rewards(i);
+      console.log("rewards " +i +": " +JSON.stringify(rInfo));
+    }
+
+
+    await staker.setRewardGroup(debugtoken, 1,{from:multisig,gasPrice:0});
+    console.log("\n>>set reward group\n");
+
+    for(var i = 0; i < rewardCount; i++){
+      var rInfo = await staker.rewards(i);
+      console.log("rewards " +i +": " +JSON.stringify(rInfo));
+    }
 
     //reclaim
     console.log(">>> reclaim check <<<");
