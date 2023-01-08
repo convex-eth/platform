@@ -22,13 +22,32 @@ const ConvexStakingWrapperFrax = artifacts.require("ConvexStakingWrapperFrax");
 const ConvexStakingWrapperFraxLend = artifacts.require("ConvexStakingWrapperFraxLend");
 
 
-const unlockAccount = async (address) => {
+// const unlockAccount = async (address) => {
+//   return new Promise((resolve, reject) => {
+//     web3.currentProvider.send(
+//       {
+//         jsonrpc: "2.0",
+//         method: "evm_unlockUnknownAccount",
+//         params: [address],
+//         id: new Date().getTime(),
+//       },
+//       (err, result) => {
+//         if (err) {
+//           return reject(err);
+//         }
+//         return resolve(result);
+//       }
+//     );
+//   });
+// };
+
+const addAccount = async (address) => {
   return new Promise((resolve, reject) => {
     web3.currentProvider.send(
       {
         jsonrpc: "2.0",
-        method: "evm_unlockUnknownAccount",
-        params: [address],
+        method: "evm_addAccount",
+        params: [address, "passphrase"],
         id: new Date().getTime(),
       },
       (err, result) => {
@@ -39,6 +58,73 @@ const unlockAccount = async (address) => {
       }
     );
   });
+};
+
+const unlockAccount = async (address) => {
+  await addAccount(address);
+  return new Promise((resolve, reject) => {
+    web3.currentProvider.send(
+      {
+        jsonrpc: "2.0",
+        method: "personal_unlockAccount",
+        params: [address, "passphrase"],
+        id: new Date().getTime(),
+      },
+      (err, result) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve(result);
+      }
+    );
+  });
+};
+
+const send = payload => {
+  if (!payload.jsonrpc) payload.jsonrpc = '2.0';
+  if (!payload.id) payload.id = new Date().getTime();
+
+  return new Promise((resolve, reject) => {
+    web3.currentProvider.send(payload, (error, result) => {
+      if (error) return reject(error);
+
+      return resolve(result);
+    });
+  });
+};
+
+/**
+ *  Mines a single block in Ganache (evm_mine is non-standard)
+ */
+const mineBlock = () => send({ method: 'evm_mine' });
+
+/**
+ *  Gets the time of the last block.
+ */
+const currentTime = async () => {
+  const { timestamp } = await web3.eth.getBlock('latest');
+  return timestamp;
+};
+
+/**
+ *  Increases the time in the EVM.
+ *  @param seconds Number of seconds to increase the time by
+ */
+const fastForward = async seconds => {
+  // It's handy to be able to be able to pass big numbers in as we can just
+  // query them from the contract, then send them back. If not changed to
+  // a number, this causes much larger fast forwards than expected without error.
+  if (BN.isBN(seconds)) seconds = seconds.toNumber();
+
+  // And same with strings.
+  if (typeof seconds === 'string') seconds = parseFloat(seconds);
+
+  await send({
+    method: 'evm_increaseTime',
+    params: [seconds],
+  });
+
+  await mineBlock();
 };
 
 
@@ -92,6 +178,7 @@ contract("Deploy stake wrapper", async accounts => {
     
     const deployFraxLendPool = async (poolId) => {
       console.log("\n\nDeploy Fraxlend pool " +poolId +"\n");
+      console.log("using implementation: " +contractList.system.masterFraxLend);
       let pfactory = await ProxyFactory.at(contractList.system.proxyFactory);
       let clonec = await pfactory.clone.call(contractList.system.masterFraxLend,{from:deployer});
       console.log("wrapper: " +clonec);
@@ -125,6 +212,7 @@ contract("Deploy stake wrapper", async accounts => {
 
     const deployPool = async (poolId) => {
       console.log("\n\nDeploy pool " +poolId +"\n");
+      console.log("using implementation: " +contractList.system.masterFraxWrapper);
       let pfactory = await ProxyFactory.at(contractList.system.proxyFactory);
       let clonec = await pfactory.clone.call(contractList.system.masterFraxWrapper,{from:deployer});
       console.log("wrapper: " +clonec);
@@ -170,6 +258,7 @@ contract("Deploy stake wrapper", async accounts => {
     // await deployPool(128);//frxeth
     // await deployPool(125);//rsr
     // await deployPool(129);//xai
+    // await deployPool(131);//sdt
 
 
     // await deployFraxLendPool(100);//fraxbp
