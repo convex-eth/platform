@@ -51,7 +51,8 @@
         "rescueToken": "0xB15fFb543211b558D40160811e5DcBcd7d5aaac9",
         "vlcvxExtraRewardsOLD": "0xDecc7d761496d30F30b92Bdf764fb8803c79360D",
         "vlcvxExtraRewards": "0x9B622f2c40b80EF5efb14c2B2239511FfBFaB702",
-        "masterFraxWrapper": "0xb410d27baa290c5d54ecE34913EAFB687AA2CB08"
+        "masterFraxWrapper": "0xb410d27baa290c5d54ecE34913EAFB687AA2CB08",
+        "masterFraxLend": "0xA82bEBC607Cd258C66A6D5006A19401EaFb786A4"
     },
     "curve":{
         "registry":"0x0000000022D53366457F9d5E68Ec105046FC4383",
@@ -1076,6 +1077,12 @@
         {
             "token": "0x4Fc2A279fFDdDE98cB154F04375E69205156b987",
             "name": "stk-cvxcrv"
+        }
+    ],
+    "fraxlend":[
+        {
+            "token": "0xA82bEBC607Cd258C66A6D5006A19401EaFb786A4",
+            "name": "tricrypto2"
         }
     ]
 }
