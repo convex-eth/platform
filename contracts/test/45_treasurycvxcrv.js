@@ -212,6 +212,10 @@ contract("Test swapping/stakign and other actions for treasury", async accounts 
     await crv.balanceOf(swapper.address).then(a=>console.log("swap bal: " +a));
 
 
+    var crvApprove = crv.contract.methods.approve(swapper.address,"115792089237316195423570985008687907853269984665640564039457584007913129639935").encodeABI();
+    var cvxCrvApprove = cvxCrv.contract.methods.approve(swapper.address,"115792089237316195423570985008687907853269984665640564039457584007913129639935").encodeABI();
+    console.log("crv calldata: " +crvApprove);
+    console.log("cvxcrv calldata: " +cvxCrvApprove);
     await crv.approve(swapper.address,web3.utils.toWei("100000000000.0", "ether"),{from:treasury,gasPrice:0});
     await cvxCrv.approve(swapper.address,web3.utils.toWei("100000000000.0", "ether"),{from:treasury,gasPrice:0});
     await staker.approve(swapper.address,web3.utils.toWei("100000000000.0", "ether"),{from:treasury,gasPrice:0});

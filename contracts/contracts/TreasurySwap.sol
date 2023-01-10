@@ -45,10 +45,11 @@ contract TreasurySwap{
     address public immutable owner;
 
 
-    mapping(address => bool) operators;
+    mapping(address => bool) public operators;
     address public stakedCvxcrv;
     uint256 public slippage;
 
+    event OperatorSet(address indexed _op, bool _active);
 
     constructor() public {
         owner = address(0xa3C5A1e09150B75ff251c1a7815A07182c3de2FB);
@@ -80,6 +81,7 @@ contract TreasurySwap{
 
     function setOperator(address _op, bool _active) external onlyOwner{
         operators[_op] = _active;
+        emit OperatorSet(_op, _active);
     }
 
     function setSlippageAllowance(uint256 _slip) external onlyOwner{
