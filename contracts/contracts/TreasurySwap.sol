@@ -125,8 +125,8 @@ contract TreasurySwap{
     function swap(uint256 _amount, uint256 _minAmountOut) external onlyOperator{
         require(_minAmountOut > 0, "!min_out");
 
+        //pull
         IERC20(crv).safeTransferFrom(treasury,address(this),_amount);
-
         
         //swap and return to treasury
         ICvxCrvExchange(exchange).exchange(0,1,_amount,_minAmountOut, treasury);
@@ -135,16 +135,26 @@ contract TreasurySwap{
     function stake(uint256 _amount) external onlyOperator{
         require(stakedCvxcrv != address(0),"!stkAddress");
 
+        //pull
         IERC20(cvxCrv).safeTransferFrom(treasury,address(this),_amount);
 
         //stake for treasury
         IRewardStaking(stakedCvxcrv).stakeFor(treasury, IERC20(cvxCrv).balanceOf(address(this)));
     }
 
+    function burn(uint256 _amount) external onlyOperator{
+        //pull
+        IERC20(cvxCrv).safeTransferFrom(treasury,address(this),_amount);
+
+        //burn
+        IRewardStaking(cvxCrvRewards).stakeFor(stakedCvxcrv, IERC20(cvxCrv).balanceOf(address(this)));
+    }
+
     function swapAndStake(uint256 _amount, uint256 _minAmountOut) external onlyOperator{
         require(_minAmountOut > 0, "!min_out");
         require(stakedCvxcrv != address(0),"!stkAddress");
 
+        //pull
         IERC20(crv).safeTransferFrom(treasury,address(this),_amount);
 
         //swap
@@ -157,6 +167,7 @@ contract TreasurySwap{
         require(_minAmountOut > 0, "!min_out");
         require(stakedCvxcrv != address(0),"!stkAddress");
 
+        //pull
         IERC20(crv).safeTransferFrom(treasury,address(this),_amount);
 
         //swap
@@ -181,7 +192,7 @@ contract TreasurySwap{
 
     function  unstakeAndBurn(uint256 _amount) external onlyOperator{
         require(stakedCvxcrv != address(0),"!stkAddress");
-        
+
         //pull staked tokens
         IERC20(stakedCvxcrv).safeTransferFrom(treasury,address(this),_amount);
         //unstake

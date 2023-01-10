@@ -272,6 +272,8 @@ contract("Test swapping/stakign and other actions for treasury", async accounts 
 
     await crv.balanceOf(treasury).then(a=>console.log("treasury crv: " +a));
     await cvxCrv.balanceOf(treasury).then(a=>console.log("treasury cvxCrv: " +a));
+    await staker.totalSupply().then(a=>console.log("wrapper totalSupply: " +a));
+    await vanillacvxCrv.balanceOf(staker.address).then(a=>console.log("wrapper staked: " +a));
 
     var amount = web3.utils.toWei("100000.0", "ether");
     console.log("swap and burn amount: " +amount);
@@ -286,6 +288,25 @@ contract("Test swapping/stakign and other actions for treasury", async accounts 
     await vanillacvxCrv.balanceOf(staker.address).then(a=>console.log("wrapper staked: " +a));
     
     console.log("\n\n >>> swapAndBurn END>>>>");
+
+    console.log("\n\n >>> simple burn >>>>\n");
+
+    await crv.balanceOf(treasury).then(a=>console.log("treasury crv: " +a));
+    await cvxCrv.balanceOf(treasury).then(a=>console.log("treasury cvxCrv: " +a));
+    await staker.totalSupply().then(a=>console.log("wrapper totalSupply: " +a));
+    await vanillacvxCrv.balanceOf(staker.address).then(a=>console.log("wrapper staked: " +a));
+
+    var amount = await cvxCrv.balanceOf(treasury);
+    console.log("simple burn amount: " +amount);
+    await swapper.burn(amount,{from:deployer});
+
+    await crv.balanceOf(treasury).then(a=>console.log("treasury crv: " +a));
+    await cvxCrv.balanceOf(treasury).then(a=>console.log("treasury cvxCrv: " +a));
+    await staker.balanceOf(treasury).then(a=>console.log("treasury staked: " +a));
+    await staker.totalSupply().then(a=>console.log("wrapper totalSupply: " +a));
+    await vanillacvxCrv.balanceOf(staker.address).then(a=>console.log("wrapper staked: " +a));
+    
+    console.log("\n\n >>> simple burn END>>>>");
 
     console.log("\n\n >>> unstake >>>>\n");
     
