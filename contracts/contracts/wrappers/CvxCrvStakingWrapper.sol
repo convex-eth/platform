@@ -4,7 +4,6 @@ pragma experimental ABIEncoderV2;
 
 import "../interfaces/IRewardStaking.sol";
 import "../interfaces/IConvexDeposits.sol";
-import "../interfaces/IBooster.sol";
 import "../interfaces/IRewardHook.sol";
 import '@openzeppelin/contracts/math/SafeMath.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
@@ -13,7 +12,7 @@ import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 
-//Wrapper for staked cvxcrv that allows other incentives to be added
+//Wrapper for staked cvxcrv that allows other incentives and user reward weighting
 
 //Based on Curve.fi's gauge wrapper implementations at https://github.com/curvefi/curve-dao-contracts/tree/master/contracts/gauges/wrappers
 contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
@@ -44,8 +43,8 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
     address public constant cvxCrv = address(0x62B9c7356A2Dc64a1969e19C23e4f579F9810Aa7);
     address public constant threeCrv = address(0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490);
     address public constant treasury = address(0x1389388d01708118b497f59521f6943Be2541bb7);
-    address public constant threeCrvRewards = address(0x7091dbb7fcbA54569eF1387Ac89Eb2a5C9F6d2EA);
     uint256 private constant WEIGHT_PRECISION = 10000;
+    uint256 private constant MAX_REWARD_COUNT = 10;
 
     //rewards
     RewardType[] public rewards;
@@ -56,7 +55,6 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
 
     //management
     bool public isShutdown;
-    bool public isInit;
     address public owner;
 
     event Deposited(address indexed _user, address indexed _account, uint256 _amount, bool _isCrv);
@@ -64,6 +62,9 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event RewardInvalidated(address _rewardToken);
     event RewardGroupSet(address _rewardToken, uint256 _rewardGroup);
+    event HookSet(address _rewardToken);
+    event IsShutdown();
+    event RewardPaid(address indexed _user, address indexed _token, uint256 _amount, address _receiver);
 
     constructor() public
         ERC20(
@@ -99,11 +100,12 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
         owner = address(0);
     }
 
-    function shutdown() external onlyOwner {
+    function shutdown() external onlyOwner nonReentrant{
         isShutdown = true;
+        emit IsShutdown();
     }
 
-    function reclaim() external onlyOwner {
+    function reclaim() external onlyOwner nonReentrant{
         require(isShutdown,"!shutdown");
 
         //reclaim extra staked cvxcrv tokens and return to treasury if this wrapper is shutdown
@@ -120,7 +122,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
         IERC20(cvxCrv).safeApprove(cvxCrvStaking, uint256(-1));
     }
 
-    function addRewards() public {
+    function addRewards() internal {
 
         if (rewards.length == 0) {
             rewards.push(
@@ -156,31 +158,20 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
             IERC20(cvx).transfer(address(this),0);
             //send to self to warmup state
             IERC20(threeCrv).transfer(address(this),0);
-        }
 
-        uint256 extraCount = IRewardStaking(cvxCrvStaking).extraRewardsLength();
-        for (uint256 i = 0; i < extraCount; i++) {
-            address extraPool = IRewardStaking(cvxCrvStaking).extraRewards(i);
-            address extraToken = IRewardStaking(extraPool).rewardToken();
-            if(registeredRewards[extraToken] == 0){
-                rewards.push(
-                    RewardType({
-                        reward_token: extraToken,
-                        reward_integral: 0,
-                        reward_remaining: 0,
-                        reward_group: 0
-                    })
-                );
-                registeredRewards[extraToken] = rewards.length; //mark registered at index+1
-            }
+            emit RewardGroupSet(crv, 0);
+            emit RewardGroupSet(cvx, 0);
+            emit RewardGroupSet(threeCrv, 1);
         }
     }
 
-    function addTokenReward(address _token, uint256 _rewardGroup) public onlyOwner {
-        require(_token != address(0),"invalid address");
+    function addTokenReward(address _token, uint256 _rewardGroup) public onlyOwner nonReentrant{
+        require(_token != address(0) && _token != cvxCrvStaking && _token != address(this) && _token != cvxCrv,"invalid address");
 
         //check if already registered
         if(registeredRewards[_token] == 0){
+            //limit reward count
+            require(rewards.length < MAX_REWARD_COUNT, "max rewards");
             //new token, add token to list
             rewards.push(
                 RewardType({
@@ -241,6 +232,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
 
     function setHook(address _hook) external onlyOwner{
         rewardHook = _hook;
+        emit HookSet(_hook);
     }
 
     function rewardLength() external view returns(uint256) {
@@ -302,6 +294,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
                         //if claiming only the 0 index will update so 1 index can hold forwarding info
                         //guaranteed to have an address in u+1 so no need to check
                         IERC20(reward.reward_token).safeTransfer(_accounts[u+1], receiveable);
+                        emit RewardPaid(_accounts[u], reward.reward_token, receiveable, _accounts[u+1]);
                         bal = bal.sub(receiveable);
                     }
                 }else{
@@ -312,7 +305,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
         }
 
         //update remaining reward here since balance could have changed if claiming
-        if(bal != reward.reward_remaining){
+        if(_supply > 0 && bal != reward.reward_remaining){
             reward.reward_remaining = uint128(bal);
         }
     }
@@ -507,18 +500,20 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
     function _beforeTokenTransfer(address _from, address _to, uint256 _amount) internal override {
         _checkpoint([_from, _to]);
 
-        //adjust supply weight assuming post transfer balances
-        uint256 sweight = supplyWeight;
-        if(_from != address(0)){
-            sweight -= balanceOf(_from) * userRewardWeight[_from] / WEIGHT_PRECISION;
-            sweight += balanceOf(_from).sub(_amount) * userRewardWeight[_from] / WEIGHT_PRECISION;
-        }
-        if(_to != address(0)){
-            sweight -= balanceOf(_to) * userRewardWeight[_to] / WEIGHT_PRECISION;
-            sweight += balanceOf(_to).add(_amount) * userRewardWeight[_to] / WEIGHT_PRECISION;
-        }
+        if(_from != _to){
+            //adjust supply weight assuming post transfer balances
+            uint256 sweight = supplyWeight;
+            if(_from != address(0)){
+                sweight -= balanceOf(_from) * userRewardWeight[_from] / WEIGHT_PRECISION;
+                sweight += balanceOf(_from).sub(_amount) * userRewardWeight[_from] / WEIGHT_PRECISION;
+            }
+            if(_to != address(0)){
+                sweight -= balanceOf(_to) * userRewardWeight[_to] / WEIGHT_PRECISION;
+                sweight += balanceOf(_to).add(_amount) * userRewardWeight[_to] / WEIGHT_PRECISION;
+            }
 
-        //write new supply weight
-        supplyWeight = sweight;
+            //write new supply weight
+            supplyWeight = sweight;
+        }
     }
 }
