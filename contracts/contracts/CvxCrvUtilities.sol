@@ -46,25 +46,22 @@ contract CvxCrvUtilities{
         // multiply reward rates by wrapper supply and wrapped staked balance
         uint256 wrappedRatio = 1e18;
         if(wrappedStakedBalance > 0){
-            wrapperSupply * 1e18 / wrappedStakedBalance;
+            wrappedRatio = wrapperSupply * 1e18 / wrappedStakedBalance;
         }
 
         //get reward count
         uint256 extraCount = IRewardStaking(cvxCrvStaking).extraRewardsLength();
 
         //add 1 for cvx
-        tokens = new address[](extraCount + 1);
-        rates = new uint256[](extraCount + 1);
-        groups = new uint256[](extraCount + 1);
+        tokens = new address[](extraCount + 2);
+        rates = new uint256[](extraCount + 2);
+        groups = new uint256[](extraCount + 2);
 
-        //loop through all vanilla staked cvxcrv reward contracts
-        for (uint256 i = 0; i < extraCount; i++) {
-            address extraPool = IRewardStaking(cvxCrvStaking).extraRewards(i);
-            address extraToken = IRewardStaking(extraPool).rewardToken();
-            uint256 rate = IRewardStaking(extraPool).rewardRate();
 
-            uint256 rindex = ICvxCrvStaking(stkcvxcrv).registeredRewards(extraToken);
-            (,uint8 group,,) = ICvxCrvStaking(stkcvxcrv).rewards(rindex);
+        //first get rates from base (crv)
+        {
+            uint256 rate = IRewardStaking(cvxCrvStaking).rewardRate();
+            (,uint8 group,,) = ICvxCrvStaking(stkcvxcrv).rewards(0); //always first slot
 
             uint256 groupSupply = ICvxCrvStaking(stkcvxcrv).rewardSupply(group);
 
@@ -81,32 +78,64 @@ contract CvxCrvUtilities{
                 rate = rate * wrapperSupply / groupSupply;
             }
 
-            tokens[i] = extraToken;
-            rates[i] = rate;
-            groups[i] = group;
+            tokens[0] = crv;
+            rates[0] = rate;
+            groups[0] = group;
 
-            //add minted cvx for crv
-            if(extraToken == crv){
-                //put minted cvx in last slot (there could be two cvx slots, one for direct rewards and one for mints)
-                tokens[extraCount] = cvx;
-                rates[extraCount] = ICvxMining(cvxMining).ConvertCrvToCvx(rate);
+            //put minted cvx in last slot (there could be two cvx slots, one for direct rewards and one for mints)
+            tokens[tokens.length-1] = cvx;
+            rates[tokens.length-1] = ICvxMining(cvxMining).ConvertCrvToCvx(rate);
+        }
+
+        //loop through all vanilla staked cvxcrv reward contracts
+        for (uint256 i = 0; i < extraCount; i++) {
+            address extraPool = IRewardStaking(cvxCrvStaking).extraRewards(i);
+            address extraToken = IRewardStaking(extraPool).rewardToken();
+            uint256 rate = IRewardStaking(extraPool).rewardRate();
+
+            uint256 rindex = ICvxCrvStaking(stkcvxcrv).registeredRewards(extraToken);
+            (,uint8 group,,) = ICvxCrvStaking(stkcvxcrv).rewards(rindex-1);
+
+            uint256 groupSupply = ICvxCrvStaking(stkcvxcrv).rewardSupply(group);
+
+            //rate per 1 staked cvxcrv
+            if(stakedSupply > 0){
+                rate = rate * 1e18 / stakedSupply;
             }
+
+            //rate per 1 wrapped staked cvxcrv
+            rate = rate * wrappedRatio / 1e18;
+
+            //rate per 1 weighted supply of given reward group
+            if(groupSupply > 0){
+                rate = rate * wrapperSupply / groupSupply;
+            }
+
+            tokens[i+1] = extraToken;
+            rates[i+1] = rate;
+            groups[i+1] = group;
         }
     }
 
     //get reward rates for a specific account taking into account their personal weighting
     function accountRewardRates(address _account) public view returns (address[] memory tokens, uint256[] memory rates, uint256[] memory groups) {
-        (address[] memory tokens, uint256[] memory rates, uint256[] memory groups) = mainRewardRates();
+        (address[] memory t, uint256[] memory r, uint256[] memory g) = mainRewardRates();
+
+        tokens = new address[](t.length);
+        rates = new uint256[](t.length);
+        groups = new uint256[](t.length);
         uint256 userWeight = ICvxCrvStaking(stkcvxcrv).userRewardWeight(_account);
 
         for(uint256 i = 0; i < tokens.length; i++){
-            uint256 rindex = ICvxCrvStaking(stkcvxcrv).registeredRewards(tokens[i]);
-            (,uint8 group,,) = ICvxCrvStaking(stkcvxcrv).rewards(rindex);
+            // uint256 rindex = ICvxCrvStaking(stkcvxcrv).registeredRewards(t[i]);
+            // (,uint8 group,,) = ICvxCrvStaking(stkcvxcrv).rewards(rindex-1);
+            tokens[i] = t[i];
+            groups[i] = g[i];
 
-            if(group == 0){
-                rates[i] = rates[i] * (WEIGHT_PRECISION - userWeight) / WEIGHT_PRECISION;
+            if(g[i] == 0){
+                rates[i] = r[i] * (WEIGHT_PRECISION - userWeight) / WEIGHT_PRECISION;
             }else{
-                rates[i] = rates[i] * userWeight / WEIGHT_PRECISION;
+                rates[i] = r[i] * userWeight / WEIGHT_PRECISION;
             }
         }
     }

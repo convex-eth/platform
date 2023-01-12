@@ -17,6 +17,7 @@ const IUniswapV2Router01 = artifacts.require("IUniswapV2Router01");
 const CvxMining = artifacts.require("CvxMining");
 const ICurveRegistry = artifacts.require("ICurveRegistry");
 const DebugRegistry = artifacts.require("DebugRegistry");
+const CvxCrvUtilities = artifacts.require("CvxCrvUtilities");
 
 // const unlockAccount = async (address) => {
 //   return new Promise((resolve, reject) => {
@@ -183,6 +184,9 @@ contract("Test cvxcrv stake wrapper", async accounts => {
 
     let staker = await CvxCrvStakingWrapper.new({from:deployer});
     console.log("staker token: " +staker.address);
+    let util = await CvxCrvUtilities.new(staker.address,{from:deployer});
+    console.log("util: " +util.address);
+    await util.mainRewardRates().then(a=>console.log("mainRewardRates: " +JSON.stringify(a) ))
 
     await staker.name().then(a=>console.log("name: " +a));
     await staker.symbol().then(a=>console.log("symbol: " +a));
@@ -229,11 +233,18 @@ contract("Test cvxcrv stake wrapper", async accounts => {
     await staker.rewardSupply(1).then(a=>console.log("rewardSupply(1): " +a))
 
     
+    await util.mainRewardRates().then(a=>console.log("mainRewardRates: " +JSON.stringify(a)))
+    await util.accountRewardRates(userA).then(a=>console.log("accountRewardRates: " +JSON.stringify(a)))
+    await util.accountRewardRates(userB).then(a=>console.log("accountRewardRates: " +JSON.stringify(a)))
 
     await staker.earned.call(userA).then(a=>console.log("user a earned: " +a));
     await staker.earned.call(userB).then(a=>console.log("user b earned: " +a));
 
     await advanceTime(day/10);
+
+    await util.mainRewardRates().then(a=>console.log("mainRewardRates: " +JSON.stringify(a)))
+    await util.accountRewardRates(userA).then(a=>console.log("accountRewardRates: " +JSON.stringify(a)))
+    await util.accountRewardRates(userB).then(a=>console.log("accountRewardRates: " +JSON.stringify(a)))
 
     console.log("======");
     await staker.earned.call(userA).then(a=>console.log("user a earned: " +a ));
