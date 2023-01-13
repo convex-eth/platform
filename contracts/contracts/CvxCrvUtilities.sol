@@ -30,6 +30,11 @@ contract CvxCrvUtilities{
     }
 
 
+    function apr(uint256 _rate, uint256 _priceOfReward, uint256 _priceOfDeposit) external view returns(uint256 _apr){
+        return _rate * 365 days * _priceOfReward / _priceOfDeposit; 
+    }
+
+
     //get reward rates for each token based on weighted reward group supply and wrapper's boosted cvxcrv rates
     //%return = rate * timeFrame * price of reward / price of LP / 1e18
     function mainRewardRates() public view returns (address[] memory tokens, uint256[] memory rates, uint256[] memory groups) {
@@ -46,13 +51,17 @@ contract CvxCrvUtilities{
         // multiply reward rates by wrapper supply and wrapped staked balance
         uint256 wrappedRatio = 1e18;
         if(wrappedStakedBalance > 0){
-            wrappedRatio = wrapperSupply * 1e18 / wrappedStakedBalance;
+            if(wrapperSupply > 0){
+                wrappedRatio = wrappedStakedBalance * 1e18 / wrapperSupply;
+            }else{
+                wrappedRatio = 1000e18; //inf rate, just max out at 1000x
+            }
         }
 
         //get reward count
         uint256 extraCount = IRewardStaking(cvxCrvStaking).extraRewardsLength();
 
-        //add 1 for cvx
+        //add 2 for crv + minted cvx
         tokens = new address[](extraCount + 2);
         rates = new uint256[](extraCount + 2);
         groups = new uint256[](extraCount + 2);
@@ -76,6 +85,8 @@ contract CvxCrvUtilities{
             //rate per 1 weighted supply of given reward group
             if(groupSupply > 0){
                 rate = rate * wrapperSupply / groupSupply;
+            }else{
+                rate = rate * 1000; //no supply? apr inf so display 1000x
             }
 
             tokens[0] = crv;
@@ -83,8 +94,10 @@ contract CvxCrvUtilities{
             groups[0] = group;
 
             //put minted cvx in last slot (there could be two cvx slots, one for direct rewards and one for mints)
-            tokens[tokens.length-1] = cvx;
-            rates[tokens.length-1] = ICvxMining(cvxMining).ConvertCrvToCvx(rate);
+            tokens[1] = cvx;
+            rates[1] = ICvxMining(cvxMining).ConvertCrvToCvx(rate);
+            (, uint8 cvxgroup,,) = ICvxCrvStaking(stkcvxcrv).rewards(1); //always second slot
+            groups[1] = cvxgroup;
         }
 
         //loop through all vanilla staked cvxcrv reward contracts
@@ -109,11 +122,13 @@ contract CvxCrvUtilities{
             //rate per 1 weighted supply of given reward group
             if(groupSupply > 0){
                 rate = rate * wrapperSupply / groupSupply;
+            }else{
+                rate = rate * 1000; //no supply? apr inf so display 1000x
             }
 
-            tokens[i+1] = extraToken;
-            rates[i+1] = rate;
-            groups[i+1] = group;
+            tokens[i+2] = extraToken;
+            rates[i+2] = rate;
+            groups[i+2] = group;
         }
     }
 
@@ -125,12 +140,17 @@ contract CvxCrvUtilities{
         rates = new uint256[](t.length);
         groups = new uint256[](t.length);
         uint256 userWeight = ICvxCrvStaking(stkcvxcrv).userRewardWeight(_account);
+        uint256 userbalance = ICvxCrvStaking(stkcvxcrv).balanceOf(_account);
 
         for(uint256 i = 0; i < tokens.length; i++){
             // uint256 rindex = ICvxCrvStaking(stkcvxcrv).registeredRewards(t[i]);
             // (,uint8 group,,) = ICvxCrvStaking(stkcvxcrv).rewards(rindex-1);
             tokens[i] = t[i];
             groups[i] = g[i];
+            if(userbalance == 0){
+                rates[i] = 0;
+                continue;
+            }
 
             if(g[i] == 0){
                 rates[i] = r[i] * (WEIGHT_PRECISION - userWeight) / WEIGHT_PRECISION;
