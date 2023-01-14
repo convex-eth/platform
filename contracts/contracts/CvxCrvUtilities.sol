@@ -67,7 +67,7 @@ contract CvxCrvUtilities{
         groups = new uint256[](extraCount + 2);
 
 
-        //first get rates from base (crv)
+        //first get rates from base (crv/cvx)
         {
             uint256 rate = IRewardStaking(cvxCrvStaking).rewardRate();
             (,uint8 group,,) = ICvxCrvStaking(stkcvxcrv).rewards(0); //always first slot
@@ -89,11 +89,12 @@ contract CvxCrvUtilities{
                 rate = rate * 1000; //no supply? apr inf so display 1000x
             }
 
+            //crv always first slow
             tokens[0] = crv;
             rates[0] = rate;
             groups[0] = group;
 
-            //put minted cvx in last slot (there could be two cvx slots, one for direct rewards and one for mints)
+            //cvx(minted) always second slot
             tokens[1] = cvx;
             rates[1] = ICvxMining(cvxMining).ConvertCrvToCvx(rate);
             (, uint8 cvxgroup,,) = ICvxCrvStaking(stkcvxcrv).rewards(1); //always second slot
@@ -104,9 +105,12 @@ contract CvxCrvUtilities{
         for (uint256 i = 0; i < extraCount; i++) {
             address extraPool = IRewardStaking(cvxCrvStaking).extraRewards(i);
             address extraToken = IRewardStaking(extraPool).rewardToken();
-            uint256 rate = IRewardStaking(extraPool).rewardRate();
+            tokens[i+2] = extraToken;
 
+            uint256 rate = IRewardStaking(extraPool).rewardRate();
+            
             uint256 rindex = ICvxCrvStaking(stkcvxcrv).registeredRewards(extraToken);
+            if(rindex == 0) continue;
             (,uint8 group,,) = ICvxCrvStaking(stkcvxcrv).rewards(rindex-1);
 
             uint256 groupSupply = ICvxCrvStaking(stkcvxcrv).rewardSupply(group);
@@ -125,8 +129,7 @@ contract CvxCrvUtilities{
             }else{
                 rate = rate * 1000; //no supply? apr inf so display 1000x
             }
-
-            tokens[i+2] = extraToken;
+            
             rates[i+2] = rate;
             groups[i+2] = group;
         }
@@ -143,8 +146,69 @@ contract CvxCrvUtilities{
         uint256 userbalance = ICvxCrvStaking(stkcvxcrv).balanceOf(_account);
 
         for(uint256 i = 0; i < tokens.length; i++){
-            // uint256 rindex = ICvxCrvStaking(stkcvxcrv).registeredRewards(t[i]);
-            // (,uint8 group,,) = ICvxCrvStaking(stkcvxcrv).rewards(rindex-1);
+            tokens[i] = t[i];
+            groups[i] = g[i];
+            if(userbalance == 0){
+                rates[i] = 0;
+                continue;
+            }
+
+            if(g[i] == 0){
+                rates[i] = r[i] * (WEIGHT_PRECISION - userWeight) / WEIGHT_PRECISION;
+            }else{
+                rates[i] = r[i] * userWeight / WEIGHT_PRECISION;
+            }
+        }
+    }
+
+    
+
+    function extraRewardRates() public view returns(address[] memory tokens, uint256[] memory rates, uint256[] memory groups){
+        //get all external contracts
+        address[] memory rewardContracts = externalRewardContracts();
+        //get wrapper supply
+        uint256 wrapperSupply = IStakingWrapper(stkcvxcrv).totalSupply();
+
+        tokens = new address[](rewardContracts.length);
+        rates = new uint256[](rewardContracts.length);
+        groups = new uint256[](rewardContracts.length);
+
+        for(uint256 i = 0; i < rewardContracts.length; i++){
+            IExtraRewardPool.PoolType pt = IExtraRewardPool(rewardContracts[i]).poolType();
+            if(pt == IExtraRewardPool.PoolType.Single){
+                (address t, uint256 r) = singleRewardRate(rewardContracts[i]);
+
+                tokens[i] = t;
+
+                uint256 rindex = ICvxCrvStaking(stkcvxcrv).registeredRewards(t);
+                if(rindex == 0) continue;
+                (,uint8 group,,) = ICvxCrvStaking(stkcvxcrv).rewards(rindex-1);
+
+                uint256 groupSupply = ICvxCrvStaking(stkcvxcrv).rewardSupply(group);
+
+                //rate per 1 weighted supply of given reward group
+                if(groupSupply > 0){
+                    r = r * wrapperSupply / groupSupply;
+                }else{
+                    r = r * 1000; //no supply? apr inf so display 1000x
+                }
+                
+                rates[i] = r;
+                groups[i] = group;
+            }
+        }
+    }
+
+    function accountExtraRewardRates(address _account) public view returns (address[] memory tokens, uint256[] memory rates, uint256[] memory groups) {
+        (address[] memory t, uint256[] memory r, uint256[] memory g) = extraRewardRates();
+
+        tokens = new address[](t.length);
+        rates = new uint256[](t.length);
+        groups = new uint256[](t.length);
+        uint256 userWeight = ICvxCrvStaking(stkcvxcrv).userRewardWeight(_account);
+        uint256 userbalance = ICvxCrvStaking(stkcvxcrv).balanceOf(_account);
+
+        for(uint256 i = 0; i < tokens.length; i++){
             tokens[i] = t[i];
             groups[i] = g[i];
             if(userbalance == 0){
@@ -172,22 +236,6 @@ contract CvxCrvUtilities{
         }
     }
 
-    function aggregateExtraRewardRates() external view returns(address[] memory tokens, uint256[] memory rates){
-        address[] memory rewardContracts = externalRewardContracts();
-
-        tokens = new address[](rewardContracts.length);
-        rates = new uint256[](rewardContracts.length);
-
-        for(uint256 i = 0; i < rewardContracts.length; i++){
-            IExtraRewardPool.PoolType pt = IExtraRewardPool(rewardContracts[i]).poolType();
-            if(pt == IExtraRewardPool.PoolType.Single){
-                (address t, uint256 r) = singleRewardRate(rewardContracts[i]);
-                tokens[i] = t;
-                rates[i] = r;
-            }
-        }
-    }
-
     function singleRewardRate(address _rewardContract) public view returns (address token, uint256 rate) {
         
         //set token
@@ -205,7 +253,7 @@ contract CvxCrvUtilities{
         
 
         if(totalSupply > 0){
-            //get rate for whole pool (vs other pools)
+            //get rate for cvxcrv wrapper
             rate = globalRate * IExtraRewardPool(_rewardContract).balanceOf(stkcvxcrv) / totalSupply;
 
             //get pool total supply

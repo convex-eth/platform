@@ -12,6 +12,11 @@ const BaseRewardPool = artifacts.require("BaseRewardPool");
 const CvxCrvStakingWrapper = artifacts.require("CvxCrvStakingWrapper");
 const IERC20 = artifacts.require("IERC20");
 const CvxCrvUtilities = artifacts.require("CvxCrvUtilities");
+const ChefRewardHook = artifacts.require("ChefRewardHook");
+const ChefToken = artifacts.require("ChefToken");
+const ConvexMasterChef = artifacts.require("ConvexMasterChef");
+const CvxDistribution = artifacts.require("CvxDistribution");
+const PoolRewardHook = artifacts.require("PoolRewardHook");
 
 
 // -- for old ganache
@@ -177,7 +182,173 @@ contract("deply cvxcrv stake wrapper for ui testing", async accounts => {
     await vanillacvxCrv.balanceOf(wrapper.address).then(a=>console.log("wrapper staked balance: " +a))
 
     
+    //hook up cvx emissions
+    
 
+    //create deposit token
+    var cheftoken = await ChefToken.new("CvxDistribution",{from:deployer});
+    console.log("chef token: " +cheftoken.address);
+    await cheftoken.create({from:deployer});
+    await cheftoken.name().then(a=>console.log("chef token name: " +a))
+
+    //add to chef
+    var chef = await ConvexMasterChef.at(contractList.system.chef);
+    var pid = await chef.poolLength();
+    await chef.add(1000,cheftoken.address,addressZero,true,{from:multisig,gasPrice:0});
+    console.log("added to chef at pid: " +pid);
+
+    //create distro
+    var cvxdistro = await CvxDistribution.new({from:deployer});
+    console.log("cvxdistro: " +cvxdistro.address);
+    await cvxdistro.setWeight(wrapper.address,10000,{from:multisig,gasPrice:0});
+    console.log("set cvxdistro weight for wrapper");
+
+    //create hook
+    var hook = await ChefRewardHook.new(cvxdistro.address, pid, cheftoken.address, {from:deployer});
+    console.log("chef hook: " +hook.address);
+    await cvxdistro.setChefHook(hook.address,{from:multisig,gasPrice:0});
+    console.log("cvxdistro hook set to chef hook");
+    await cheftoken.approve(hook.address,web3.utils.toWei("1000.0", "ether"),{from:deployer});
+    await hook.deposit({from:deployer});
+    console.log("chef deposited");
+
+    //create poolrewardhook
+    var poolhook = await PoolRewardHook.new({from:deployer});
+    console.log("pool hook: "+poolhook.address);
+    await poolhook.addPoolReward(wrapper.address, cvxdistro.address, {from:deployer});
+    console.log("pool hook added to wrapper")
+
+    //get cvx from somewhere
+    var cvxholder = "0xcf50b810e57ac33b91dcf525c6ddd9881b139332";
+    await unlockAccount(cvxholder);
+    await cvx.transfer(deployer,web3.utils.toWei("10000.0", "ether"),{from:cvxholder,gasPrice:0});
+    console.log("pulled cvx");
+    await cvx.approve(cvxdistro.address,web3.utils.toWei("10000.0", "ether"),{from:deployer});
+    await cvxdistro.donate(web3.utils.toWei("500.0", "ether"),{from:deployer});
+    console.log("donated cvx");
+    await cvxdistro.queueNewRewards({from:deployer});
+    console.log("cvx rewards queued");
+
+    //add hook
+    await wrapper.setHook(poolhook.address,{from:multisig,gasPrice:0});
+    console.log("hook set on cvxcrv wrapper");
+
+    console.log("deployment complete");
+    return;
+
+
+    
+    ////// local rate/apr testing ///////////
+
+    await crv.transfer(userB,web3.utils.toWei("300000.0", "ether"),{from:crvescrow,gasPrice:0});
+    await crv.transfer(userC,web3.utils.toWei("300000.0", "ether"),{from:crvescrow,gasPrice:0});
+    await crv.approve(wrapper.address,web3.utils.toWei("100000000.0", "ether"),{from:userA});
+    await crv.approve(crvDeposit.address,web3.utils.toWei("100000000.0", "ether"),{from:userA});
+    await cvxCrv.approve(wrapper.address,web3.utils.toWei("100000000.0", "ether"),{from:userA});
+    await crv.approve(wrapper.address,web3.utils.toWei("100000000.0", "ether"),{from:userB});
+    await crv.approve(crvDeposit.address,web3.utils.toWei("100000000.0", "ether"),{from:userB});
+    await cvxCrv.approve(wrapper.address,web3.utils.toWei("100000000.0", "ether"),{from:userB});
+    await crv.approve(wrapper.address,web3.utils.toWei("100000000.0", "ether"),{from:userC});
+    await crv.approve(crvDeposit.address,web3.utils.toWei("100000000.0", "ether"),{from:userC});
+    await cvxCrv.approve(wrapper.address,web3.utils.toWei("100000000.0", "ether"),{from:userC});
+
+    await wrapper.totalSupply().then(a=>console.log("wrapper supply: " +a));
+    await vanillacvxCrv.balanceOf(wrapper.address).then(a=>console.log("wrapped staked balance: " +a));
+
+    //todo: actually get price
+    const price = async (token) => {
+      if(token == crv.address){
+        return "809000000000000000"
+      }
+      if(token == cvxCrv.address){
+        return "720000000000000000"
+      }
+      if(token == cvx.address){
+        return "4010000000000000000"
+      }
+      if(token == threeCrv.address){
+        return "1020000000000000000"
+      }
+      return 0;
+    }
+    const displayApr = async (r) => {
+
+      var cvxcrvPrice = await price(cvxCrv.address);
+      for(var i = 0; i < r.rates.length; i++){
+        // console.log("rate " +i +": " +r.rates[i].toString());
+        console.log("rate " +i +": " +web3.utils.fromWei(r.rates[i].toString(), "ether"));
+        var p = await price(r.tokens[i]);
+        await util.apr(r.rates[i],p, cvxcrvPrice).then(a=>console.log("apr " +i +": " +web3.utils.fromWei(a.toString(), "ether")));
+      }
+    }
+
+    const displayAllRates = async (r) => {
+      var rates = await util.mainRewardRates();
+      console.log("--- global rates ---");
+      await displayApr(rates);
+      console.log("--- extra rates ---");
+      var extraRates = await util.extraRewardRates();
+      await displayApr(extraRates);
+      console.log("--- user main rates ---");
+      var userRates = await util.accountRewardRates(userA);
+      await displayApr(userRates);
+      console.log("--- user extra rates ---");
+      var userExtraRates = await util.accountExtraRewardRates(userA);
+      await displayApr(userExtraRates);
+      console.log("\n\n");
+    }
+    await displayAllRates();
+
+    await wrapper.setRewardWeight(5000,{from:userA});
+
+    await wrapper.deposit(web3.utils.toWei("100000.0", "ether"),userA,{from:userA});
+    console.log("deposit complete");
+
+    await wrapper.totalSupply().then(a=>console.log("wrapper supply: " +a));
+    await vanillacvxCrv.balanceOf(wrapper.address).then(a=>console.log("wrapped staked balance: " +a));
+
+    await displayAllRates();
+
+    await wrapper.stake(web3.utils.toWei("100000.0", "ether"),userA,{from:userA});
+    console.log("stake complete");
+    await wrapper.totalSupply().then(a=>console.log("wrapper supply: " +a));
+    await vanillacvxCrv.balanceOf(wrapper.address).then(a=>console.log("wrapped staked balance: " +a));
+
+    await displayAllRates();
+
+    await wrapper.setRewardWeight(10000,{from:userB});
+    await wrapper.setRewardWeight(5000,{from:userC});
+    console.log("set weights on b and c")
+
+    await wrapper.deposit(web3.utils.toWei("200000.0", "ether"),userB,{from:userB});
+    await wrapper.deposit(web3.utils.toWei("200000.0", "ether"),userC,{from:userC});
+    console.log("deposited b and c")
+
+    var rates = await util.mainRewardRates();
+    console.log("--- global rates ---");
+    await displayApr(rates);
+    console.log("--- extra rates ---");
+    var extraRates = await util.extraRewardRates();
+    await displayApr(extraRates);
+    console.log("--- user main rates ---");
+    var userRates = await util.accountRewardRates(userA);
+    await displayApr(userRates);
+    console.log("---");
+    var userRates = await util.accountRewardRates(userB);
+    await displayApr(userRates);
+    console.log("---");
+    var userRates = await util.accountRewardRates(userC);
+    await displayApr(userRates);
+    console.log("--- user extra rates ---");
+    var userExtraRates = await util.accountExtraRewardRates(userA);
+    await displayApr(userExtraRates);
+    console.log("---");
+    var userExtraRates = await util.accountExtraRewardRates(userB);
+    await displayApr(userExtraRates);
+    console.log("---");
+    var userExtraRates = await util.accountExtraRewardRates(userC);
+    await displayApr(userExtraRates);
+    console.log("\n\n");
   });
 });
 
