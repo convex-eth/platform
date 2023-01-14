@@ -8,10 +8,10 @@ contract ChefToken is ERC20 {
 
     bool public isInit;
 
-    constructor()
+    constructor(string memory _name)
         public
         ERC20(
-            "Chef Token",
+            string(abi.encodePacked("Chef Token: ",_name)),
             "cvxCT"
         ){
     }
