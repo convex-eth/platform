@@ -305,7 +305,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
         }
 
         //update remaining reward here since balance could have changed if claiming
-        if(_supply > 0 && bal != reward.reward_remaining){
+        if(bal != reward.reward_remaining){
             reward.reward_remaining = uint128(bal);
         }
     }
