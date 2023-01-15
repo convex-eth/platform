@@ -228,7 +228,11 @@ contract CvxCrvUtilities{
         //get reward hook
         address hook = IStakingWrapper(stkcvxcrv).rewardHook();
 
-        uint256 rewardCount = IRewardHookExtended(hook).poolRewardLength(stkcvxcrv);
+        uint256 rewardCount;
+
+        if(hook != address(0)){
+            rewardCount = IRewardHookExtended(hook).poolRewardLength(stkcvxcrv);
+        }
         rewardContracts = new address[](rewardCount);
 
         for(uint256 i = 0; i < rewardCount; i++){

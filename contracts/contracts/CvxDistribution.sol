@@ -77,7 +77,7 @@ contract CvxDistribution {
     uint256 public currentRewards;
     address public owner;
 
-    address public chefhook;
+    address public chefhook; //todo set immutable before deploying
     
     uint256 private _totalSupply;
     mapping(address => uint256) public userRewardPerTokenPaid;
@@ -90,12 +90,12 @@ contract CvxDistribution {
     event WeightSet(address indexed user, uint256 oldWeight, uint256 newWeight);
     event RewardPaid(address indexed user, uint256 reward);
     event AddOperator(address indexed _op, bool _valid);
-    event HookSet(address _hook);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
-    constructor() public{
+    constructor(address _chefhook) public{
         owner = address(0xa3C5A1e09150B75ff251c1a7815A07182c3de2FB); //default to convex multisig
         emit OwnershipTransferred(address(0), owner);
+        chefhook = _chefhook;
     }
 
     function poolType() external pure returns(IExtraRewardPool.PoolType){
@@ -122,22 +122,21 @@ contract CvxDistribution {
         owner = newOwner;
     }
 
+    function setChefHook(address _hook) external onlyOwner{
+        chefhook = _hook;
+    }
+
     //set operator
     function setOperators(address _op, bool _valid) external onlyOwner{
         operators[_op] = _valid;
         emit AddOperator(_op, _valid);
     }
 
-    function setChefHook(address _hook) external onlyOwner{
-        chefhook = _hook;
-        emit HookSet(_hook);
-    }
-
-    function pullChef() internal{
-        if(block.timestamp - 1 days > periodFinish){
+    function pullChef(bool _force) internal{
+        if(_force || (block.timestamp + 1 days) > periodFinish){
             uint256 b = IERC20(rewardToken).balanceOf(address(this));
             IRewardHook(chefhook).onRewardClaim();
-            b = b - IERC20(rewardToken).balanceOf(address(this));
+            b = IERC20(rewardToken).balanceOf(address(this)) - b;
             notifyRewardAmount(b);
         }
     }
@@ -186,7 +185,7 @@ contract CvxDistribution {
         return rewards[_account] + (balanceOf(_account) * (rewardPerToken() - userRewardPerTokenPaid[_account]) / 1e18);
     }
 
-    function setDistributionType(address _account, DistributType _dt) external onlyOwner returns(bool){
+    function setDistributionType(address _account, DistributType _dt) external onlyOperators returns(bool){
         require(_dt < DistributType.TypeCount, "!valid type");
         distributionType[_account] = _dt;
     }
@@ -194,13 +193,13 @@ contract CvxDistribution {
 
     //increase reward weight for a given pool
     //used by reward manager
-    function setWeight(address _account, uint256 _amount) external onlyOwner returns(bool){
+    function setWeight(address _account, uint256 _amount) external onlyOperators returns(bool){
         return _setWeight(_account, _amount);
     }
 
     //increase reward weight for a list of pools
     //used by reward manager
-    function setWeights(address[] calldata _account, uint256[] calldata _amount) external onlyOwner{
+    function setWeights(address[] calldata _account, uint256[] calldata _amount) external onlyOperators{
 
         for(uint256 i = 0; i < _account.length; i++){
             _setWeight(_account[i], _amount[i]);
@@ -213,6 +212,7 @@ contract CvxDistribution {
         updateReward(_account)
         returns(bool)
     {
+        require(_account != address(0),"!valid addr");
         emit WeightSet(_account, _balances[_account], _amount);
 
         uint256 tsupply = _totalSupply;
@@ -243,7 +243,7 @@ contract CvxDistribution {
         }
 
         //check if chef should be pulled
-        pullChef();
+        pullChef(false);
         return true;
     }
 
@@ -256,7 +256,7 @@ contract CvxDistribution {
 
     //force pull chef
     function queueNewRewards() external returns(bool){
-        pullChef();
+        pullChef(true);
         return true;
     }
 

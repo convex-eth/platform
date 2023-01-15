@@ -198,7 +198,7 @@ contract("deply cvxcrv stake wrapper for ui testing", async accounts => {
     console.log("added to chef at pid: " +pid);
 
     //create distro
-    var cvxdistro = await CvxDistribution.new({from:deployer});
+    var cvxdistro = await CvxDistribution.new(addressZero,{from:deployer});
     console.log("cvxdistro: " +cvxdistro.address);
     await cvxdistro.setWeight(wrapper.address,10000,{from:multisig,gasPrice:0});
     console.log("set cvxdistro weight for wrapper");
@@ -237,7 +237,7 @@ contract("deply cvxcrv stake wrapper for ui testing", async accounts => {
     return;
 
 
-    
+
     ////// local rate/apr testing ///////////
 
     await crv.transfer(userB,web3.utils.toWei("300000.0", "ether"),{from:crvescrow,gasPrice:0});
@@ -298,8 +298,6 @@ contract("deply cvxcrv stake wrapper for ui testing", async accounts => {
       console.log("\n\n");
     }
     await displayAllRates();
-
-    await wrapper.setRewardWeight(5000,{from:userA});
 
     await wrapper.deposit(web3.utils.toWei("100000.0", "ether"),userA,{from:userA});
     console.log("deposit complete");
