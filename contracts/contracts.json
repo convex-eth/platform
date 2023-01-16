@@ -5,6 +5,8 @@
         "voteProxy": "0x989AEb4d175e16225E39E87d0D97A3360524AD80",
         "treasury": "0x1389388d01708118b497f59521f6943Be2541bb7",
         "treasurySwapper": "0x00711E5c8FcD631ba9c6165D99E641FaCE75d21D",
+        "cvxDistro": "0x449f2fd99174e1785CF2A1c79E665Fec3dD1DdC6",
+        "cvxDistroPoolHook": "0x723f9Aa67FDD9B0e375eF8553eB2AFC28eCD4a96",
         "cvx": "0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B",
         "booster": "0xF403C135812408BFbE8713b5A23a04b3D48AAE31",
         "boosterOwner": "0x3cE6408F923326f81A7D7929952947748180f1E6",
@@ -47,6 +49,8 @@
         "masterAbraWrapper": "0xD379454E9f28302A3bbE92b271605cbEA5aEa0A2",
         "chefTokenTreasury": "0x51854310A2411e682F5C1A23924DD9de79D0342a",
         "chefRewardHookTreasury": "0x5e2706946c2bE55b038f4a0475cb7b19f5a67897",
+        "chefTokenCvxDistro": "0x745356676eC4dE8DE6AE84AD0f21D30cB590d8Bd",
+        "chefHookCvxDistro": "0x973c2F122Dbfa2867e6f7a05d329414bFF43EAEa",
         "rescueStashImpl": "0x9dC3de2e9d6963bAb146dC35DC3925ADD0CFc918",
         "rescueStash": "0x01140351069af98416cC08b16424b9E765436531",
         "rescueToken": "0xB15fFb543211b558D40160811e5DcBcd7d5aaac9",
@@ -1026,7 +1030,7 @@
                 {
                     "contract": "0xE2585F27bf5aaB7756f626D6444eD5Fc9154e606",
                     "token": "0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b",
-                    "fxsHook": "0xb32eace5d3c2bD7625E00D63203A6Ff0Bf638Cbc",
+                    "fxsHook": "0x1A6980170FD45bdeBf5902B597c53a2a0678F1F7",
                     "chefHook": "0x0f29b765be2DE395cb6b10D9Ead46975057B51eD",
                     "chefToken": "0x33A3446DbdA1aeaFDC16c17AAffc77Aa020a7efA",
                     "name": "CVX"

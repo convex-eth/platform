@@ -77,7 +77,7 @@ contract CvxDistribution {
     uint256 public currentRewards;
     address public owner;
 
-    address public chefhook; //todo set immutable before deploying
+    address public immutable chefhook;
     
     uint256 private _totalSupply;
     mapping(address => uint256) public userRewardPerTokenPaid;
@@ -120,10 +120,6 @@ contract CvxDistribution {
         require(newOwner != address(0), "Ownable: new owner is the zero address");
         emit OwnershipTransferred(owner, newOwner);
         owner = newOwner;
-    }
-
-    function setChefHook(address _hook) external onlyOwner{
-        chefhook = _hook;
     }
 
     //set operator
