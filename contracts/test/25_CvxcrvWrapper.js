@@ -480,37 +480,19 @@ contract("Test cvxcrv stake wrapper", async accounts => {
     await util.extraRewardRates().then(a=>console.log("extra rates: " +JSON.stringify(a) ));
     //hook up cvx emissions
     //create deposit token
-    var cheftoken = await ChefToken.new("CvxDistribution",{from:deployer});
-    console.log("chef token: " +cheftoken.address);
-    await cheftoken.create({from:deployer});
-    await cheftoken.name().then(a=>console.log("chef token name: " +a))
-
-    //add to chef
-    var chef = await ConvexMasterChef.at(contractList.system.chef);
-    var pid = await chef.poolLength();
-    await chef.add(1000,cheftoken.address,addressZero,true,{from:multisig,gasPrice:0});
-    console.log("added to chef at pid: " +pid);
-
-    //create distro
-    var cvxdistro = await CvxDistribution.new(addressZero, {from:deployer});
+    var cvxdistro = await CvxDistribution.at(contractList.system.cvxDistro);
+    var poolhook = await PoolRewardHook.at(contractList.system.cvxDistroPoolHook);
     console.log("cvxdistro: " +cvxdistro.address);
+    console.log("pool hook: "+poolhook.address);
+
     await cvxdistro.setWeight(staker.address,10000,{from:multisig,gasPrice:0});
     console.log("set cvxdistro weight for staker");
 
-    //create hook
-    var hook = await ChefRewardHook.new(cvxdistro.address, pid, cheftoken.address, {from:deployer});
-    console.log("chef hook: " +hook.address);
-    await cvxdistro.setChefHook(hook.address,{from:multisig,gasPrice:0});
-    console.log("cvxdistro hook set to chef hook");
-    await cheftoken.approve(hook.address,web3.utils.toWei("1000.0", "ether"),{from:deployer});
-    await hook.deposit({from:deployer});
-    console.log("chef deposited");
-
-    //create poolrewardhook
-    var poolhook = await PoolRewardHook.new({from:deployer});
-    console.log("pool hook: "+poolhook.address);
+    //add hooks
     await poolhook.addPoolReward(staker.address, cvxdistro.address, {from:deployer});
     console.log("pool hook added to staker")
+    await staker.setHook(poolhook.address,{from:multisig,gasPrice:0});
+    console.log("hook set on cvxcrv staker");
 
     //get cvx from somewhere
     // var cvxholder = "0xcf50b810e57ac33b91dcf525c6ddd9881b139332";
@@ -523,58 +505,13 @@ contract("Test cvxcrv stake wrapper", async accounts => {
     // await cvxdistro.queueNewRewards({from:deployer});
     // console.log("cvx rewards queued");
 
-    //add hook
-    await staker.setHook(poolhook.address,{from:multisig,gasPrice:0});
-    console.log("hook set on cvxcrv staker");
-
-    await cvxdistro.currentRewards().then(a=>console.log("cvxdistro currentRewards: " +a))
-    await cvxdistro.rewardRate().then(a=>console.log("cvxdistro rate: " +a))
-    await cvxdistro.periodFinish().then(a=>console.log("cvxdistro periodFinish: " +a))
-    await chef.userInfo(pid,hook.address).then(a=>console.log("chef userinfo: " +JSON.stringify(a)));
-
     await cvxdistro.queueNewRewards();
     console.log("cvxdistro queueNewRewards");
-    await cvxdistro.currentRewards().then(a=>console.log("cvxdistro currentRewards: " +a))
-    await cvxdistro.rewardRate().then(a=>console.log("cvxdistro rate: " +a))
-    await cvxdistro.periodFinish().then(a=>console.log("cvxdistro periodFinish: " +a))
-    await chef.userInfo(pid,hook.address).then(a=>console.log("chef userinfo: " +JSON.stringify(a)));
 
     await advanceTime(day);
 
-    //force pull from chef
     await cvxdistro.queueNewRewards();
-    console.log("cvxdistro queueNewRewards (force new cycle)");
-    await cvxdistro.currentRewards().then(a=>console.log("cvxdistro currentRewards: " +a))
-    await cvxdistro.rewardRate().then(a=>console.log("cvxdistro rate: " +a))
-    await cvxdistro.periodFinish().then(a=>console.log("cvxdistro periodFinish: " +a))
-    await chef.userInfo(pid,hook.address).then(a=>console.log("chef userinfo: " +JSON.stringify(a)));
-
-
-    //can also force pull rewards by getting reward if close to period finish
-    await advanceTime(day*2);
-    await cvxdistro.getReward(staker.address);
-    await cvxdistro.currentRewards().then(a=>console.log("cvxdistro currentRewards: " +a))
-    await cvxdistro.rewardRate().then(a=>console.log("cvxdistro rate: " +a))
-    await cvxdistro.periodFinish().then(a=>console.log("cvxdistro periodFinish: " +a))
-    await chef.userInfo(pid,hook.address).then(a=>console.log("chef userinfo: " +JSON.stringify(a)));
-    await advanceTime(day*8);
-    await cvxdistro.getReward(staker.address);
-    await cvxdistro.currentRewards().then(a=>console.log("cvxdistro currentRewards: " +a))
-    await cvxdistro.rewardRate().then(a=>console.log("cvxdistro rate: " +a))
-    await cvxdistro.periodFinish().then(a=>console.log("cvxdistro periodFinish: " +a))
-    await chef.userInfo(pid,hook.address).then(a=>console.log("chef userinfo: " +JSON.stringify(a)));
-    await advanceTime(day*8);
-    await cvxdistro.getReward(staker.address);
-    await cvxdistro.currentRewards().then(a=>console.log("cvxdistro currentRewards: " +a))
-    await cvxdistro.rewardRate().then(a=>console.log("cvxdistro rate: " +a))
-    await cvxdistro.periodFinish().then(a=>console.log("cvxdistro periodFinish: " +a))
-    await chef.userInfo(pid,hook.address).then(a=>console.log("chef userinfo: " +JSON.stringify(a)));
-    await advanceTime(day*8);
-    await cvxdistro.getReward(staker.address);
-    await cvxdistro.currentRewards().then(a=>console.log("cvxdistro currentRewards: " +a))
-    await cvxdistro.rewardRate().then(a=>console.log("cvxdistro rate: " +a))
-    await cvxdistro.periodFinish().then(a=>console.log("cvxdistro periodFinish: " +a))
-    await chef.userInfo(pid,hook.address).then(a=>console.log("chef userinfo: " +JSON.stringify(a)));
+    console.log("cvxdistro queueNewRewards");
 
 
     await util.extraRewardRates().then(a=>console.log("extra rates: " +JSON.stringify(a) ));
