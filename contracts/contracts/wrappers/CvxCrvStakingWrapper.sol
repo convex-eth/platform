@@ -387,7 +387,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
     }
 
     //set a user's reward weight to determine how much of each reward group to receive
-    function setRewardWeight(uint256 _weight) external{
+    function setRewardWeight(uint256 _weight) public{
         require(_weight <= WEIGHT_PRECISION, "!invalid");
 
         //checkpoint user
@@ -446,7 +446,7 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
     }
 
     //deposit vanilla crv
-    function deposit(uint256 _amount, address _to) external {
+    function deposit(uint256 _amount, address _to) public {
         require(!isShutdown, "shutdown");
 
         //dont need to call checkpoint since _mint() will
@@ -459,6 +459,11 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
         }
 
         emit Deposited(msg.sender, _to, _amount, true);
+    }
+
+    function depositAndSetWeight(uint256 _amount, uint256 _weight) external {
+        deposit(_amount, msg.sender);
+        setRewardWeight(_weight);
     }
 
     //stake cvxcrv
@@ -475,6 +480,11 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
         }
 
         emit Deposited(msg.sender, _to, _amount, false);
+    }
+
+    function stakeAndSetWeight(uint256 _amount, uint256 _weight) external {
+        stake(_amount, msg.sender);
+        setRewardWeight(_weight);
     }
 
     //backwards compatibility for other systems (note: amount and address reversed)
