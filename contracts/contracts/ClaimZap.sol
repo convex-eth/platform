@@ -51,13 +51,11 @@ contract ClaimZap{
     address public constant cvx = address(0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B);
     address public constant cvxCrv = address(0x62B9c7356A2Dc64a1969e19C23e4f579F9810Aa7);
     address public constant crvDeposit = address(0x8014595F2AB54cD7c604B00E9fb932176fDc86Ae);
-    address public constant cvxCrvRewards = address(0x3Fe65692bfCD0e6CF84cB1E7d24108E434A7587e);
     address public constant cvxRewards = address(0xCF50b810E57Ac33B91dCF525C6ddd9881B139332);
-
     address public constant exchange = address(0x9D0464996170c6B9e75eED71c68B99dDEDf279e8);//curve
-
     address public constant locker = address(0x72a19342e8F1838460eBFCCEf09F6585e32db86E);
 
+    address public immutable cvxCrvRewards;
     address public immutable owner;
 
     enum Options{
@@ -71,12 +69,14 @@ contract ClaimZap{
         LockCvx //128
     }
 
-    constructor() public {
+    constructor(address _cvxcrvStaking) public {
         owner = msg.sender;
+        cvxCrvRewards = _cvxcrvStaking;
     }
 
+    //2.1 - change cvxcrv staking address as immutable in constructor, change claim parameters
     function getName() external pure returns (string memory) {
-        return "ClaimZap V2.0";
+        return "ClaimZap V2.1";
     }
 
     function setApprovals() external {
@@ -151,7 +151,7 @@ contract ClaimZap{
 
         //claim from cvxCrv rewards
         if(CheckOption(options,uint256(Options.ClaimCvxCrv))){
-            IBasicRewards(cvxCrvRewards).getReward(msg.sender,true);
+            IBasicRewards(cvxCrvRewards).getReward(msg.sender);
         }
 
         //claim from locker

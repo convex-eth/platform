@@ -23,6 +23,7 @@ const ChefToken = artifacts.require("ChefToken");
 const ConvexMasterChef = artifacts.require("ConvexMasterChef");
 const CvxDistribution = artifacts.require("CvxDistribution");
 const PoolRewardHook = artifacts.require("PoolRewardHook");
+const ClaimZap = artifacts.require("ClaimZap");
 
 // const unlockAccount = async (address) => {
 //   return new Promise((resolve, reject) => {
@@ -210,20 +211,28 @@ contract("Test cvxcrv stake wrapper", async accounts => {
     await cvxCrv.approve(staker.address,crvbalance,{from:userB});
     console.log("approved depositor and staker");
 
-    await staker.setRewardWeight(10000,{from:userB});
-    console.log("set user b weight to 10,000 (100% stables)")
-
+    
     await crvDeposit.deposit(crvbalance,false,addressZero,{from:userB});
-    // await crvDeposit.deposit(crvbalance,false,staker.address,{from:userB});
     console.log("deposited into convex for user b");
 
 
-    var depositTx = await staker.deposit(crvbalance,userA,{from:userA});
-    console.log("user A deposited, gas: " +depositTx.receipt.gasUsed);
+    // var depositTx = await staker.deposit(crvbalance,userA,{from:userA});
+    // console.log("user A deposited, gas: " +depositTx.receipt.gasUsed);
 
-    var stakeTx = await staker.stake(crvbalance,userB,{from:userB});
-    console.log("user b staked, gas: " +stakeTx.receipt.gasUsed);
+    var depositTx = await staker.depositAndSetWeight(crvbalance,7,{from:userA});
+    console.log("user A deposited and set weight 7 , gas: " +depositTx.receipt.gasUsed);
+    await staker.userRewardWeight(userA).then(a=>console.log("user a weight: " +a))
+    await staker.setRewardWeight(0,{from:userA});
+    console.log("revert weight back to 0");
+    await staker.userRewardWeight(userA).then(a=>console.log("user a weight: " +a))
 
+    // await staker.setRewardWeight(10000,{from:userB});
+    // console.log("set user b weight to 10,000 (100% stables)")
+    // var stakeTx = await staker.stake(crvbalance,userB,{from:userB});
+    // console.log("user b staked, gas: " +stakeTx.receipt.gasUsed);
+
+    var stakeTx = await staker.stakeAndSetWeight(crvbalance,10000,{from:userB});
+    console.log("user b staked and set weight(100% stables), gas: " +stakeTx.receipt.gasUsed);
 
     await staker.balanceOf(userA).then(a=>console.log("user a: " +a));
     await staker.balanceOf(userB).then(a=>console.log("user b: " +a));
@@ -380,11 +389,36 @@ contract("Test cvxcrv stake wrapper", async accounts => {
     await staker.earned.call(userC).then(a=>console.log("user c earned: " +a ));
     await crv.balanceOf(userC).then(a=>console.log("user c wallet crv: " +a));
     await cvx.balanceOf(userC).then(a=>console.log("user c wallet cvx: " +a));
+    await cvxCrv.balanceOf(userC).then(a=>console.log("user c wallet cvxcrv: " +a));
     await threeCrv.balanceOf(userC).then(a=>console.log("user c wallet threeCrv: " +a));
+    await staker.balanceOf(userC).then(a=>console.log("user c staked cvxcrv: " +a));
+
+    console.log("\n claim with zap");
+    var zap = await ClaimZap.new(staker.address,{from:deployer});
+    await zap.setApprovals({from:deployer});
+    console.log("zap at: " +zap.address);
+    await crv.approve(zap.address,web3.utils.toWei("100000.0", "ether"),{from:userC} );
+    await cvxCrv.approve(zap.address,web3.utils.toWei("100000.0", "ether"),{from:userC} );
+    console.log("approved");
+    await zap.claimRewards([],[],[],[],web3.utils.toWei("10000000.0", "ether"),web3.utils.toWei("1.0", "ether"), 0, 0, 4,{from:userC});
+    // await zap.claimRewards([],[],[],[],web3.utils.toWei("10000000.0", "ether"),0, 0, 0, 4,{from:userC});
+    // await zap.claimRewards([],[],[],[],0,0, 0, 0, 4,{from:userC});
+    // await staker.methods['getReward(address)'](userC,{from:deployer});
+    console.log("claimed via zap");
+
+    await crv.balanceOf(zap.address).then(a=>console.log("zap crv: " +a));
+    await cvxCrv.balanceOf(zap.address).then(a=>console.log("zap cvxcrv: " +a));
+
+    await staker.earned.call(userC).then(a=>console.log("user c earned: " +a ));
+    await crv.balanceOf(userC).then(a=>console.log("user c wallet crv: " +a));
+    await cvx.balanceOf(userC).then(a=>console.log("user c wallet cvx: " +a));
+    await cvxCrv.balanceOf(userC).then(a=>console.log("user c wallet cvxcrv: " +a));
+    await threeCrv.balanceOf(userC).then(a=>console.log("user c wallet threeCrv: " +a));
+    await staker.balanceOf(userC).then(a=>console.log("user c staked cvxcrv: " +a));
 
 
     //withdraw
-    console.log("withdrawing...");
+    console.log("\n\nwithdrawing...");
     await crv.balanceOf(staker.address).then(a=>console.log("staker crv: " +a));
     await cvx.balanceOf(staker.address).then(a=>console.log("staker cvx: " +a));
     await threeCrv.balanceOf(staker.address).then(a=>console.log("staker threeCrv: " +a));
@@ -410,7 +444,7 @@ contract("Test cvxcrv stake wrapper", async accounts => {
     await staker.earned.call(userB).then(a=>console.log("user b earned: " +a ));
     await staker.getReward(userB,userB,{from:userB}); ////
     await staker.getReward(userC,userC,{from:userC});
-    
+
 
     console.log("try claim again");
     await staker.getReward(userC,userC,{from:userC});

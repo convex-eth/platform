@@ -17,6 +17,7 @@ const ChefToken = artifacts.require("ChefToken");
 const ConvexMasterChef = artifacts.require("ConvexMasterChef");
 const CvxDistribution = artifacts.require("CvxDistribution");
 const PoolRewardHook = artifacts.require("PoolRewardHook");
+const ClaimZap = artifacts.require("ClaimZap");
 
 
 // -- for old ganache
@@ -162,7 +163,9 @@ contract("deply cvxcrv stake wrapper for ui testing", async accounts => {
     let util = await CvxCrvUtilities.new(wrapper.address,{from:deployer});
     console.log("cvxcrv wrapper: " +wrapper.address);
     console.log("cvxcrv util: " +util.address);
-
+    var zap = await ClaimZap.new(wrapper.address,{from:deployer});
+    await zap.setApprovals({from:deployer});
+    console.log("claimzap at: " +zap.address);
 
     //grab crv
     var crvescrow = "0x5f3b5dfeb7b28cdbd7faba78963ee202a494e2a2";
