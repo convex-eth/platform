@@ -77,6 +77,10 @@ contract CvxCrvStakingWrapper is ERC20, ReentrancyGuard {
 
         addRewards();
         setApprovals();
+
+        //preset hook
+        rewardHook = address(0x723f9Aa67FDD9B0e375eF8553eB2AFC28eCD4a96);
+        emit HookSet(rewardHook);
     }
 
 

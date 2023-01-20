@@ -524,9 +524,11 @@ contract("Test cvxcrv stake wrapper", async accounts => {
 
     //add hooks
     await poolhook.addPoolReward(staker.address, cvxdistro.address, {from:deployer});
-    console.log("pool hook added to staker")
-    await staker.setHook(poolhook.address,{from:multisig,gasPrice:0});
-    console.log("hook set on cvxcrv staker");
+    console.log("staker added to pool hook added")
+
+    // await staker.setHook(poolhook.address,{from:multisig,gasPrice:0});
+    // console.log("hook set on cvxcrv staker");
+    await staker.rewardHook().then(a=>console.log("staker reward hook: " +a))
 
     //get cvx from somewhere
     // var cvxholder = "0xcf50b810e57ac33b91dcf525c6ddd9881b139332";
