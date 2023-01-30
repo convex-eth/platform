@@ -13,6 +13,7 @@ import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 //v3.1: support for arbitrary token rewards outside of gauge rewards
 //      add reward hook to pull rewards during claims
 //v3.2: move constuctor to init function for proxy creation
+//v3.3: add extra checks and restrictions
 
 contract ExtraRewardStashV3 {
     using SafeERC20 for IERC20;
@@ -21,6 +22,7 @@ contract ExtraRewardStashV3 {
 
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
     uint256 private constant maxRewards = 8;
+    uint256 private constant maxTotalRewards = 12;
 
     uint256 public pid;
     address public operator;
@@ -57,7 +59,7 @@ contract ExtraRewardStashV3 {
     }
 
     function getName() external pure returns (string memory) {
-        return "ExtraRewardStashV3.2";
+        return "ExtraRewardStashV3.3";
     }
 
     function tokenCount() external view returns (uint256){
@@ -67,6 +69,7 @@ contract ExtraRewardStashV3 {
     //try claiming if there are reward tokens registered
     function claimRewards() external returns (bool) {
         require(msg.sender == operator, "!operator");
+        uint256 boosterCrv = IERC20(crv).balanceOf(operator);
 
         //this is updateable from v2 gauges now so must check each time.
         checkForNewRewardTokens();
@@ -88,6 +91,8 @@ contract ExtraRewardStashV3 {
             try IRewardHook(rewardHook).onRewardClaim(){
             }catch{}
         }
+
+        require(boosterCrv == IERC20(crv).balanceOf(operator),"crvChange");
         return true;
     }
    
@@ -111,12 +116,15 @@ contract ExtraRewardStashV3 {
     function setExtraReward(address _token) external{
         //owner of booster can set extra rewards
         require(IDeposit(operator).owner() == msg.sender, "!owner");
+        require(tokenList.length < maxTotalRewards,"rwd cnt");
+
         setToken(_token);
     }
 
     function setRewardHook(address _hook) external{
         //owner of booster can set reward hook
         require(IDeposit(operator).owner() == msg.sender, "!owner");
+
         rewardHook = _hook;
     }
 
@@ -164,8 +172,12 @@ contract ExtraRewardStashV3 {
             address token = t.token;
             if(token == address(0)) continue;
             
-            uint256 amount = IERC20(token).balanceOf(address(this));
-            if (amount > 0) {
+            uint256 amount;
+            try IERC20(token).balanceOf(address(this)) returns(uint256 _a){
+                amount = _a;
+            }catch{}
+
+            if (amount > 0 && amount < 1e30) {
                 historicalRewards[token] = historicalRewards[token].add(amount);
                 if(token == crv){
                     //if crv, send back to booster to distribute
