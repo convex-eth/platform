@@ -13,7 +13,7 @@ contract StashTokenWrapper {
     constructor() public{}
 
     function init(address _token, address _rewardpool) external{
-        require(token != address(0),"init");
+        require(token == address(0), "init");
 
         token = _token;
         rewardPool = _rewardpool;
