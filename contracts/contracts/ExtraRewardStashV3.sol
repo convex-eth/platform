@@ -3,6 +3,8 @@ pragma solidity 0.6.12;
 
 import "./Interfaces.sol";
 import "./interfaces/IRewardHook.sol";
+import "./interfaces/IProxyFactory.sol";
+import "./interfaces/IStashTokenWrapper.sol";
 import '@openzeppelin/contracts/math/SafeMath.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/utils/Address.sol';
@@ -13,7 +15,7 @@ import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 //v3.1: support for arbitrary token rewards outside of gauge rewards
 //      add reward hook to pull rewards during claims
 //v3.2: move constuctor to init function for proxy creation
-//v3.3: add extra checks and restrictions
+//v3.3: add extra checks and restrictions, wrap reward tokens
 
 contract ExtraRewardStashV3 {
     using SafeERC20 for IERC20;
@@ -23,6 +25,9 @@ contract ExtraRewardStashV3 {
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
     uint256 private constant maxRewards = 8;
     uint256 private constant maxTotalRewards = 12;
+    address public constant proxyFactory = address(0x66807B5598A848602734B82E432dD88DBE13fC8f);
+
+    address public immutable tokenWrapperImplementation;
 
     uint256 public pid;
     address public operator;
@@ -37,6 +42,7 @@ contract ExtraRewardStashV3 {
     struct TokenInfo {
         address token;
         address rewardAddress;
+        address wrapperAddress;
     }
 
     //use mapping+array so that we dont have to loop check each time setToken is called
@@ -46,7 +52,8 @@ contract ExtraRewardStashV3 {
     //address to call for reward pulls
     address public rewardHook;
 
-    constructor() public {
+    constructor(address _wrapperImplementation) public {
+        tokenWrapperImplementation = _wrapperImplementation;
     }
 
     function initialize(uint256 _pid, address _operator, address _staker, address _gauge, address _rFactory) external {
@@ -139,14 +146,21 @@ contract ExtraRewardStashV3 {
 
             //check if crv
             if(_token != crv){
+                //create new wrapper
+                address tokenwrapper = IProxyFactory(proxyFactory).clone(tokenWrapperImplementation);
+                
                 //create new reward contract (for NON-crv tokens only)
                 (,,,address mainRewardContract,,) = IDeposit(operator).poolInfo(pid);
                 address rewardContract = IRewardFactory(rewardFactory).CreateTokenRewards(
-                    _token,
+                    tokenwrapper,//add the wrapper as reward token
                     mainRewardContract,
                     address(this));
                 
                 t.rewardAddress = rewardContract;
+                t.wrapperAddress = tokenwrapper;
+
+                //init wrapper
+                IStashTokenWrapper(tokenwrapper).init(_token, rewardContract);
             }
             //add token to list of known rewards
             tokenList.push(_token);
@@ -184,8 +198,8 @@ contract ExtraRewardStashV3 {
                     IERC20(token).safeTransfer(operator, amount);
                     continue;
                 }
-            	//add to reward contract
-            	address rewards = t.rewardAddress;
+            	//add to wrapper, which is allocated to reward contract
+            	address rewards = t.wrapperAddress;
             	if(rewards == address(0)) continue;
             	IERC20(token).safeTransfer(rewards, amount);
             	IRewards(rewards).queueNewRewards(amount);
