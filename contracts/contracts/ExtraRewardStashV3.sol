@@ -186,10 +186,10 @@ contract ExtraRewardStashV3 {
             address token = t.token;
             if(token == address(0)) continue;
             
-            uint256 amount;
-            try IERC20(token).balanceOf(address(this)) returns(uint256 _a){
-                amount = _a;
-            }catch{}
+            address wrapper = t.wrapperAddress;
+            if(IStashTokenWrapper(wrapper).isInvalid()) continue;
+
+            uint256 amount = IERC20(token).balanceOf(address(this));
 
             if (amount > 0 && amount < 1e30) {
                 historicalRewards[token] = historicalRewards[token].add(amount);
@@ -199,9 +199,9 @@ contract ExtraRewardStashV3 {
                     continue;
                 }
             	//add to wrapper, which is allocated to reward contract
-            	address rewards = t.wrapperAddress;
+            	address rewards = t.rewardAddress;
             	if(rewards == address(0)) continue;
-            	IERC20(token).safeTransfer(rewards, amount);
+            	IERC20(token).safeTransfer(wrapper, amount);
             	IRewards(rewards).queueNewRewards(amount);
             }
         }

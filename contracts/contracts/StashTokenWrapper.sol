@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.6.12;
 
+import "./interfaces/IBooster.sol";
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 
 contract StashTokenWrapper {
     using SafeERC20 for ERC20;
 
+    address public constant booster = address(0xF403C135812408BFbE8713b5A23a04b3D48AAE31);
+
     address public token;
     address public rewardPool;
+    bool public isInvalid;
 
     constructor() public{}
 
@@ -49,9 +53,10 @@ contract StashTokenWrapper {
         return true;
     }
 
-    function approve(address spender, uint256 amount) external returns (bool){ return true; }
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool) {
-        revert("sealed");
+    function setInvalid(bool _isInvalid) external{
+       require(IBooster(booster).owner() == msg.sender, "!owner");
+
+       isInvalid = _isInvalid;
     }
 
 }
