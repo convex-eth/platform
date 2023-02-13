@@ -211,30 +211,14 @@ contract("Test new stash and reward wrapper", async accounts => {
     console.log("deposited");
     await rewardAddress.balanceOf(userA).then(a=>console.log("balance: "+a))
 
-    //harvest
-    await advanceTime(5 * day);
     await booster.earmarkRewards(poolCnt);
     console.log("harvested");
-    await advanceTime(5 * day);
 
-    //claim
-    await crv.balanceOf(userA).then(a=>console.log("crv balance: " +a))
-    await rewardAddress.earned(userA).then(a=>console.log("earned: " +a))
-    await rewardAddress.getReward();
-    console.log("claimed");
-    await crv.balanceOf(userA).then(a=>console.log("crv balance: " +a))
+    var cvxholder = "0xCF50b810E57Ac33B91dCF525C6ddd9881B139332";
+    await unlockAccount(cvxholder);
+    await cvx.transfer(poolstash.address,web3.utils.toWei("1000.0", "ether"),{from:cvxholder,gasPrice:0});
+    console.log("transfered cvx tokens");
 
-
-
-    //create reward token
-    var dummyReward = await DepositToken.new(deployer,lptoken.address,{from:deployer});
-    console.log("dummy token: " +dummyReward.address);
-
-    //add reward token
-    await poolstash.tokenCount().then(a=>console.log("reward tokens: " +a));
-    await bowner.setStashExtraReward(poolstash.address, dummyReward.address,{from:multisig,gasPrice:0});
-    console.log("added token to stash rewards");
-    await poolstash.tokenCount().then(a=>console.log("reward tokens: " +a));
     var tkncnt = await poolstash.tokenCount();
     var virtualReward;
     var tokenWrapper;
@@ -248,75 +232,19 @@ contract("Test new stash and reward wrapper", async accounts => {
       console.log("tokenWrapper: " +tokenWrapper.address);
     }
 
-    await tokenWrapper.init(addressZero, addressZero).catch(a=>console.log("catch double init: " +a))
-
-    await dummyReward.mint(poolstash.address,web3.utils.toWei("1.0", "ether"),{from:deployer});
-    console.log("minted");
-    await dummyReward.balanceOf(poolstash.address).then(a=>console.log("rewards on stash: " +a))
+    await cvx.balanceOf(poolstash.address).then(a=>console.log("cvx on poolstash: " +a))
+    await cvx.balanceOf(virtualReward.address).then(a=>console.log("cvx on virtual: " +a))
+    await cvx.balanceOf(tokenWrapper.address).then(a=>console.log("cvx on tokenWrapper: " +a))
+    await tokenWrapper.balanceOf(virtualReward.address).then(a=>console.log("wrapper balance of virtual: " +a))
 
     await booster.earmarkRewards(poolCnt);
     console.log("harvested");
-    await dummyReward.balanceOf(poolstash.address).then(a=>console.log("rewards on stash: " +a))
-    
-    //check distribution
-    await tokenWrapper.totalSupply().then(a=>console.log("wrapper totalSupply: " +a))
-    await tokenWrapper.token().then(a=>console.log("wrapper token: " +a))
-    await tokenWrapper.rewardPool().then(a=>console.log("wrapper rewardPool: " +a))
-    await dummyReward.balanceOf(tokenWrapper.address).then(a=>console.log("dummy on wrapper: " +a))
-    await dummyReward.balanceOf(poolstash.address).then(a=>console.log("dummy on virtual: " +a))
-    await tokenWrapper.balanceOf(virtualReward.address).then(a=>console.log("wrapper on virtual: " +a))
-    await dummyReward.balanceOf(userA).then(a=>console.log("dummy on user: " +a))
+    await advanceTime(2 * day);
 
-    //claim rewards
-    await virtualReward.earned(userA).then(a=>console.log("extra tokens earned: " +a))
-    await advanceTime(5 * day);
-    await virtualReward.earned(userA).then(a=>console.log("extra tokens earned: " +a))
-    await rewardAddress.getReward();
-    console.log("claimed");
-    await tokenWrapper.balanceOf(virtualReward.address).then(a=>console.log("wrapper on virtual: " +a))
-    await dummyReward.balanceOf(userA).then(a=>console.log("dummy on user: " +a))
-
-    //test invalidate
-    await tokenWrapper.isInvalid().then(a=>console.log("isInvalid: " +a))
-    await dummyReward.mint(poolstash.address,web3.utils.toWei("1.0", "ether"),{from:deployer});
-    await dummyReward.balanceOf(poolstash.address).then(a=>console.log("rewards on stash: " +a))
-    var calldata = tokenWrapper.contract.methods.setInvalid(true).encodeABI();
-    await bowner.execute(tokenWrapper.address,0,calldata,{from:multisig,gasPrice:0});
-    console.log("execute invalidate");
-    await tokenWrapper.isInvalid().then(a=>console.log("isInvalid: " +a))
-    await booster.earmarkRewards(poolCnt);
-    console.log("harvested");
-    await dummyReward.balanceOf(poolstash.address).then(a=>console.log("rewards on stash: " +a))
-
-    calldata = tokenWrapper.contract.methods.setInvalid(false).encodeABI();
-    await bowner.execute(tokenWrapper.address,0,calldata,{from:multisig,gasPrice:0});
-    console.log("execute validate");
-    await tokenWrapper.isInvalid().then(a=>console.log("isInvalid: " +a))
-    await booster.earmarkRewards(poolCnt);
-    console.log("harvested");
-    await dummyReward.balanceOf(poolstash.address).then(a=>console.log("rewards on stash: " +a))
-
-    //try minting too many
-    await dummyReward.mint(poolstash.address,web3.utils.toWei("1000000000000000.0", "ether"),{from:deployer});
-    console.log("minted too many");
-    await dummyReward.balanceOf(poolstash.address).then(a=>console.log("rewards on stash: " +a))
-    await tokenWrapper.balanceOf(virtualReward.address).then(a=>console.log("wrapper on virtual: " +a))
-    await booster.earmarkRewards(poolCnt);
-    console.log("harvested");
-    console.log("check that rewards didnt move to reward contract")
-    await dummyReward.balanceOf(poolstash.address).then(a=>console.log("rewards on stash: " +a))
-    await tokenWrapper.balanceOf(virtualReward.address).then(a=>console.log("wrapper on virtual: " +a))
-
-    //try donate
-    console.log("try donate...");
-    await virtualReward.donate(web3.utils.toWei("1.0", "ether")).catch(a=>console.log("revert donate: " +a));
-
-    //withdraw
-    console.log("withdraw...");
-    await lptoken.balanceOf(userA).then(a=>console.log("lp balance: " +a))
-    await rewardAddress.withdrawAllAndUnwrap(false);
-    console.log("withdrawn")
-    await lptoken.balanceOf(userA).then(a=>console.log("lp balance: " +a))
+    await cvx.balanceOf(poolstash.address).then(a=>console.log("cvx on poolstash: " +a))
+    await cvx.balanceOf(virtualReward.address).then(a=>console.log("cvx on virtual: " +a))
+    await cvx.balanceOf(tokenWrapper.address).then(a=>console.log("cvx on tokenWrapper: " +a))
+    await tokenWrapper.balanceOf(virtualReward.address).then(a=>console.log("wrapper balance of virtual: " +a))
 
   });
 });
