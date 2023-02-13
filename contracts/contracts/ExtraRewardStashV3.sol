@@ -23,6 +23,7 @@ contract ExtraRewardStashV3 {
     using SafeMath for uint256;
 
     address public constant crv = address(0xD533a949740bb3306d119CC777fa900bA034cd52);
+    address public constant cvx = address(0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B);
     uint256 private constant maxRewards = 8;
     uint256 private constant maxTotalRewards = 12;
     address public constant proxyFactory = address(0x66807B5598A848602734B82E432dD88DBE13fC8f);
@@ -85,6 +86,9 @@ contract ExtraRewardStashV3 {
         if(!hasRedirected){
             IDeposit(operator).setGaugeRedirect(pid);
             hasRedirected = true;
+
+            //always make sure cvx is added as well
+            setToken(cvx);
         }
 
         if(hasCurveRewards){
