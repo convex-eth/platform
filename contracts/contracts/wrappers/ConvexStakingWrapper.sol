@@ -54,6 +54,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     RewardType[] public rewards;
     mapping(address => uint256) public registeredRewards;
     address public rewardHook;
+    mapping(address => address) public rewardRedirect;
 
     //management
     bool public isShutdown;
@@ -67,6 +68,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     event Withdrawn(address indexed _user, uint256 _amount, bool _unwrapped);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event RewardInvalidated(address _rewardToken);
+    event RewardRedirected(address indexed _account, address _forward);
 
     constructor() public
         ERC20(
@@ -415,9 +417,21 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         return claimable;
     }
 
+    //set any claimed rewards to automatically go to a different address
+    //set address to zero to disable
+    function setRewardRedirect(address _to) external nonReentrant{
+        rewardRedirect[msg.sender] = _to;
+        emit RewardRedirected(msg.sender, _to);
+    }
+
     function getReward(address _account) external {
+        //check if there is a redirect address
+        address claimTo = _account;
+        if(rewardRedirect[msg.sender] != address(0)){
+            claimTo = rewardRedirect[msg.sender];
+        }
         //claim directly in checkpoint logic to save a bit of gas
-        _checkpointAndClaim([_account, _account]);
+        _checkpointAndClaim([_account, claimTo]);
     }
 
     function getReward(address _account, address _forwardTo) external {
