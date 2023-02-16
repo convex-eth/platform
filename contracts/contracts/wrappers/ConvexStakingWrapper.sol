@@ -426,12 +426,12 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
 
     function getReward(address _account) external {
         //check if there is a redirect address
-        address claimTo = _account;
         if(rewardRedirect[_account] != address(0)){
-            claimTo = rewardRedirect[_account];
+            _checkpoint(_account, rewardRedirect[_account]);
+        }else{
+            //claim directly in checkpoint logic to save a bit of gas
+            _checkpoint(_account, _account);
         }
-        //claim directly in checkpoint logic to save a bit of gas
-        _checkpointAndClaim([_account, claimTo]);
     }
 
     function getReward(address _account, address _forwardTo) external {
