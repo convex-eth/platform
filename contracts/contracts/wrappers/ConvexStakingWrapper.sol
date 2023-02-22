@@ -69,6 +69,10 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event RewardInvalidated(address _rewardToken);
     event RewardRedirected(address indexed _account, address _forward);
+    event RewardAdded(address _token);
+    event Shutdown();
+    event HookSet(address _hook);
+    event UserCheckpoint(address _userA, address _userB);
 
     constructor() public
         ERC20(
@@ -131,6 +135,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
 
     function shutdown() external onlyOwner {
         isShutdown = true;
+        emit Shutdown();
     }
 
     function setApprovals() public {
@@ -166,6 +171,8 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
             IERC20(crv).transfer(address(this),0);
             //send to self to warmup state
             IERC20(cvx).transfer(address(this),0);
+            emit RewardAdded(crv);
+            emit RewardAdded(cvx);
         }
 
         uint256 extraCount = IRewardStaking(mainPool).extraRewardsLength();
@@ -186,6 +193,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
                     })
                 );
                 registeredRewards[extraToken] = rewards.length; //mark registered at index+1
+                emit RewardAdded(extraToken);
             }
         }
     }
@@ -207,6 +215,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
             registeredRewards[_token] = rewards.length; //mark registered at index+1
             //send to self to warmup state
             IERC20(_token).transfer(address(this),0);   
+            emit RewardAdded(_token);
         }else{
             //get previous used index of given token
             //this ensures that reviving can only be done on the previous used slot
@@ -238,6 +247,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
 
     function setHook(address _hook) external onlyOwner{
         rewardHook = _hook;
+        emit HookSet(_hook);
     }
 
     function rewardLength() external view returns(uint256) {
@@ -323,6 +333,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         for (uint256 i = 0; i < rewardCount; i++) {
            _calcRewardIntegral(i,_accounts,depositedBalance,supply,false);
         }
+        emit UserCheckpoint(_accounts[0],_accounts[1]);
     }
 
     function _checkpointAndClaim(address[2] memory _accounts) internal nonReentrant{
@@ -339,6 +350,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         for (uint256 i = 0; i < rewardCount; i++) {
            _calcRewardIntegral(i,_accounts,depositedBalance,supply,true);
         }
+        emit UserCheckpoint(_accounts[0],_accounts[1]);
     }
 
     //claim any rewards not part of the convex pool
