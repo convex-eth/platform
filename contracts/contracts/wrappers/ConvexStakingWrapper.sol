@@ -318,16 +318,17 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     }
 
     function _checkpoint(address[2] memory _accounts) internal nonReentrant{
-        //if shutdown, no longer checkpoint in case there are problems
-        if(isShutdown) return;
-
         uint256 supply = _getTotalSupply();
         uint256[2] memory depositedBalance;
         depositedBalance[0] = _getDepositedBalance(_accounts[0]);
         depositedBalance[1] = _getDepositedBalance(_accounts[1]);
         
-        IRewardStaking(convexPool).getReward(address(this), true);
-
+        //just in case, dont claim rewards directly if shutdown
+        //can still technically claim via unguarded calls but skipping here
+        //protects against outside calls reverting
+        if(!isShutdown){
+            IRewardStaking(convexPool).getReward(address(this), true);
+        }
         _claimExtras();
 
         uint256 rewardCount = rewards.length;
@@ -338,13 +339,16 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     }
 
     function _checkpointAndClaim(address[2] memory _accounts) internal nonReentrant{
-
         uint256 supply = _getTotalSupply();
         uint256[2] memory depositedBalance;
         depositedBalance[0] = _getDepositedBalance(_accounts[0]); //only do first slot
         
-        IRewardStaking(convexPool).getReward(address(this), true);
-
+        //just in case, dont claim rewards directly if shutdown
+        //can still technically claim via unguarded calls but skipping here
+        //protects against outside calls reverting
+        if(!isShutdown){
+            IRewardStaking(convexPool).getReward(address(this), true);
+        }
         _claimExtras();
 
         uint256 rewardCount = rewards.length;
