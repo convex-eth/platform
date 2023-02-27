@@ -1,7 +1,7 @@
 const fs = require('fs');
 const { ethers } = require("ethers");
 const jsonfile = require('jsonfile');
-const { ARAGON_VOTING, ARGAON_AGENT, GAUGE_CONTROLLER, SIDE_GAUGE_FACTORY, OWNER_PROXY } = require('./abi');
+const { ARAGON_VOTING, ARGAON_AGENT, GAUGE_CONTROLLER, SIDE_GAUGE_FACTORY, OWNER_PROXY, WHITELIST_CHECKER } = require('./abi');
 var BN = require('big-number');
 
 const config = jsonfile.readFileSync('./config.json');
@@ -117,6 +117,12 @@ function addressName(address){
     if(address.toLowerCase() == "0x5a8fdC979ba9b6179916404414F7BA4D8B77C8A1".toLowerCase() ){
         return "Curve Crypto Owner Proxy"
     }
+    if(address.toLowerCase() == "0x742C3cF9Af45f91B109a81EfEaf11535ECDe9571".toLowerCase() ){
+        return "Curve StableSwap Owner Proxy"
+    }
+    if(address.toLowerCase() == "0xca719728Ef172d0961768581fdF35CB116e0B7a4".toLowerCase() ){
+        return "Curve Whitelist Checker"
+    }
     return "Unknown " +address
 }
 
@@ -186,6 +192,29 @@ const decodeOwnerProxyData = async (calldata) => {
     return report;
 }
 
+const decodeWhitelist = async (calldata) => {
+    // console.log("gauge calldata: " +calldata)
+    var scriptbytes = hexStringToByte(calldata);
+    var calldataFunction = scriptbytes.slice(1,5);
+    // console.log("function: " +byteToHexString(calldataFunction))
+    var report = "";
+    if(byteToHexString(calldataFunction) == "0fcb0ae5"){
+        let iface = new ethers.utils.Interface(WHITELIST_CHECKER)
+        report += "Function: approveWallet\n";
+        var dec = iface.decodeFunctionData("approveWallet(address)",calldata);
+        report += "Address: " +dec +" " +etherscan(dec) +"\n";
+    }else if(byteToHexString(calldataFunction) == "808a9d40"){
+        let iface = new ethers.utils.Interface(WHITELIST_CHECKER)
+        report += "Function: revokeWallet\n";
+        var dec = iface.decodeFunctionData("revokeWallet(address)",calldata);
+        report += "Address: " +dec +" " +etherscan(dec) +"\n";
+    }else{
+        report += "Function Unknown: " +byteToHexString(calldataFunction) +"\n";
+        report += "Calldata: " +calldata +"\n";
+    }
+    return report;
+}
+
 const decodeProposal = async (vote_id, isOwnership) => {
     var votedata;
     if(isOwnership){
@@ -225,6 +254,12 @@ const decodeProposal = async (vote_id, isOwnership) => {
         }else if(dec[0] == "0x5a8fdC979ba9b6179916404414F7BA4D8B77C8A1"){ //crypto factory owner proxy
             report += "To: "+addressName(dec[0]) +"\n";
             report += await decodeOwnerProxyData(dec[2]);
+        }else if(dec[0] == "0x742C3cF9Af45f91B109a81EfEaf11535ECDe9571"){ //stableswap factory owner proxy
+            report += "To: "+addressName(dec[0]) +"\n";
+            report += await decodeOwnerProxyData(dec[2]);
+        }else if(dec[0] == "0xca719728Ef172d0961768581fdF35CB116e0B7a4"){ //whitelist checker
+            report += "To: "+addressName(dec[0]) +"\n";
+            report += await decodeWhitelist(dec[2]);
         }else{
             report += "To: " +addressName(dec[0]) +" " +etherscan(dec[0]) +"\n";
             report += "Calldata: " +dec[2] + "\n";
