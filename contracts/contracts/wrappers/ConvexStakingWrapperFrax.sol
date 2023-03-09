@@ -3,20 +3,32 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import "./ConvexStakingWrapper.sol";
+import "../interfaces/IProxyFactory.sol";
 
-interface IFraxFarm {
-    function lockedLiquidityOf(address account) external view returns (uint256 amount);
+
+interface IFraxFarmDistributor {
+    function initialize(address _farm, address _wrapper) external;
 }
 
 //Staking wrapper for Frax Finance platform
 //use convex LP positions as collateral while still receiving rewards
+//
+//This version directs all rewards from the vault(fxs gauge) to a distributor contract
+//which will feed the rewards back into the vault
 contract ConvexStakingWrapperFrax is ConvexStakingWrapper {
     using SafeERC20
     for IERC20;
     using SafeMath
     for uint256;
 
-    constructor() public{}
+    address public immutable distroImplementation;
+    address public constant proxyFactory = address(0x66807B5598A848602734B82E432dD88DBE13fC8f);
+
+    address public distroContract;
+
+    constructor(address _distributor) public{
+        distroImplementation = _distributor;
+    }
 
     function initialize(uint256 _poolId)
     override external {
@@ -35,31 +47,21 @@ contract ConvexStakingWrapperFrax is ConvexStakingWrapper {
         isShutdown = false;
         isInit = true;
 
-        //set vault later
-        // collateralVault = _vault;
-
-
         //add rewards
         addRewards();
         setApprovals();
     }
 
     function setVault(address _vault) external onlyOwner{
-        require(collateralVault == address(0), "already set");
+        //set distro contract to take care of rewards
+        require(distroContract == address(0), "already set");
+        
+        //create a distro contract
+        distroContract = IProxyFactory(proxyFactory).clone(distroImplementation);
+        IFraxFarmDistributor(distroContract).initialize(_vault, address(this));
 
-        collateralVault = _vault;
+        //forward rewards from vault to distro
+        rewardRedirect[_vault] = distroContract;
     }
 
-    function _getDepositedBalance(address _account) internal override view returns(uint256) {
-        if (_account == address(0) || _account == collateralVault) {
-            return 0;
-        }
-
-        uint256 collateral;
-        if(collateralVault != address(0)){
-           collateral = IFraxFarm(collateralVault).lockedLiquidityOf(_account);
-        }
-
-        return balanceOf(_account).add(collateral);
-    }
 }

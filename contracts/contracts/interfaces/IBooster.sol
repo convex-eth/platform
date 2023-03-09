@@ -7,4 +7,6 @@ interface IBooster {
     function vote(uint256 _voteId, address _votingAddress, bool _support) external returns(bool);
     function voteGaugeWeight(address[] calldata _gauge, uint256[] calldata _weight ) external returns(bool);
     function poolInfo(uint256 _pid) external view returns(address _lptoken, address _token, address _gauge, address _crvRewards, address _stash, bool _shutdown);
+    function earmarkRewards(uint256 _pid) external returns(bool);
+    function earmarkFees() external returns(bool);
 }
