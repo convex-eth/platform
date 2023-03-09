@@ -59,7 +59,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     //management
     bool public isShutdown;
     bool public isInit;
-    address public owner;
+    address internal _owner;
 
     string internal _tokenname;
     string internal _tokensymbol;
@@ -84,8 +84,8 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     function initialize(uint256 _poolId)
     virtual external {
         require(!isInit,"already init");
-        owner = msg.sender;
-        emit OwnershipTransferred(address(0), owner);
+        _owner = msg.sender;
+        emit OwnershipTransferred(address(0), _owner);
 
         (address _lptoken, address _token, , address _rewards, , ) = IBooster(convexBooster).poolInfo(_poolId);
         curveToken = _lptoken;
@@ -105,6 +105,10 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         setApprovals();
     }
 
+    function owner() public view virtual returns(address) {
+        return _owner;
+    }
+
     function name() public view override returns (string memory) {
         return _tokenname;
     }
@@ -117,20 +121,20 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         return 18;
     }
 
-    modifier onlyOwner() {
-        require(owner == msg.sender, "Ownable: caller is not the owner");
+    modifier onlyOwner() virtual{
+        require(_owner == msg.sender, "Ownable: caller is not the owner");
         _;
     }
 
     function transferOwnership(address newOwner) public virtual onlyOwner {
         require(newOwner != address(0), "Ownable: new owner is the zero address");
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
+        emit OwnershipTransferred(_owner, newOwner);
+        _owner = newOwner;
     }
 
     function renounceOwnership() public virtual onlyOwner {
-        emit OwnershipTransferred(owner, address(0));
-        owner = address(0);
+        emit OwnershipTransferred(_owner, address(0));
+        _owner = address(0);
     }
 
     function shutdown() external onlyOwner {

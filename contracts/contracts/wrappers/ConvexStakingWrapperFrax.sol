@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import "./ConvexStakingWrapper.sol";
 import "../interfaces/IProxyFactory.sol";
+import "../interfaces/IOwner.sol";
 
 
 interface IFraxFarmDistributor {
@@ -22,19 +23,31 @@ contract ConvexStakingWrapperFrax is ConvexStakingWrapper {
     for uint256;
 
     address public immutable distroImplementation;
+    address public immutable factory;
     address public constant proxyFactory = address(0x66807B5598A848602734B82E432dD88DBE13fC8f);
 
     address public distroContract;
 
-    constructor(address _distributor) public{
+    constructor(address _distributor, address _factory) public{
         distroImplementation = _distributor;
+        factory = _factory;
     }
+
+    modifier onlyOwner() override{
+        require(owner() == msg.sender, "Ownable: caller is not the owner");
+        _;
+    }
+
+    function owner() public view override returns(address) {
+        return IOwner(factory).owner();
+    }
+
 
     function initialize(uint256 _poolId)
     override external {
         require(!isInit,"already init");
-        owner = msg.sender;
-        emit OwnershipTransferred(address(0), owner);
+        // _owner = msg.sender;
+        // emit OwnershipTransferred(address(0), _owner);
 
         (address _lptoken, address _token, , address _rewards, , ) = IBooster(convexBooster).poolInfo(_poolId);
         curveToken = _lptoken;

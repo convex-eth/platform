@@ -22,8 +22,8 @@ contract ConvexStakingWrapperAbra is ConvexStakingWrapper {
     function initialize(uint256 _poolId)
     override external {
         require(!isInit,"already init");
-        owner = msg.sender;
-        emit OwnershipTransferred(address(0), owner);
+        _owner = msg.sender;
+        emit OwnershipTransferred(address(0), _owner);
 
         (address _lptoken, address _token, , address _rewards, , ) = IBooster(convexBooster).poolInfo(_poolId);
         curveToken = _lptoken;
