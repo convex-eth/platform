@@ -60,9 +60,9 @@
         "rescueToken": "0xB15fFb543211b558D40160811e5DcBcd7d5aaac9",
         "vlcvxExtraRewardsOLD": "0xDecc7d761496d30F30b92Bdf764fb8803c79360D",
         "vlcvxExtraRewards": "0x9B622f2c40b80EF5efb14c2B2239511FfBFaB702",
-        "masterFraxWrapper": "0x6De275fc3cE59976e9f5FBbAb31523CB5942766E",
+        "masterFraxWrapper": "0x41768CCadBe73c5C8CD291b4F3A0BADaeE71678f",
         "masterFraxLend": "0xA82bEBC607Cd258C66A6D5006A19401EaFb786A4",
-        "masterFraxRewardDistributor": "0x2365FD450b7b040288B318543F683f01Ca189712"
+        "masterFraxRewardDistributor": "0x04Bb59bd617f06eeeeE00CaEAFFC8F3b68510330"
     },
     "curve":{
         "registry":"0x0000000022D53366457F9d5E68Ec105046FC4383",
