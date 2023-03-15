@@ -49,6 +49,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     address public collateralVault;
     uint256 private constant CRV_INDEX = 0;
     uint256 private constant CVX_INDEX = 1;
+    uint256 private constant minimumSupply = 1e16;
 
     //rewards
     RewardType[] public rewards;
@@ -277,7 +278,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
 
     function _calcRewardIntegral(uint256 _index, address[2] memory _accounts, uint256[2] memory _balances, uint256 _supply, bool _isClaim) internal{
          RewardType storage reward = rewards[_index];
-         if(reward.reward_token == address(0)){
+         if(_supply < minimumSupply || reward.reward_token == address(0)){
             return;
          }
 
