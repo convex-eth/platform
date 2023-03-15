@@ -32,8 +32,8 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     struct RewardType {
         address reward_token;
         address reward_pool;
-        uint128 reward_integral;
-        uint128 reward_remaining;
+        uint256 reward_integral;
+        uint256 reward_remaining;
         mapping(address => uint256) reward_integral_for;
         mapping(address => uint256) claimable_reward;
     }
@@ -49,7 +49,6 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     address public collateralVault;
     uint256 private constant CRV_INDEX = 0;
     uint256 private constant CVX_INDEX = 1;
-    uint256 private constant minimumSupply = 1e16;
 
     //rewards
     RewardType[] public rewards;
@@ -278,7 +277,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
 
     function _calcRewardIntegral(uint256 _index, address[2] memory _accounts, uint256[2] memory _balances, uint256 _supply, bool _isClaim) internal{
          RewardType storage reward = rewards[_index];
-         if(_supply < minimumSupply || reward.reward_token == address(0)){
+         if(reward.reward_token == address(0)){
             return;
          }
 
@@ -287,7 +286,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         uint256 bal = IERC20(reward.reward_token).balanceOf(address(this));
 
         if (_supply > 0 && bal.sub(reward.reward_remaining) > 0) {
-            reward.reward_integral = reward.reward_integral + uint128(bal.sub(reward.reward_remaining).mul(1e20).div(_supply));
+            reward.reward_integral = reward.reward_integral + (bal.sub(reward.reward_remaining).mul(1e20).div(_supply));
         }
 
         //update user integrals
@@ -300,7 +299,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
             uint userI = reward.reward_integral_for[_accounts[u]];
             if(_isClaim || userI < reward.reward_integral){
                 if(_isClaim){
-                    uint256 receiveable = reward.claimable_reward[_accounts[u]].add(_balances[u].mul( uint256(reward.reward_integral).sub(userI)).div(1e20));
+                    uint256 receiveable = reward.claimable_reward[_accounts[u]].add(_balances[u].mul( reward.reward_integral.sub(userI)).div(1e20));
                     if(receiveable > 0){
                         reward.claimable_reward[_accounts[u]] = 0;
                         //cheat for gas savings by transfering to the second index in accounts list
@@ -310,7 +309,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
                         bal = bal.sub(receiveable);
                     }
                 }else{
-                    reward.claimable_reward[_accounts[u]] = reward.claimable_reward[_accounts[u]].add(_balances[u].mul( uint256(reward.reward_integral).sub(userI)).div(1e20));
+                    reward.claimable_reward[_accounts[u]] = reward.claimable_reward[_accounts[u]].add(_balances[u].mul( reward.reward_integral.sub(userI)).div(1e20));
                 }
                 reward.reward_integral_for[_accounts[u]] = reward.reward_integral;
             }
@@ -318,7 +317,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
 
         //update remaining reward here since balance could have changed if claiming
         if(bal != reward.reward_remaining){
-            reward.reward_remaining = uint128(bal);
+            reward.reward_remaining = bal;
         }
     }
 
