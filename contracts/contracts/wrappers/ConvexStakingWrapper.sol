@@ -184,8 +184,8 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         for (uint256 i = 0; i < extraCount; i++) {
             address extraPool = IRewardStaking(mainPool).extraRewards(i);
             address extraToken = IRewardStaking(extraPool).rewardToken();
-            //from pool 152, extra reward tokens are wrapped
-            if(convexPoolId >= 152){
+            //from pool 151, extra reward tokens are wrapped
+            if(convexPoolId >= 151){
                 extraToken = ITokenWrapper(extraToken).token();
             }
             if(extraToken == cvx){
