@@ -7,6 +7,7 @@ import "../interfaces/IConvexDeposits.sol";
 import "../interfaces/CvxMining.sol";
 import "../interfaces/IBooster.sol";
 import "../interfaces/IRewardHook.sol";
+import "../interfaces/ITokenWrapper.sol";
 import '@openzeppelin/contracts/math/SafeMath.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
@@ -183,6 +184,10 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         for (uint256 i = 0; i < extraCount; i++) {
             address extraPool = IRewardStaking(mainPool).extraRewards(i);
             address extraToken = IRewardStaking(extraPool).rewardToken();
+            //from pool 152, extra reward tokens are wrapped
+            if(convexPoolId >= 152){
+                extraToken = ITokenWrapper(extraToken).token();
+            }
             if(extraToken == cvx){
                 //update cvx reward pool address
                 rewards[CVX_INDEX].reward_pool = extraPool;
