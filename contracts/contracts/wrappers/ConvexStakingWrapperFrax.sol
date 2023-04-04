@@ -27,6 +27,7 @@ contract ConvexStakingWrapperFrax is ConvexStakingWrapper {
     address public constant proxyFactory = address(0x66807B5598A848602734B82E432dD88DBE13fC8f);
 
     address public distroContract;
+    bool public distroSealed;
 
     constructor(address _distributor, address _factory) public{
         distroImplementation = _distributor;
@@ -75,6 +76,22 @@ contract ConvexStakingWrapperFrax is ConvexStakingWrapper {
 
         //forward rewards from vault to distro
         rewardRedirect[_vault] = distroContract;
+    }
+
+    //Also resetting of distributor while this feature is new
+    //Seal once battle tested
+    //Future versions should remove this
+    function setDistributor(address _vault, address _distro) external onlyOwner{
+        require(rewardRedirect[_vault] == distroContract, "!vault");
+        require(!distroSealed,"sealed");
+
+        distroContract = _distro;
+        IFraxFarmDistributor(_distro).initialize(_vault, address(this));
+        rewardRedirect[_vault] = _distro;
+    }
+
+    function sealDistributor() external onlyOwner{
+        distroSealed = true;
     }
 
 }
