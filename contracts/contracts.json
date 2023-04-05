@@ -62,7 +62,7 @@
         "vlcvxExtraRewards": "0x9B622f2c40b80EF5efb14c2B2239511FfBFaB702",
         "masterFraxWrapper": "0x97A05bBb55a7793BE570e08C7eb668b8E94A1F0F",
         "masterFraxLend": "0xA82bEBC607Cd258C66A6D5006A19401EaFb786A4",
-        "masterFraxRewardDistributor": "0x395a8974a00e4a0e91Efe0E335aC39a8486158cD"
+        "masterFraxRewardDistributor": "0x3f78e6FA2DCc1b04D3c4377f393F4F83F4730852"
     },
     "curve":{
         "registry":"0x0000000022D53366457F9d5E68Ec105046FC4383",
