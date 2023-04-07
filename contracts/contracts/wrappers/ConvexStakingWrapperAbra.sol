@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 import "../interfaces/ICauldron.sol";
 import "../interfaces/IBentoBox.sol";
 import "../interfaces/IBooster.sol";
+import "../interfaces/IOwner.sol";
 import "./ConvexStakingWrapper.sol";
 
 //Staking wrapper for Abracadabra platform
@@ -15,9 +16,21 @@ contract ConvexStakingWrapperAbra is ConvexStakingWrapper {
     using SafeMath
     for uint256;
 
+    address public immutable factory;
     address[] public cauldrons;
 
-    constructor() public{}
+    constructor(address _factory) public{
+        factory = _factory;
+    }
+
+    modifier onlyOwner() override{
+        require(owner() == msg.sender, "Ownable: caller is not the owner");
+        _;
+    }
+
+    function owner() public view override returns(address) {
+        return IOwner(factory).owner();
+    }
 
     function initialize(uint256 _poolId)
     override external {
@@ -36,7 +49,7 @@ contract ConvexStakingWrapperAbra is ConvexStakingWrapper {
         isShutdown = false;
         isInit = true;
 
-        collateralVault = address(0xF5BCE5077908a1b7370B9ae04AdC565EBd643966);
+        collateralVault = address(0xd96f48665a1410C0cd669A88898ecA36B9Fc2cce);
     
         // if(_vault != address(0)){
         //     cauldrons.push(_vault);
