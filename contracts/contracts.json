@@ -55,6 +55,7 @@
         "chefRewardHookTreasury": "0x5e2706946c2bE55b038f4a0475cb7b19f5a67897",
         "chefTokenCvxDistro": "0x745356676eC4dE8DE6AE84AD0f21D30cB590d8Bd",
         "chefHookCvxDistro": "0x973c2F122Dbfa2867e6f7a05d329414bFF43EAEa",
+        "fpisClaimHook": "0xb93989B104A3bc2EBA16210748CEcdf76ea3238d",
         "rescueStashImpl": "0x9dC3de2e9d6963bAb146dC35DC3925ADD0CFc918",
         "rescueStash": "0x01140351069af98416cC08b16424b9E765436531",
         "rescueToken": "0xB15fFb543211b558D40160811e5DcBcd7d5aaac9",
