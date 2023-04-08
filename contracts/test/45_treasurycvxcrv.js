@@ -363,7 +363,7 @@ contract("Test swapping/stakign and other actions for treasury", async accounts 
 
     await swapper.addToPool(amountCrv, amountCrvCvx, minOut,{from:deployer});
 
-    var lprewards = await IERC20.at("0x0392321e86F42C2F94FBb0c6853052487db521F0");
+    var lprewards = await IERC20.at("0x39D78f11b246ea4A1f68573c3A5B64E83Cff2cAe");
 
     await crv.balanceOf(treasury).then(a=>console.log("treasury crv: " +a));
     await cvxCrv.balanceOf(treasury).then(a=>console.log("treasury cvxCrv: " +a));
@@ -395,6 +395,67 @@ contract("Test swapping/stakign and other actions for treasury", async accounts 
     await cvx.balanceOf(treasury).then(a=>console.log("treasury cvx: " +a));
 
     console.log("\n\n >>> Remove LP END>>>>");
+
+    console.log("\n\n >>> Add LP 2>>>>");
+    
+    await crv.balanceOf(treasury).then(a=>console.log("treasury crv: " +a));
+    await cvxCrv.balanceOf(treasury).then(a=>console.log("treasury cvxCrv: " +a));
+
+    var amountCrv = web3.utils.toWei("100000.0", "ether");
+    var amountCrvCvx = web3.utils.toWei("100000.0", "ether");
+    console.log("add to LP crv: " +amountCrv);
+    console.log("add to LP cvxcrv: " +amountCrvCvx);
+
+    var minOut = await swapper.calc_minOut_deposit(amountCrv,amountCrvCvx);
+    console.log("minOut: " +minOut);
+
+    await swapper.addToPool(amountCrv, amountCrvCvx, minOut,{from:deployer});
+
+    await crv.balanceOf(treasury).then(a=>console.log("treasury crv: " +a));
+    await cvxCrv.balanceOf(treasury).then(a=>console.log("treasury cvxCrv: " +a));
+    await lprewards.balanceOf(swapper.address).then(a=>console.log("staked lp: " +a));
+
+    console.log("\n\n >>> Add LP 2 END>>>>");
+
+    await advanceTime(day*3);
+
+
+    console.log("\n\n >>> claim rewards >>>>");
+
+    await crv.balanceOf(treasury).then(a=>console.log("treasury crv: " +a));
+    await cvx.balanceOf(treasury).then(a=>console.log("treasury cvx: " +a));
+
+    await crv.balanceOf(swapper.address).then(a=>console.log("swapper crv: " +a));
+    await cvxCrv.balanceOf(swapper.address).then(a=>console.log("swapper cvxCrv: " +a));
+
+    await swapper.claimLPRewards({from:deployer});
+
+    await crv.balanceOf(swapper.address).then(a=>console.log("swapper crv: " +a));
+    await cvxCrv.balanceOf(swapper.address).then(a=>console.log("swapper cvxCrv: " +a));
+
+    await crv.balanceOf(treasury).then(a=>console.log("treasury crv: " +a));
+    await cvx.balanceOf(treasury).then(a=>console.log("treasury cvx: " +a));
+
+    console.log("\n\n >>> claim rewards END>>>>");
+
+    console.log("\n\n >>> Remove LP as lp token >>>>");
+    var lptoken = await IERC20.at("0x971add32Ea87f10bD192671630be3BE8A11b8623");
+
+    await crv.balanceOf(treasury).then(a=>console.log("treasury crv: " +a));
+    await lptoken.balanceOf(treasury).then(a=>console.log("treasury lptoken: " +a));
+    await cvx.balanceOf(treasury).then(a=>console.log("treasury cvx: " +a));
+
+    var lpbal = await lprewards.balanceOf(swapper.address);
+    console.log("remove LP: " +lpbal);
+
+    await swapper.removeAsLP(lpbal, {from:deployer});
+
+    await crv.balanceOf(treasury).then(a=>console.log("treasury crv: " +a));
+    await lptoken.balanceOf(treasury).then(a=>console.log("treasury lptoken: " +a));
+    await cvx.balanceOf(treasury).then(a=>console.log("treasury cvx: " +a));
+
+    console.log("\n\n >>> Remove LP as lp token END>>>>");
+
   });
 });
 

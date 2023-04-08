@@ -37,10 +37,10 @@ contract TreasurySwap{
     address public constant cvxCrv = address(0x62B9c7356A2Dc64a1969e19C23e4f579F9810Aa7);
     address public constant cvxCrvRewards = address(0x3Fe65692bfCD0e6CF84cB1E7d24108E434A7587e);
     address public constant treasury = address(0x1389388d01708118b497f59521f6943Be2541bb7);
-    address public constant exchange = address(0x9D0464996170c6B9e75eED71c68B99dDEDf279e8);
+    address public constant exchange = address(0x971add32Ea87f10bD192671630be3BE8A11b8623);
     address public constant booster = address(0xF403C135812408BFbE8713b5A23a04b3D48AAE31);
-    address public constant lprewards = address(0x0392321e86F42C2F94FBb0c6853052487db521F0);
-    uint256 public constant pid = 41;
+    address public constant lprewards = address(0x39D78f11b246ea4A1f68573c3A5B64E83Cff2cAe);
+    uint256 public constant pid = 157;
 
     address public immutable owner;
 
