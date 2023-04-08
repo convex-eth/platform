@@ -50,6 +50,14 @@ contract TreasurySwap{
     uint256 public slippage;
 
     event OperatorSet(address indexed _op, bool _active);
+    event Swap(uint256 _amountIn, uint256 _amountOut);
+    event Convert(uint256 _amount);
+    event Burn(uint256 _amount);
+    event Stake(uint256 _amount);
+    event Unstake(uint256 _amount);
+    event AddedToLP(uint256 _lpamount);
+    event RemovedFromLp(uint256 _lpamount);
+    event ClaimedReward(address indexed _token, uint256 _amount);
 
     constructor() public {
         owner = address(0xa3C5A1e09150B75ff251c1a7815A07182c3de2FB);
@@ -71,6 +79,14 @@ contract TreasurySwap{
     modifier onlyOperator() {
         require(operators[msg.sender] || owner == msg.sender, "!operator");
         _;
+    }
+
+    function treasuryBalanceOfCrv() external view returns(uint256){
+        return IERC20(crv).balanceOf(treasury);
+    }
+
+    function treasuryBalanceOfCvxCrv() external view returns(uint256){
+        return IERC20(cvxCrv).balanceOf(treasury);
     }
 
     function setStakeAddress(address _stake) external onlyOwner{
@@ -127,11 +143,15 @@ contract TreasurySwap{
     function swap(uint256 _amount, uint256 _minAmountOut) external onlyOperator{
         require(_minAmountOut > 0, "!min_out");
 
+        uint256 before = IERC20(cvxCrv).balanceOf(treasury);
+
         //pull
         IERC20(crv).safeTransferFrom(treasury,address(this),_amount);
         
         //swap and return to treasury
         ICvxCrvExchange(exchange).exchange(0,1,_amount,_minAmountOut, treasury);
+
+        emit Swap(_amount, IERC20(cvxCrv).balanceOf(treasury) - before );
     }
 
     function stake(uint256 _amount) external onlyOperator{
@@ -141,7 +161,10 @@ contract TreasurySwap{
         IERC20(cvxCrv).safeTransferFrom(treasury,address(this),_amount);
 
         //stake for treasury
-        IRewardStaking(stakedCvxcrv).stakeFor(treasury, IERC20(cvxCrv).balanceOf(address(this)));
+        uint256 bal = IERC20(cvxCrv).balanceOf(address(this));
+        IRewardStaking(stakedCvxcrv).stakeFor(treasury, bal);
+
+        emit Stake(bal);
     }
 
     function burn(uint256 _amount) external onlyOperator{
@@ -149,7 +172,10 @@ contract TreasurySwap{
         IERC20(cvxCrv).safeTransferFrom(treasury,address(this),_amount);
 
         //burn
-        IRewardStaking(cvxCrvRewards).stakeFor(stakedCvxcrv, IERC20(cvxCrv).balanceOf(address(this)));
+        uint256 bal = IERC20(cvxCrv).balanceOf(address(this));
+        IRewardStaking(cvxCrvRewards).stakeFor(stakedCvxcrv, bal);
+
+        emit Burn(bal);
     }
 
     function swapAndStake(uint256 _amount, uint256 _minAmountOut) external onlyOperator{
@@ -161,8 +187,12 @@ contract TreasurySwap{
 
         //swap
         ICvxCrvExchange(exchange).exchange(0,1,_amount,_minAmountOut, address(this));
+        uint256 bal = IERC20(cvxCrv).balanceOf(address(this));
+        emit Swap(_amount, bal );
+
         //stake for treasury
-        IRewardStaking(stakedCvxcrv).stakeFor(treasury, IERC20(cvxCrv).balanceOf(address(this)));
+        IRewardStaking(stakedCvxcrv).stakeFor(treasury, bal);
+        emit Stake(bal);
     }
 
     function swapAndBurn(uint256 _amount, uint256 _minAmountOut) external onlyOperator{
@@ -174,12 +204,16 @@ contract TreasurySwap{
 
         //swap
         ICvxCrvExchange(exchange).exchange(0,1,_amount,_minAmountOut, address(this));
+        uint256 bal = IERC20(cvxCrv).balanceOf(address(this));
+        emit Swap(_amount, bal );
+
         //burn
         IRewardStaking(cvxCrvRewards).stakeFor(stakedCvxcrv, IERC20(cvxCrv).balanceOf(address(this)));
+        emit Burn(bal);
     }
 
 
-    function  unstake(uint256 _amount) external onlyOperator{
+    function unstake(uint256 _amount) external onlyOperator{
         require(stakedCvxcrv != address(0),"!stkAddress");
 
         //pull staked tokens
@@ -190,19 +224,25 @@ contract TreasurySwap{
         IERC20(cvxCrv).safeTransfer(treasury, IERC20(cvxCrv).balanceOf(address(this)));
         //get rewards for treasury
         ICvxCrvStaking(stakedCvxcrv).getReward(treasury);
+
+        emit Unstake(_amount);
     }
 
-    function  unstakeAndBurn(uint256 _amount) external onlyOperator{
+    function unstakeAndBurn(uint256 _amount) external onlyOperator{
         require(stakedCvxcrv != address(0),"!stkAddress");
 
         //pull staked tokens
         IERC20(stakedCvxcrv).safeTransferFrom(treasury,address(this),_amount);
         //unstake
         ICvxCrvStaking(stakedCvxcrv).withdraw(_amount);
+        uint256 bal = IERC20(cvxCrv).balanceOf(address(this));
         //burn
-        IRewardStaking(cvxCrvRewards).stakeFor(stakedCvxcrv, IERC20(cvxCrv).balanceOf(address(this)));
+        IRewardStaking(cvxCrvRewards).stakeFor(stakedCvxcrv, bal);
         //get rewards for treasury
         ICvxCrvStaking(stakedCvxcrv).getReward(treasury);
+
+        emit Unstake(_amount);
+        emit Burn(bal);
     }
 
     function addToPool(uint256 _crvamount, uint256 _cvxcrvamount, uint256 _minAmountOut) external onlyOperator{
@@ -217,7 +257,10 @@ contract TreasurySwap{
         ICvxCrvExchange(exchange).add_liquidity(amounts, _minAmountOut, address(this));
 
         //add to convex
-        IConvexDeposits(booster).deposit(pid, IERC20(exchange).balanceOf(address(this)), true);
+        uint256 lpBalance = IERC20(exchange).balanceOf(address(this));
+        IConvexDeposits(booster).deposit(pid, lpBalance, true);
+
+        emit AddedToLP(lpBalance);
     }
 
     function removeFromPool(uint256 _amount, uint256 _minAmountOut) external onlyOperator{
@@ -233,20 +276,60 @@ contract TreasurySwap{
         if(bal > 0){
             //transfer to treasury
             IERC20(crv).safeTransfer(treasury, bal);
-        }
-
-        bal = IERC20(cvxCrv).balanceOf(address(this));
-        if(bal > 0){
-            //transfer to treasury
-            IERC20(cvxCrv).safeTransfer(treasury, bal);
+            emit ClaimedReward(crv,bal);
         }
 
         bal = IERC20(cvx).balanceOf(address(this));
         if(bal > 0){
             //transfer to treasury
             IERC20(cvx).safeTransfer(treasury, bal);
+            emit ClaimedReward(cvx,bal);
         }
 
+        emit RemovedFromLp(_amount);
+    }
+
+    function removeAsLP(uint256 _amount) external onlyOperator{
+        //remove from convex
+        IRewardStaking(lprewards).withdrawAndUnwrap(_amount, true);
+
+        //remove from LP with treasury as receiver
+        IERC20(exchange).safeTransfer(treasury,IERC20(exchange).balanceOf(address(this)));
+
+        uint256 bal = IERC20(crv).balanceOf(address(this));
+        if(bal > 0){
+            //transfer to treasury
+            IERC20(crv).safeTransfer(treasury, bal);
+            emit ClaimedReward(crv,bal);
+        }
+
+        bal = IERC20(cvx).balanceOf(address(this));
+        if(bal > 0){
+            //transfer to treasury
+            IERC20(cvx).safeTransfer(treasury, bal);
+            emit ClaimedReward(cvx,bal);
+        }
+
+        emit RemovedFromLp(_amount);
+    }
+
+    function claimLPRewards() external onlyOperator{
+        //claim from convex
+        IRewardStaking(lprewards).getReward();
+
+        uint256 bal = IERC20(crv).balanceOf(address(this));
+        if(bal > 0){
+            //transfer to treasury
+            IERC20(crv).safeTransfer(treasury, bal);
+            emit ClaimedReward(crv,bal);
+        }
+
+        bal = IERC20(cvx).balanceOf(address(this));
+        if(bal > 0){
+            //transfer to treasury
+            IERC20(cvx).safeTransfer(treasury, bal);
+            emit ClaimedReward(cvx,bal);
+        }
     }
 
 }
