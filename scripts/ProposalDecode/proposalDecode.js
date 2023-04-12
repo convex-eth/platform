@@ -120,6 +120,9 @@ function addressName(address){
     if(address.toLowerCase() == "0x742C3cF9Af45f91B109a81EfEaf11535ECDe9571".toLowerCase() ){
         return "Curve StableSwap Owner Proxy"
     }
+    if(address.toLowerCase() == "0x017dB2B92233018973902858B31269Ed071E1D39".toLowerCase() ){
+        return "Curve Root Gauge Owner Proxy"
+    }
     if(address.toLowerCase() == "0xca719728Ef172d0961768581fdF35CB116e0B7a4".toLowerCase() ){
         return "Curve Whitelist Checker"
     }
@@ -255,6 +258,9 @@ const decodeProposal = async (vote_id, isOwnership) => {
             report += "To: "+addressName(dec[0]) +"\n";
             report += await decodeOwnerProxyData(dec[2]);
         }else if(dec[0] == "0x742C3cF9Af45f91B109a81EfEaf11535ECDe9571"){ //stableswap factory owner proxy
+            report += "To: "+addressName(dec[0]) +"\n";
+            report += await decodeOwnerProxyData(dec[2]);
+        }else if(dec[0] == "0x017dB2B92233018973902858B31269Ed071E1D39"){ //root gauge factory owner proxy
             report += "To: "+addressName(dec[0]) +"\n";
             report += await decodeOwnerProxyData(dec[2]);
         }else if(dec[0] == "0xca719728Ef172d0961768581fdF35CB116e0B7a4"){ //whitelist checker
