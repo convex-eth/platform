@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import "./ConvexStakingWrapper.sol";
 import "../interfaces/IBooster.sol";
+import "../interfaces/IOwner.sol";
 
 interface IFraxLend {
     function userCollateralBalance(address account) external view returns (uint256 amount);
@@ -17,8 +18,20 @@ contract ConvexStakingWrapperFraxLend is ConvexStakingWrapper {
     using SafeMath
     for uint256;
 
+    address public immutable factory;
     
-    constructor() public{}
+    constructor(address _factory) public{
+        factory = _factory;
+    }
+
+    modifier onlyOwner() override{
+        require(owner() == msg.sender, "Ownable: caller is not the owner");
+        _;
+    }
+
+    function owner() public view override returns(address) {
+        return IOwner(factory).owner();
+    }
 
     function initialize(uint256 _poolId)
     override external {

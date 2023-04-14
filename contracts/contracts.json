@@ -50,7 +50,6 @@
         "proxyFactory": "0x66807B5598A848602734B82E432dD88DBE13fC8f",
         "stashv3Impl": "0x0dBffBA31097510d291aD9150B150b3BB07d8852",
         "stashTokenWrapper": "0xc19Cf0eAA43ee080c3cB8fB7dB388091d3a13eB7",
-        "masterAbraWrapper": "0xD379454E9f28302A3bbE92b271605cbEA5aEa0A2",
         "chefTokenTreasury": "0x51854310A2411e682F5C1A23924DD9de79D0342a",
         "chefRewardHookTreasury": "0x5e2706946c2bE55b038f4a0475cb7b19f5a67897",
         "chefTokenCvxDistro": "0x745356676eC4dE8DE6AE84AD0f21D30cB590d8Bd",
@@ -62,8 +61,11 @@
         "vlcvxExtraRewardsOLD": "0xDecc7d761496d30F30b92Bdf764fb8803c79360D",
         "vlcvxExtraRewards": "0x9B622f2c40b80EF5efb14c2B2239511FfBFaB702",
         "masterFraxWrapper": "0xC1115C1E030b38416a7B7ab1C20165f67098913B",
-        "masterFraxLend": "0xA82bEBC607Cd258C66A6D5006A19401EaFb786A4",
-        "masterFraxRewardDistributor": "0x4C586e8B191d67AA79EB55e89F9a5cbD9BcbDc57"
+        "masterFraxRewardDistributor": "0x4C586e8B191d67AA79EB55e89F9a5cbD9BcbDc57",
+        "masterFraxLend": "0x6982E8F7Ddb33D1dbfe1a962d69D2496Ef1C015B",
+        "factoryFraxLendWrapper": "0xe5Ca8CB440A6f9F6fA1D535D94A839CED59D9942",
+        "masterAbraWrapper": "0xbc8923a60319807B1DAE6b866f80F99Ec1A3A0eF",
+        "factoryAbraWrapper": "0x6a5A26E5B91cC9EB1D84DA16A8360Bc1DF8212BC"
     },
     "curve":{
         "registry":"0x0000000022D53366457F9d5E68Ec105046FC4383",
