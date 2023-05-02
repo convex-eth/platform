@@ -280,6 +280,11 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         return totalSupply();
     }
 
+    //internal transfer function to transfer rewards out on claim
+    function _transferReward(address _token, address _to, uint256 _amount) internal virtual{
+        IERC20(_token).safeTransfer(_to, _amount);
+    }
+
     function _calcRewardIntegral(uint256 _index, address[2] memory _accounts, uint256[2] memory _balances, uint256 _supply, bool _isClaim) internal{
          RewardType storage reward = rewards[_index];
          if(reward.reward_token == address(0)){
@@ -311,7 +316,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
                         //cheat for gas savings by transfering to the second index in accounts list
                         //if claiming only the 0 index will update so 1 index can hold forwarding info
                         //guaranteed to have an address in u+1 so no need to check
-                        IERC20(reward.reward_token).safeTransfer(_accounts[u+1], receiveable);
+                        _transferReward(reward.reward_token, _accounts[u+1], receiveable);
                         bal = bal.sub(receiveable);
                     }
                 }else{
