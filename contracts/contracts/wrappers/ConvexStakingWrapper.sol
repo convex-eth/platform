@@ -290,7 +290,8 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         //getReward is unguarded so we use reward_remaining to keep track of how much was actually claimed
         uint256 bal = IERC20(reward.reward_token).balanceOf(address(this));
 
-        if (_supply > 0 && bal.sub(reward.reward_remaining) > 0) {
+        //check that balance increased and update integral
+        if (_supply > 0 && bal > reward.reward_remaining) {
             reward.reward_integral = reward.reward_integral + (bal.sub(reward.reward_remaining).mul(1e20).div(_supply));
         }
 
