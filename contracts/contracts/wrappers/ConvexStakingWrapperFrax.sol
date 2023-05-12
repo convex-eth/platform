@@ -11,6 +11,10 @@ interface IFraxFarmDistributor {
     function initialize(address _farm, address _wrapper) external;
 }
 
+interface IFraxFarm {
+    function lockedLiquidityOf(address account) external view returns (uint256 amount);
+}
+
 //Staking wrapper for Frax Finance platform
 //use convex LP positions as collateral while still receiving rewards
 //
@@ -66,6 +70,41 @@ contract ConvexStakingWrapperFrax is ConvexStakingWrapper {
         setApprovals();
     }
 
+    function _getDepositedBalance(address _account) internal override view returns(uint256) {
+        if (_account == address(0) || _account == collateralVault) {
+            return 0;
+        }
+
+        uint256 collateral;
+        if(collateralVault != address(0)){
+           collateral = IFraxFarm(collateralVault).lockedLiquidityOf(_account);
+        }
+
+        return balanceOf(_account).add(collateral);
+    }
+
+    //add extra check if farm is the caller of claim then pull tokens
+    function _claimExtras(bool _isClaim) internal override{
+        super._claimExtras(_isClaim);
+
+        //if the frax farm is the caller, send all crv/cvx to the distribution contract
+        if(_isClaim && msg.sender == collateralVault){
+            uint256 b = IERC20(crv).balanceOf(address(this));
+            if(b > 0){
+                _transferReward(crv,distroContract,b);
+            }
+            b = IERC20(cvx).balanceOf(address(this));
+            if(b > 0){
+                _transferReward(cvx,distroContract,b);
+            }
+        }
+    }
+
+    function addTokenReward(address _token) public override onlyOwner {
+        require(_token != crv && _token != cvx,"!revive");
+        super.addTokenReward(_token);
+    }
+
     function setVault(address _vault) external onlyOwner{
         //set distro contract to take care of rewards
         require(distroContract == address(0), "already set");
@@ -76,18 +115,25 @@ contract ConvexStakingWrapperFrax is ConvexStakingWrapper {
 
         //forward rewards from vault to distro
         rewardRedirect[_vault] = distroContract;
+        collateralVault = _vault;
+
+        //invalidate crv and cvx so that they are not distributed directly
+        //but rather picked up by the frax farm distributor via _claimExtras
+        invalidateReward(crv);
+        invalidateReward(cvx);
     }
 
     //Also resetting of distributor while this feature is new
     //Seal once battle tested
     //Future versions should remove this
-    function setDistributor(address _vault, address _distro) external onlyOwner{
-        require(rewardRedirect[_vault] == distroContract, "!vault");
+    function setDistributor(address _distro) external onlyOwner{
+        address _farm = collateralVault;
+        require(_farm != address(0),"!farm");
         require(!distroSealed,"sealed");
 
         distroContract = _distro;
-        IFraxFarmDistributor(_distro).initialize(_vault, address(this));
-        rewardRedirect[_vault] = _distro;
+        IFraxFarmDistributor(_distro).initialize(_farm, address(this));
+        rewardRedirect[_farm] = _distro;
     }
 
     function sealDistributor() external onlyOwner{
