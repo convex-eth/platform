@@ -207,9 +207,9 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         }
     }
 
-    function addTokenReward(address _token) public onlyOwner {
+    function addTokenReward(address _token) public virtual onlyOwner {
 
-        //check if already registered
+        //check if not registered yet
         if(registeredRewards[_token] == 0){
             //add new token to list
             rewards.push(
@@ -344,7 +344,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         if(!isShutdown){
             IRewardStaking(convexPool).getReward(address(this), true);
         }
-        _claimExtras();
+        _claimExtras(false);
 
         uint256 rewardCount = rewards.length;
         for (uint256 i = 0; i < rewardCount; i++) {
@@ -364,7 +364,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         if(!isShutdown){
             IRewardStaking(convexPool).getReward(address(this), true);
         }
-        _claimExtras();
+        _claimExtras(true);
 
         uint256 rewardCount = rewards.length;
         for (uint256 i = 0; i < rewardCount; i++) {
@@ -374,7 +374,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     }
 
     //claim any rewards not part of the convex pool
-    function _claimExtras() internal virtual{
+    function _claimExtras(bool _isClaim) internal virtual{
         //override and add any external reward claiming
         if(rewardHook != address(0)){
             try IRewardHook(rewardHook).onRewardClaim(){
