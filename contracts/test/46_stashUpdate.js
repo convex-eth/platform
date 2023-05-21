@@ -175,7 +175,8 @@ contract("Test new stash and reward wrapper", async accounts => {
 
     var bowner = await BoosterOwner.at(contractList.system.boosterOwner);
 
-    var rewardWrapper = await StashTokenWrapper.new();
+    // var rewardWrapper = await StashTokenWrapper.new();
+    var rewardWrapper = await StashTokenWrapper.at(contractList.system.stashTokenWrapper);
     console.log("reward rewardWrapper: " +rewardWrapper.address);
     var stashImpl = await ExtraRewardStashV3.new(rewardWrapper.address)
     console.log("stash implementation: " +stashImpl.address);
@@ -225,9 +226,11 @@ contract("Test new stash and reward wrapper", async accounts => {
     await crv.balanceOf(userA).then(a=>console.log("crv balance: " +a))
 
 
-
+    await booster.earmarkRewards(poolCnt);
+    console.log("harvested");
     //create reward token
     var dummyReward = await DepositToken.new(deployer,lptoken.address,{from:deployer});
+    // var dummyReward = crv;
     console.log("dummy token: " +dummyReward.address);
 
     //add reward token
@@ -242,6 +245,10 @@ contract("Test new stash and reward wrapper", async accounts => {
       var tokenaddress = await poolstash.tokenList(i);
       var tokeninfo = await poolstash.tokenInfo(tokenaddress);
       console.log("token info " +JSON.stringify(tokeninfo));
+      if(tokenaddress == crv.address){
+        console.log("**no virtual reward and token wrapper for crv");
+        continue;
+      }
       virtualReward = await VirtualBalanceRewardPool.at(tokeninfo.rewardAddress);
       tokenWrapper = await StashTokenWrapper.at(tokeninfo.wrapperAddress);
       console.log("virtualReward: " +virtualReward.address);
@@ -251,12 +258,16 @@ contract("Test new stash and reward wrapper", async accounts => {
     await tokenWrapper.init(addressZero, addressZero).catch(a=>console.log("catch double init: " +a))
 
     await dummyReward.mint(poolstash.address,web3.utils.toWei("1.0", "ether"),{from:deployer});
+    // await unlockAccount(contractList.curve.vecrv);
+    // await crv.transfer(poolstash.address,web3.utils.toWei("100000.0", "ether"),{from:contractList.curve.vecrv,gasPrice:0});
     console.log("minted");
     await dummyReward.balanceOf(poolstash.address).then(a=>console.log("rewards on stash: " +a))
+    await dummyReward.balanceOf(rewardAddress.address).then(a=>console.log("rewards on BaseRewardPool: " +a))
 
     await booster.earmarkRewards(poolCnt);
     console.log("harvested");
     await dummyReward.balanceOf(poolstash.address).then(a=>console.log("rewards on stash: " +a))
+    await dummyReward.balanceOf(rewardAddress.address).then(a=>console.log("rewards on BaseRewardPool: " +a))
     
     //check distribution
     await tokenWrapper.totalSupply().then(a=>console.log("wrapper totalSupply: " +a))
@@ -275,6 +286,8 @@ contract("Test new stash and reward wrapper", async accounts => {
     console.log("claimed");
     await tokenWrapper.balanceOf(virtualReward.address).then(a=>console.log("wrapper on virtual: " +a))
     await dummyReward.balanceOf(userA).then(a=>console.log("dummy on user: " +a))
+
+    // return;
 
     //test invalidate
     await tokenWrapper.isInvalid().then(a=>console.log("isInvalid: " +a))

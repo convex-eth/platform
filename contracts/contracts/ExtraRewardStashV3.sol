@@ -67,7 +67,7 @@ contract ExtraRewardStashV3 {
     }
 
     function getName() external pure returns (string memory) {
-        return "ExtraRewardStashV3.3";
+        return "ExtraRewardStashV3.4";
     }
 
     function tokenCount() external view returns (uint256){
@@ -189,6 +189,12 @@ contract ExtraRewardStashV3 {
             TokenInfo storage t = tokenInfo[tokenList[i]];
             address token = t.token;
             if(token == address(0)) continue;
+
+            if(token == crv){
+                //if crv, send back to booster to distribute
+                IERC20(token).safeTransfer(operator, IERC20(token).balanceOf(address(this)));
+                continue;
+            }
             
             address wrapper = t.wrapperAddress;
             if(IStashTokenWrapper(wrapper).isInvalid()) continue;
@@ -197,11 +203,6 @@ contract ExtraRewardStashV3 {
 
             if (amount > 0 && amount < 1e30) {
                 historicalRewards[token] = historicalRewards[token].add(amount);
-                if(token == crv){
-                    //if crv, send back to booster to distribute
-                    IERC20(token).safeTransfer(operator, amount);
-                    continue;
-                }
             	//add to wrapper, which is allocated to reward contract
             	address rewards = t.rewardAddress;
             	if(rewards == address(0)) continue;
