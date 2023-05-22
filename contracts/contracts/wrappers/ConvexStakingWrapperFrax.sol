@@ -88,7 +88,7 @@ contract ConvexStakingWrapperFrax is ConvexStakingWrapper {
         super._claimExtras(_isClaim);
 
         //if the frax farm is the caller, send all crv/cvx to the distribution contract
-        if(_isClaim && msg.sender == collateralVault){
+        if(_isClaim && msg.sender == distroContract){
             uint256 b = IERC20(crv).balanceOf(address(this));
             if(b > 0){
                 _transferReward(crv,distroContract,b);
