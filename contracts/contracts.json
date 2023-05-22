@@ -62,9 +62,9 @@
         "vlcvxExtraRewards": "0x9B622f2c40b80EF5efb14c2B2239511FfBFaB702",
         "masterFraxWrapper": "0xc93Ab3c4DDdc488dbca581a0c3459aaF7eBd700A",
         "masterFraxRewardDistributor": "0x4C586e8B191d67AA79EB55e89F9a5cbD9BcbDc57",
-        "masterFraxLend": "0x6982E8F7Ddb33D1dbfe1a962d69D2496Ef1C015B",
+        "masterFraxLend": "0x1b12de066feF1a1eC275D8844FFeD27bc6e0F44e",
         "factoryFraxLendWrapper": "0xe5Ca8CB440A6f9F6fA1D535D94A839CED59D9942",
-        "masterAbraWrapper": "0xbc8923a60319807B1DAE6b866f80F99Ec1A3A0eF",
+        "masterAbraWrapper": "0xcC8Df73215F3983E84fc9896A0d4740183ebaB0C",
         "factoryAbraWrapper": "0x6a5A26E5B91cC9EB1D84DA16A8360Bc1DF8212BC"
     },
     "curve":{
