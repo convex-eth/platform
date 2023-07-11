@@ -7,7 +7,7 @@ import "./interfaces/IRewardHookExtended.sol";
 import "./interfaces/IExtraRewardPool.sol";
 import "./interfaces/IRewardStaking.sol";
 import "./interfaces/IBooster.sol";
-
+import "./interfaces/ITokenWrapper.sol";
 
 /*
 This is a utility library which is mainly used for off chain calculations
@@ -24,9 +24,14 @@ contract PoolUtilities{
     }
 
 
+    //get apr with given rates and prices
+    function apr(uint256 _rate, uint256 _priceOfReward, uint256 _priceOfDeposit) external view returns(uint256 _apr){
+        return _rate * 365 days * _priceOfReward / _priceOfDeposit; 
+    }
+
     //get reward rates for each token based on weighted reward group supply and wrapper's boosted cvxcrv rates
     //%return = rate * timeFrame * price of reward / price of LP / 1e18
-    function mainRewardRates(uint256 _pid) public view returns (address[] memory tokens, uint256[] memory rates) {
+    function rewardRates(uint256 _pid) external view returns (address[] memory tokens, uint256[] memory rates) {
         (, , , address _crvRewards, , ) = IBooster(booster).poolInfo(_pid);
 
 
@@ -36,30 +41,44 @@ contract PoolUtilities{
         //get reward count
         uint256 extraCount = IRewardStaking(_crvRewards).extraRewardsLength();
 
-        //add 1 for cvx
-        tokens = new address[](extraCount + 1);
-        rates = new uint256[](extraCount + 1);
+        //add 2 for crv/cvx
+        tokens = new address[](extraCount + 2);
+        rates = new uint256[](extraCount + 2);
+
+        //first get crv
+        uint256 crvrate;
+        if(block.timestamp <= IRewardStaking(_crvRewards).periodFinish()){
+            crvrate = IRewardStaking(_crvRewards).rewardRate();
+        }
+        if(stakedSupply > 0){
+            crvrate = crvrate * 1e18 / stakedSupply;
+        }
+        tokens[0] = crv;
+        rates[0] = crvrate;
+        tokens[1] = cvx;
+        rates[1] = ICvxMining(cvxMining).ConvertCrvToCvx(crvrate);
 
         //loop through all reward contracts
         for (uint256 i = 0; i < extraCount; i++) {
             address extraPool = IRewardStaking(_crvRewards).extraRewards(i);
-            address extraToken = IRewardStaking(extraPool).rewardToken();
-            uint256 rate = IRewardStaking(extraPool).rewardRate();
+            uint256 rate;
+
+            if(block.timestamp <= IRewardStaking(extraPool).periodFinish()){
+                rate = IRewardStaking(extraPool).rewardRate();
+            }
 
             //rate per 1 staked lp
             if(stakedSupply > 0){
                 rate = rate * 1e18 / stakedSupply;
             }
 
-            tokens[i] = extraToken;
-            rates[i] = rate;
-
-            //add minted cvx for crv
-            if(extraToken == crv){
-                //put minted cvx in last slot (there could be two cvx slots, one for direct rewards and one for mints)
-                tokens[extraCount] = cvx;
-                rates[extraCount] = ICvxMining(cvxMining).ConvertCrvToCvx(rate);
+            tokens[i+2] = IRewardStaking(extraPool).rewardToken();
+            if(_pid >= 151){
+                //151 and beyond must get token() from the wrapped reward
+                tokens[i+2] = ITokenWrapper(tokens[i+2]).token();
             }
+
+            rates[i+2] = rate;
         }
     }
 }

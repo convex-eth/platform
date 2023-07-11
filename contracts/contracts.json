@@ -65,7 +65,8 @@
         "masterFraxLend": "0x1b12de066feF1a1eC275D8844FFeD27bc6e0F44e",
         "factoryFraxLendWrapper": "0xe5Ca8CB440A6f9F6fA1D535D94A839CED59D9942",
         "masterAbraWrapper": "0xcC8Df73215F3983E84fc9896A0d4740183ebaB0C",
-        "factoryAbraWrapper": "0x6a5A26E5B91cC9EB1D84DA16A8360Bc1DF8212BC"
+        "factoryAbraWrapper": "0x6a5A26E5B91cC9EB1D84DA16A8360Bc1DF8212BC",
+        "poolUtility": "0x5Fba69a794F395184b5760DAf1134028608e5Cd1"
     },
     "curve":{
         "registry":"0x0000000022D53366457F9d5E68Ec105046FC4383",
