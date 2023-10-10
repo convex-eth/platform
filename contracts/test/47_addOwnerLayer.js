@@ -205,7 +205,6 @@ contract("Test new stash and reward wrapper", async accounts => {
     }
     const day = 86400;
 
-
     // var poolmanagerold = await PoolManagerV4.at("0x9E398B61a7d1B320b8510f0873bA071AcF92BD1b");
     var poolmanagerold = await PoolManagerV4.at(contractList.system.poolManager);
     console.log("old pool manager: " +poolmanagerold.address);
@@ -668,7 +667,7 @@ contract("Test new stash and reward wrapper", async accounts => {
     await setNoGas();
     await secondaryOwner.shutdownSystem([],{from:multisig,gasPrice:0}).catch(a=>console.log("revert: " +a))
 
-    var doForceShutdown = true;
+    var doForceShutdown = false;
 
     if(doForceShutdown){
       await setNoGas();
