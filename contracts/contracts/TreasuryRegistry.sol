@@ -35,10 +35,6 @@ contract TreasuryRegistry {
         return registry.length;
     }
 
-    function getAddressAt(uint256 _index) external view returns(address){
-        return registry[_index];
-    }
-
     function registryList() external view returns(address[] memory list){
         list = new address[](registry.length);
 
