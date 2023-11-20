@@ -5,6 +5,7 @@
         "voteProxy": "0x989AEb4d175e16225E39E87d0D97A3360524AD80",
         "voteProxyOwner": "0x2B83552729067D1c32A2a31024776BD83c48816e",
         "treasury": "0x1389388d01708118b497f59521f6943Be2541bb7",
+        "treasuryRegistry": "0xcab2bb34EEAA177BD8D36E46114B45528AaC4507",
         "treasurySwapper": "0xa25B17D7deEE59f9e326e45cC3C0C1B158E74316",
         "cvxDistro": "0x449f2fd99174e1785CF2A1c79E665Fec3dD1DdC6",
         "cvxDistroPoolHook": "0x723f9Aa67FDD9B0e375eF8553eB2AFC28eCD4a96",
