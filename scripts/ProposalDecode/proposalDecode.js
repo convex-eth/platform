@@ -1,7 +1,7 @@
 const fs = require('fs');
 const { ethers } = require("ethers");
 const jsonfile = require('jsonfile');
-const { ARAGON_VOTING, ARGAON_AGENT, GAUGE_CONTROLLER, SIDE_GAUGE_FACTORY, OWNER_PROXY, WHITELIST_CHECKER } = require('./abi');
+const { ARAGON_VOTING, ARGAON_AGENT, GAUGE_CONTROLLER, SIDE_GAUGE_FACTORY, OWNER_PROXY, WHITELIST_CHECKER, CURVE_GUAGE, POOL_FACTORY } = require('./abi');
 var BN = require('big-number');
 
 const config = jsonfile.readFileSync('./config.json');
@@ -139,6 +139,16 @@ const isValidGauge = async(address) => {
 
     let address_bytecode = await provider.getCode(address);
     var result = ethers.utils.isAddress(address) && (VALID_BYTECODE.includes(address_bytecode.toLowerCase()) || address_bytecode.includes(v6_bytecode));
+
+    if(!result){
+        //check if valid gauge from ng factory
+        const gaugeContract = new ethers.Contract(address, CURVE_GUAGE, provider);
+        var pool = await gaugeContract.lp_token();
+        //is gauge if factory returns same gauge address for the pool
+        const ngfactory = new ethers.Contract("0x6A8cbed756804B16E05E741eDaBd5cB544AE21bf", POOL_FACTORY, provider);
+        result = address.toLowerCase() == (await ngfactory.get_gauge(pool)).toLowerCase();
+        console.log("is a ng gauge? " +result)
+    }
 
     if(!result){
         //need to check if its a sidechain gauge
