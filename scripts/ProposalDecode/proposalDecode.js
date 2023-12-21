@@ -141,6 +141,7 @@ const isValidGauge = async(address) => {
     var result = ethers.utils.isAddress(address) && (VALID_BYTECODE.includes(address_bytecode.toLowerCase()) || address_bytecode.includes(v6_bytecode));
 
     if(!result){
+        try{
         //check if valid gauge from ng factory
         const gaugeContract = new ethers.Contract(address, CURVE_GUAGE, provider);
         var pool = await gaugeContract.lp_token();
@@ -148,6 +149,9 @@ const isValidGauge = async(address) => {
         const ngfactory = new ethers.Contract("0x6A8cbed756804B16E05E741eDaBd5cB544AE21bf", POOL_FACTORY, provider);
         result = address.toLowerCase() == (await ngfactory.get_gauge(pool)).toLowerCase();
         console.log("is a ng gauge? " +result)
+        }catch{
+            //side chain gauge will error
+        }
     }
 
     if(!result){
