@@ -332,7 +332,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         }
     }
 
-    function _checkpoint(address[2] memory _accounts) internal nonReentrant{
+    function _checkpoint(address[2] memory _accounts) internal virtual nonReentrant{
         uint256 supply = _getTotalSupply();
         uint256[2] memory depositedBalance;
         depositedBalance[0] = _getDepositedBalance(_accounts[0]);
@@ -353,7 +353,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         emit UserCheckpoint(_accounts[0],_accounts[1]);
     }
 
-    function _checkpointAndClaim(address[2] memory _accounts) internal nonReentrant{
+    function _checkpointAndClaim(address[2] memory _accounts) internal virtual nonReentrant{
         uint256 supply = _getTotalSupply();
         uint256[2] memory depositedBalance;
         depositedBalance[0] = _getDepositedBalance(_accounts[0]); //only do first slot
@@ -374,7 +374,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     }
 
     //claim any rewards not part of the convex pool
-    function _claimExtras(bool _isClaim) internal virtual{
+    function _claimExtras(bool /*_isClaim*/) internal virtual{
         //override and add any external reward claiming
         if(rewardHook != address(0)){
             try IRewardHook(rewardHook).onRewardClaim(){
@@ -440,7 +440,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     }
 
     //deposit a curve token
-    function deposit(uint256 _amount, address _to) external {
+    function deposit(uint256 _amount, address _to) external virtual{
         require(!isShutdown, "shutdown");
 
         //dont need to call checkpoint since _mint() will
@@ -455,7 +455,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     }
 
     //stake a convex token
-    function stake(uint256 _amount, address _to) external {
+    function stake(uint256 _amount, address _to) external virtual{
         require(!isShutdown, "shutdown");
 
         //dont need to call checkpoint since _mint() will
@@ -470,7 +470,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     }
 
     //withdraw to convex deposit token
-    function withdraw(uint256 _amount) external {
+    function withdraw(uint256 _amount) external virtual{
 
         //dont need to call checkpoint since _burn() will
 
@@ -484,7 +484,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
     }
 
     //withdraw to underlying curve lp token
-    function withdrawAndUnwrap(uint256 _amount) external {
+    function withdrawAndUnwrap(uint256 _amount) external virtual{
         
         //dont need to call checkpoint since _burn() will
 
@@ -498,7 +498,7 @@ contract ConvexStakingWrapper is ERC20, ReentrancyGuard {
         emit Withdrawn(msg.sender, _amount, true);
     }
 
-    function _beforeTokenTransfer(address _from, address _to, uint256 _amount) internal override {
+    function _beforeTokenTransfer(address _from, address _to, uint256 /*_amount*/) internal virtual override {
         _checkpoint([_from, _to]);
     }
 
