@@ -177,6 +177,9 @@ contract ConvexStakingWrapperMorpho is ConvexStakingWrapper {
                 emit Withdrawn(_from, _amount, true);
                 emit Transfer(_from, _to, _amount);
             }        
+        }else if(_from != address(this)){
+            //any other call to transfer just act as a checkpoint instead of actually transferring
+            _checkpoint([_from, _to]);
         }
     }
 }
