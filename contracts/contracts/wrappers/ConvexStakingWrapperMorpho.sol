@@ -50,10 +50,12 @@ contract ConvexStakingWrapperMorpho is ConvexStakingWrapper {
 
     address public immutable morpho;
     bytes32 immutable morphoId;
+    IMorpho.MarketParams morphoParams;
     
-    constructor(address _morpho, bytes32 _id) public{
+    constructor(address _morpho, bytes32 _id, IMorpho.MarketParams memory _params ) public{
         morpho = _morpho;
         morphoId = _id;
+        morphoParams = _params;
     }
 
     modifier onlyOwner() override{
@@ -86,8 +88,18 @@ contract ConvexStakingWrapperMorpho is ConvexStakingWrapper {
         setApprovals();
     }
 
+    //4626 interface
+    function asset() external view returns(address){
+        return curveToken;
+    }
+
+    //wrapped erc20 interface
+    function underlying() external view returns(address){
+        return curveToken;
+    }
+
     //deposit a curve token, wrap, and supply collateral to morpho
-    function depositToMorpho(IMorpho.MarketParams memory marketParams, uint256 assets, address onBehalf, bytes memory data) external{
+    function depositToMorpho(IMorpho.MarketParams memory marketParams, uint256 assets, address onBehalf, bytes memory data) public{
         require(!isShutdown, "shutdown");
 
         //call checkpoint on sender since mint will send to self
@@ -109,8 +121,14 @@ contract ConvexStakingWrapperMorpho is ConvexStakingWrapper {
         emit Deposited(msg.sender, onBehalf, assets, true);
     }
 
+    //normal/4626 deposit
     function deposit(uint256 _amount, address _to) external override{
-        //gracefully do nothing
+        depositToMorpho(morphoParams, _amount, _to, new bytes(0));
+    }
+
+    //wrapped erc20 interface
+    function depositFor(uint256 _amount, address _to) external{
+        depositToMorpho(morphoParams, _amount, _to, new bytes(0));
     }
 
     function stake(uint256 _amount, address _to) external override{
