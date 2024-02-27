@@ -179,7 +179,9 @@ contract ConvexStakingWrapperMorpho is ConvexStakingWrapper {
             }        
         }else if(_from != address(this)){
             //any other call to transfer just act as a checkpoint instead of actually transferring
-            _checkpoint([_from, _to]);
+            //..just checkpoint to as this is more of a workaround to get a checkpoint in to a specific address
+            //   and we dont have to pay for check pointing 2 addresses
+            _checkpoint([_to, address(0)]);
         }
     }
 }
