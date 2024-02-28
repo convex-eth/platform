@@ -5,26 +5,8 @@ pragma experimental ABIEncoderV2;
 import "./ConvexStakingWrapper.sol";
 import "../interfaces/IBooster.sol";
 import "../interfaces/IOwner.sol";
+import "../interfaces/IMorpho.sol";
 
-
-interface IMorpho {
-    struct MarketParams {
-        address loanToken;
-        address collateralToken;
-        address oracle;
-        address irm;
-        uint256 lltv;
-    }
-
-    struct Position {
-        uint256 supplyShares;
-        uint128 borrowShares;
-        uint128 collateral;
-    }
-
-    function supplyCollateral(MarketParams memory marketParams, uint256 assets, address onBehalf, bytes memory data) external;
-    function position(bytes32 id, address account) external view returns(Position memory p);
-}
 
 /*
 Staking wrapper for Morpho
@@ -49,13 +31,10 @@ contract ConvexStakingWrapperMorpho is ConvexStakingWrapper {
     for uint256;
 
     address public immutable morpho;
-    bytes32 immutable morphoId;
-    IMorpho.MarketParams morphoParams;
+    bytes32 morphoId;
     
-    constructor(address _morpho, bytes32 _id, IMorpho.MarketParams memory _params ) public{
+    constructor(address _morpho) public{
         morpho = _morpho;
-        morphoId = _id;
-        morphoParams = _params;
     }
 
     modifier onlyOwner() override{
@@ -86,6 +65,12 @@ contract ConvexStakingWrapperMorpho is ConvexStakingWrapper {
         //add rewards
         addRewards();
         setApprovals();
+        IERC20(address(this)).safeApprove(morpho, uint256(-1));
+    }
+
+    function setMorphoId(bytes32 _id) external onlyOwner{
+        require(morphoId == bytes32(0), "already set");
+        morphoId = _id;
     }
 
     //4626 interface
@@ -99,36 +84,37 @@ contract ConvexStakingWrapperMorpho is ConvexStakingWrapper {
     }
 
     //deposit a curve token, wrap, and supply collateral to morpho
-    function depositToMorpho(IMorpho.MarketParams memory marketParams, uint256 assets, address onBehalf, bytes memory data) public{
+    function depositToMorpho(IMorpho.MarketParams memory marketParams, uint256 assets, address onBehalf, bytes memory data) public returns (bool){
         require(!isShutdown, "shutdown");
 
-        //call checkpoint on sender since mint will send to self
-        _checkpoint([address(msg.sender), address(0)]);
+        //call checkpoint on onBehalf
+        _checkpoint([onBehalf, address(0)]);
 
         if (assets > 0) {
             //mint directly on morpho
             //this is gas trickery as we can skip transfer logic when supplying
-            //so that we"re not paying an extra transfer
+            //so that we're not paying an extra transfer
             _mint(morpho, assets);
             IERC20(curveToken).safeTransferFrom(msg.sender, address(this), assets);
             IConvexDeposits(convexBooster).deposit(convexPoolId, assets, true);
 
             //supply to morpho
-            //checkpointed above so safe to change morpho state
+            //checkpointed above so safe to change morpho state of onBehalf
             IMorpho(morpho).supplyCollateral(marketParams, assets, onBehalf, data);
         }
 
         emit Deposited(msg.sender, onBehalf, assets, true);
+        return true;
     }
 
-    //normal/4626 deposit
+    //normal deposit
     function deposit(uint256 _amount, address _to) external override{
-        depositToMorpho(morphoParams, _amount, _to, new bytes(0));
+        //gracefully do nothing
     }
 
     //wrapped erc20 interface
-    function depositFor(uint256 _amount, address _to) external{
-        depositToMorpho(morphoParams, _amount, _to, new bytes(0));
+    function depositFor(uint256 _amount, address _to) external returns (bool){
+        return depositToMorpho(IMorpho(morpho).idToMarketParams(morphoId), _amount, _to, new bytes(0));
     }
 
     function stake(uint256 _amount, address _to) external override{
