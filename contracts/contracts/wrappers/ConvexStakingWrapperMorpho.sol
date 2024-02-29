@@ -68,8 +68,10 @@ contract ConvexStakingWrapperMorpho is ConvexStakingWrapper {
         IERC20(address(this)).safeApprove(morpho, uint256(-1));
     }
 
-    function setMorphoId(bytes32 _id) external onlyOwner{
+    function setMorphoId(bytes32 _id) external{
         require(morphoId == bytes32(0), "already set");
+        IMorpho.MarketParams memory mp = IMorpho(morpho).idToMarketParams(_id);
+        require(mp.collateralToken == address(this),"invalid id");
         morphoId = _id;
     }
 
