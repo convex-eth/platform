@@ -168,16 +168,16 @@ contract("Test morpho collateral", async accounts => {
     var marketId = await morpho.id(marketParams);
     console.log("market id: " +marketId);
 
+    await morpho.addMarket(marketParams);
+    console.log("added market");
+
     await wrapper.initialize(convexpool);
     let morphoOwner = await morpho.owner();
     await unlockAccount(morphoOwner);
-    await wrapper.setMorphoId(marketId,{from:userA,gasPrice:0}).catch(a=>console.log("revert not owner: " +a));
-    await wrapper.setMorphoId(marketId,{from:morphoOwner,gasPrice:0});
+    await wrapper.setMorphoId(marketId,{from:userA,gasPrice:0})
+    console.log("wrapper id set")
     await wrapper.setMorphoId(marketId,{from:morphoOwner,gasPrice:0}).catch(a=>console.log("revert cant set id twice: " +a));
     console.log("wrapper initialized");
-
-    await morpho.addMarket(marketParams);
-    console.log("added market");
 
     await curvelp.approve(wrapper.address, web3.utils.toWei("1000000000.0","ether"),{from:userA});
     console.log("approved lp to wrapper");
