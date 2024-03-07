@@ -166,6 +166,7 @@ contract ConvexStakingWrapperMorpho is ConvexStakingWrapper {
                 emit Transfer(_from, _to, _amount);
             }        
         }else if(_from != address(this)){
+            require(_to != morpho, "!invalid transfer");
             //any other call to transfer just act as a checkpoint instead of actually transferring
             //..just checkpoint to as this is more of a workaround to get a checkpoint in to a specific address
             //   and we dont have to pay for check pointing 2 addresses

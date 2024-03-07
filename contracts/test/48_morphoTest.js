@@ -179,6 +179,9 @@ contract("Test morpho collateral", async accounts => {
     await wrapper.setMorphoId(marketId,{from:morphoOwner,gasPrice:0}).catch(a=>console.log("revert cant set id twice: " +a));
     console.log("wrapper initialized");
 
+    //make sure direct supply doesnt work
+    await morpho.supplyCollateral(marketParams, web3.utils.toWei("10000000000.0","ether"),userC, addressZero, {from:userC} ).catch(a=>console.log("revert on direct supply: " +a));
+
     await curvelp.approve(wrapper.address, web3.utils.toWei("1000000000.0","ether"),{from:userA});
     console.log("approved lp to wrapper");
 
@@ -190,6 +193,7 @@ contract("Test morpho collateral", async accounts => {
 
     await morpho.position(marketId,userA).then(a=>console.log("position collateral A: " +a.collateral))
     await morpho.position(marketId,userB).then(a=>console.log("position collateral B: " +a.collateral))
+
 
 
     //check normal claim
