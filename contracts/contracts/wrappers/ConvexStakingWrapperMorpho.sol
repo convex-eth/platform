@@ -86,7 +86,7 @@ contract ConvexStakingWrapperMorpho is ConvexStakingWrapper {
     }
 
     //deposit a curve token, wrap, and supply collateral to morpho
-    function depositToMorpho(IMorpho.MarketParams memory marketParams, uint256 assets, address onBehalf, bytes memory data) public returns (bool){
+    function _depositToMorpho(IMorpho.MarketParams memory marketParams, uint256 assets, address onBehalf, bytes memory data) internal returns (bool){
         require(!isShutdown, "shutdown");
 
         //call checkpoint on onBehalf
@@ -115,8 +115,8 @@ contract ConvexStakingWrapperMorpho is ConvexStakingWrapper {
     }
 
     //wrapped erc20 interface
-    function depositFor(uint256 _amount, address _to) external returns (bool){
-        return depositToMorpho(IMorpho(morpho).idToMarketParams(morphoId), _amount, _to, new bytes(0));
+    function depositFor(address _to, uint256 _amount) external returns (bool){
+        return _depositToMorpho(IMorpho(morpho).idToMarketParams(morphoId), _amount, _to, new bytes(0));
     }
 
     function stake(uint256 _amount, address _to) external override{

@@ -182,10 +182,10 @@ contract("Test morpho collateral", async accounts => {
     await curvelp.approve(wrapper.address, web3.utils.toWei("1000000000.0","ether"),{from:userA});
     console.log("approved lp to wrapper");
 
-    await wrapper.depositFor(web3.utils.toWei("100000.0","ether"), userA,{from:deployer,gasPrice:0}).catch(a=>console.log("revert no tokens: " +a));
-    await wrapper.depositFor(web3.utils.toWei("100000.0","ether"), userA,{from:userA});
+    await wrapper.depositFor(userA,web3.utils.toWei("100000.0","ether"), {from:deployer,gasPrice:0}).catch(a=>console.log("revert no tokens: " +a));
+    await wrapper.depositFor(userA,web3.utils.toWei("100000.0","ether"), {from:userA});
     console.log("depositFor called user A")
-    await wrapper.depositFor(web3.utils.toWei("100000.0","ether"), userB,{from:userA});
+    await wrapper.depositFor(userB, web3.utils.toWei("100000.0","ether"), {from:userA});
     console.log("depositFor called user B")
 
     await morpho.position(marketId,userA).then(a=>console.log("position collateral A: " +a.collateral))
