@@ -49,7 +49,7 @@ contract ConvexStakingWrapperMorpho is ConvexStakingWrapper {
     function initialize(uint256 _poolId)
     override external {
         require(!isInit,"already init");
-        emit OwnershipTransferred(address(0), morpho);
+        emit OwnershipTransferred(address(0), owner());
 
         (address _lptoken, address _token, , address _rewards, , ) = IBooster(convexBooster).poolInfo(_poolId);
         curveToken = _lptoken;
