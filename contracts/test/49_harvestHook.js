@@ -309,7 +309,6 @@ contract("Test harvest hook", async accounts => {
     console.log("try after time has passed...")
     await booster.earmarkRewards(convexpool);
     console.log("earmarked");
-    console.log("#### done ####");
 
 
     console.log("\n --- multi set---")
@@ -346,13 +345,8 @@ contract("Test harvest hook", async accounts => {
     console.log("accepted")
     await boosterOwner.stashRewardManager().then(a=>console.log("rmanager: " +a))
 
-
-    //TODO
-    // test when PoolRewardHook is the stash hook
-    // test multi set on rewardmanager
-    // test add new pool to auto set cvx rewards and harvest hook
-    // test reversing reward manager roles
-    // create list of pools to be added / bytecode to give to msig
+    
+    console.log("#### done ####");
   });
 });
 
