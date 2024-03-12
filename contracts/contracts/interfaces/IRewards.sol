@@ -13,6 +13,8 @@ interface IRewards{
     function addExtraReward(address) external;
     function setRewardHook(address) external;
     function user_checkpoint(address _account) external returns(bool);
+    function periodFinish() external view returns(uint256);
+    function currentRewards() external view returns(uint256);
     function rewardToken() external view returns(address);
     function rewardMap(address) external view returns(bool);
     function earned(address account) external view returns (uint256);

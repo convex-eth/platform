@@ -15,6 +15,7 @@ Changes:
 */
 
 contract PoolManagerV4{
+    address public constant booster = address(0xF403C135812408BFbE8713b5A23a04b3D48AAE31);
     address public constant gaugeController = address(0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB);
     address public immutable pools;
 
@@ -66,7 +67,7 @@ contract PoolManagerV4{
 
         //call hook if not 0 address
         if(postAddHook != address(0)){
-            IPoolAddHook(postAddHook).poolAdded(_gauge, _stashVersion, IPools(pools).poolLength()-1);
+            IPoolAddHook(postAddHook).poolAdded(_gauge, _stashVersion, IPools(booster).poolLength()-1);
         }
     }
 

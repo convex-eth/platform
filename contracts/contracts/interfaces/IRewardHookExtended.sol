@@ -6,4 +6,5 @@ interface IRewardHookExtended {
     function onRewardClaim() external;
     function poolRewardLength(address _pool) external view returns(uint256);
     function poolRewardList(address _pool, uint256 _index) external view returns(address _rewardContract);
+    function addPoolReward(address _pool, address _rewardContract) external;
 }
