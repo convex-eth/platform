@@ -153,6 +153,19 @@ const isValidGauge = async(address) => {
             //side chain gauge will error
         }
     }
+    if(!result){
+        try{
+        //check if valid gauge from ng-crypto factory
+        const gaugeContract = new ethers.Contract(address, CURVE_GUAGE, provider);
+        var pool = await gaugeContract.lp_token();
+        //is gauge if factory returns same gauge address for the pool
+        const ngfactory = new ethers.Contract("0x98EE851a00abeE0d95D08cF4CA2BdCE32aeaAF7F", POOL_FACTORY, provider);
+        result = address.toLowerCase() == (await ngfactory.get_gauge(pool)).toLowerCase();
+        console.log("is a ng gauge? " +result)
+        }catch{
+            //side chain gauge will error
+        }
+    }
 
     if(!result){
         //need to check if its a sidechain gauge
