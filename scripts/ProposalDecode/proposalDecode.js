@@ -1,7 +1,7 @@
 const fs = require('fs');
 const { ethers } = require("ethers");
 const jsonfile = require('jsonfile');
-const { ARAGON_VOTING, ARGAON_AGENT, GAUGE_CONTROLLER, SIDE_GAUGE_FACTORY, OWNER_PROXY, WHITELIST_CHECKER, CURVE_GUAGE, POOL_FACTORY } = require('./abi');
+const { ARAGON_VOTING, ARGAON_AGENT, GAUGE_CONTROLLER, SIDE_GAUGE_FACTORY, OWNER_PROXY, WHITELIST_CHECKER, CURVE_GUAGE, POOL_FACTORY, LENDING_FACTORY } = require('./abi');
 var BN = require('big-number');
 
 const config = jsonfile.readFileSync('./config.json');
@@ -161,7 +161,20 @@ const isValidGauge = async(address) => {
         //is gauge if factory returns same gauge address for the pool
         const ngfactory = new ethers.Contract("0x98EE851a00abeE0d95D08cF4CA2BdCE32aeaAF7F", POOL_FACTORY, provider);
         result = address.toLowerCase() == (await ngfactory.get_gauge(pool)).toLowerCase();
-        console.log("is a ng gauge? " +result)
+        console.log("is a ng-crypto gauge? " +result)
+        }catch{
+            //side chain gauge will error
+        }
+    }
+    if(!result){
+        try{
+        //check if valid gauge from ng-crypto factory
+        const gaugeContract = new ethers.Contract(address, CURVE_GUAGE, provider);
+        var pool = await gaugeContract.lp_token();
+        //is gauge if factory returns same gauge address for the pool
+        const lendingfactory = new ethers.Contract("0xeA6876DDE9e3467564acBeE1Ed5bac88783205E0", LENDING_FACTORY, provider);
+        result = address.toLowerCase() == (await lendingfactory.gauge_for_vault(pool)).toLowerCase();
+        console.log("is a lending gauge? " +result)
         }catch{
             //side chain gauge will error
         }
