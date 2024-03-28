@@ -184,6 +184,11 @@ const isValidGauge = async(address) => {
         //need to check if its a sidechain gauge
         result = await sideGaugeFactoryInstance.is_valid_gauge(address);
     }
+    if(!result){
+        //need to check if its a sidechain gauge 2
+        var sideGaugeFactory = new ethers.Contract("0xeF672bD94913CB6f1d2812a6e18c1fFdEd8eFf5c", SIDE_GAUGE_FACTORY, provider);
+        result = await sideGaugeFactory.is_valid_gauge(address);
+    }
 
     return result;
 }
