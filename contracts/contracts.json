@@ -7,6 +7,7 @@
         "treasury": "0x1389388d01708118b497f59521f6943Be2541bb7",
         "treasuryRegistry": "0xcab2bb34EEAA177BD8D36E46114B45528AaC4507",
         "treasurySwapper": "0xa25B17D7deEE59f9e326e45cC3C0C1B158E74316",
+        "treasuryLend": "0x04Dd97255ddeE29c941D85F5B5cdE6ace8BD207f",
         "cvxDistro": "0x449f2fd99174e1785CF2A1c79E665Fec3dD1DdC6",
         "cvxDistroPoolHook": "0x723f9Aa67FDD9B0e375eF8553eB2AFC28eCD4a96",
         "cvx": "0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B",

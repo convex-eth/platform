@@ -60,7 +60,9 @@ contract TreasuryLend{
     function setPidToVault(uint256 _pid, address _vault) external onlyOwner{
         pidVault[_pid] = _vault;
         IERC20(crvusd).safeApprove(_vault, 0);
+        IERC20(_vault).safeApprove(booster, 0);
         IERC20(crvusd).safeApprove(_vault, uint256(-1));
+        IERC20(_vault).safeApprove(booster, uint256(-1));
     }
 
     function setOperator(address _op, bool _active) external onlyOwner{
@@ -106,11 +108,13 @@ contract TreasuryLend{
         address vault = pidVault[_pid];
         require(vault != address(0), "!vault");
 
-        //pull
-        IERC20(crvusd).safeTransferFrom(treasury,address(this),_crvusdamount);
+        if(_crvusdamount > 0){
+            //pull
+            IERC20(crvusd).safeTransferFrom(treasury,address(this),_crvusdamount);
 
-        //add vault
-        IERC4626(vault).deposit(_crvusdamount, address(this));
+            //add vault
+            IERC4626(vault).deposit(_crvusdamount, address(this));
+        }
 
         //add to convex
         uint256 vBalance = IERC20(vault).balanceOf(address(this));

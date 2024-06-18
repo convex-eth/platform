@@ -9,6 +9,8 @@ const ConvexStakingWrapperMorpho = artifacts.require("ConvexStakingWrapperMorpho
 const IERC20 = artifacts.require("IERC20");
 const MorphoMock = artifacts.require("MorphoMock");
 const IMorpho = artifacts.require("IMorpho");
+const IRewards = artifacts.require("IRewards");
+const CurveVoterProxy = artifacts.require("CurveVoterProxy");
 
 const unlockAccount = async (address) => {
   let NETWORK = config.network;
@@ -112,6 +114,7 @@ contract("Test morpho collateral", async accounts => {
     let booster = await Booster.at(contractList.system.booster);
     let cvx = await IERC20.at(contractList.system.cvx);
     let crv = await IERC20.at(contractList.curve.crv);
+    let voteproxy = await CurveVoterProxy.at(contractList.system.voteProxy);
 
     let userA = accounts[0];
     let userB = accounts[1];
@@ -132,6 +135,7 @@ contract("Test morpho collateral", async accounts => {
     const day = 86400;
     await unlockAccount(deployer);
     await unlockAccount(multisig);
+    await unlockAccount(booster.address);
     console.log("deploying from " +deployer);
 
     
@@ -144,14 +148,16 @@ contract("Test morpho collateral", async accounts => {
     var convexpool = 182;
     var poolInfo = await booster.poolInfo(convexpool);
     var convexRewards = await BaseRewardPool.at(poolInfo.crvRewards);
+    var curvegauge = await IRewards.at(poolInfo.gauge);
     await unlockAccount(holder);
     await setNoGas();
     await curvelp.transfer(userA, web3.utils.toWei("1000000", "ether"),{from:holder,gasPrice:0});
     console.log("lp token transfered");
 
-    await setNoGas();
-    await booster.earmarkRewards(convexpool);
-    console.log("convex pool earmarked");
+    // await advanceTime(day*7);
+    // await setNoGas();
+    // await booster.earmarkRewards(convexpool);
+    // console.log("convex pool earmarked");
 
     await setNoGas();
     let wrapper = await ConvexStakingWrapperMorpho.new(morpho.address, {from:deployer,gasPrice:0});
@@ -194,7 +200,10 @@ contract("Test morpho collateral", async accounts => {
     await morpho.position(marketId,userA).then(a=>console.log("position collateral A: " +a.collateral))
     await morpho.position(marketId,userB).then(a=>console.log("position collateral B: " +a.collateral))
 
-
+    console.log("curve gauge " +curvegauge.address);
+    await setNoGas();
+    var tx = await voteproxy.claimCrv(curvegauge.address,{from:booster.address,gasPrice:0});
+    console.log("curve gauge claim, gas: " +tx.receipt.gasUsed);
 
     //check normal claim
     await wrapper.earned.call(userA).then(a=>console.log("earned A: " +a ));
@@ -226,8 +235,30 @@ contract("Test morpho collateral", async accounts => {
     await morpho.position(marketId,userA).then(a=>console.log("position collateral A: " +a.collateral))
     await morpho.position(marketId,userB).then(a=>console.log("position collateral B: " +a.collateral))
     await curvelp.balanceOf(userB).then(a=>console.log("lp tokens on B: " +a));
-    await morpho.liquidate(marketParams, userA, web3.utils.toWei("50000.0","ether"),{from:userB});
-    console.log("A liquidated by B")
+    var tx = await morpho.liquidate(marketParams, userA, web3.utils.toWei("10000.0","ether"),{from:userB});
+    console.log("A liquidated by B, gas: " +tx.receipt.gasUsed);
+    await advanceTime(day*30);
+    var tx = await morpho.liquidate(marketParams, userA, web3.utils.toWei("10000.0","ether"),{from:userB});
+    console.log("A liquidated by B, gas: " +tx.receipt.gasUsed);
+    // var tx = await curvegauge.user_checkpoint(contractList.system.voteProxy);
+    // console.log("curve gauge checkpoint, gas: " +tx.receipt.gasUsed);
+    var tx = await voteproxy.claimCrv(curvegauge.address,{from:booster.address,gasPrice:0});
+    console.log("curve gauge claim, gas: " +tx.receipt.gasUsed);
+    await advanceTime(day*30);
+    // var tx = await curvegauge.user_checkpoint(contractList.system.voteProxy);
+    // console.log("curve gauge checkpoint, gas: " +tx.receipt.gasUsed);
+    var tx = await voteproxy.claimCrv(curvegauge.address,{from:booster.address,gasPrice:0});
+    console.log("curve gauge claim, gas: " +tx.receipt.gasUsed);
+    var tx = await morpho.liquidate(marketParams, userA, web3.utils.toWei("10000.0","ether"),{from:userB});
+    console.log("A liquidated by B, gas: " +tx.receipt.gasUsed);
+
+    var randomgauge = "0x298bf7b80a6343214634aF16EB41Bb5B9fC6A1F1";
+    await advanceTime(day*30);
+    var tx = await voteproxy.claimCrv(randomgauge,{from:booster.address,gasPrice:0});
+    console.log("curve claim some random other gauge, gas: " +tx.receipt.gasUsed);
+    var tx = await morpho.liquidate(marketParams, userA, web3.utils.toWei("10000.0","ether"),{from:userB});
+    console.log("A liquidated by B, gas: " +tx.receipt.gasUsed);
+
     await curvelp.balanceOf(userB).then(a=>console.log("lp tokens on B: " +a));
     await morpho.position(marketId,userA).then(a=>console.log("position collateral A: " +a.collateral))
     await morpho.position(marketId,userB).then(a=>console.log("position collateral B: " +a.collateral))
@@ -245,8 +276,8 @@ contract("Test morpho collateral", async accounts => {
     console.log("position collateral A: " +collateral)
     await wrapper.earned.call(userA).then(a=>console.log("earned A: " +a ));
     await curvelp.balanceOf(userA).then(a=>console.log("lp tokens on A: " +a));
-    await morpho.withdrawCollateral(marketParams, collateral, userA, {from:userA, gasPrice:0} );
-    console.log("A withdraw without checkpointing");
+    var tx = await morpho.withdrawCollateral(marketParams, collateral, userA, {from:userA, gasPrice:0} );
+    console.log("A withdraw without checkpointing, gas: " +tx.receipt.gasUsed);
     await wrapper.earned.call(userA).then(a=>console.log("earned A: " +a ));
     await curvelp.balanceOf(userA).then(a=>console.log("lp tokens on A: " +a));
     await morpho.position(marketId,userA).then(a=>console.log("position collateral A: " +a.collateral))
@@ -259,8 +290,8 @@ contract("Test morpho collateral", async accounts => {
     await curvelp.balanceOf(userB).then(a=>console.log("lp tokens on B: " +a));
     await wrapper.transfer(userB,0,{from:userC}); //use transfer to checkpoint, callable by anyone
     console.log("checkpointed via transfer by calling wrapper.transfer(userB,0) from any address");
-    await morpho.withdrawCollateral(marketParams, collateral, userB, {from:userB, gasPrice:0} );
-    console.log("B withdraw without checkpointing");
+    var tx = await morpho.withdrawCollateral(marketParams, collateral, userB, {from:userB, gasPrice:0} );
+    console.log("B withdraw witho checkpointing, gas: " +tx.receipt.gasUsed);
     await wrapper.earned.call(userB).then(a=>console.log("earned B: " +a ));
     await curvelp.balanceOf(userB).then(a=>console.log("lp tokens on B: " +a));
     await morpho.position(marketId,userB).then(a=>console.log("position collateral B: " +a.collateral))

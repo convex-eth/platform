@@ -140,7 +140,31 @@ contract("Test harvest hook", async accounts => {
     await unlockAccount(multisig);
     console.log("deploying from " +deployer);
 
+    var pidlist = [];
+    var poolRewardlist = [];
+    var pcount = Number(await booster.poolLength())-1;
+    for(var i=151; i < pcount; i++){
+      var convexpool = i
+      
+      var poolInfo = await booster.poolInfo(convexpool);
+      var stash = await ExtraRewardStashV3.at(poolInfo.stash);
+      var currenthook = await stash.rewardHook();
+      if(currenthook == addressZero){
+        pidlist.push(convexpool);
+      }else{
+        poolRewardlist.push(convexpool);
+      }
+      console.log(convexpool +" stash: " +stash.address);
+    }
+    // for(var i=200; i < pcount; i++){
+    //   var convexpool = i
+    //   pidlist.push(convexpool);
+    // }
+    console.log("pool list: " +pidlist);
+    console.log("pools that have pool reward hook already set: " +poolRewardlist);
     
+    return;
+
     await setNoGas();
     let boosterOwner = await BoosterOwnerSecondary.at(contractList.system.boosterOwnerSecondary);
     let mainhook = await PoolRewardHook.at(contractList.system.cvxDistroPoolHook);
