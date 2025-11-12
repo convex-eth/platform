@@ -80,7 +80,7 @@ Starting Liquidity Mining pools will be cvxCRV/CRV and CVX/ETH.
 
 Links
 ----
-Twitter: https://twitter.com/ConvexFinance
+𝕏 (Twitter): https://x.com/ConvexFinance
 
 Telegram Announcements: https://t.me/ConvexEth
 
